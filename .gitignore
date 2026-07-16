@@ -1,0 +1,48 @@
+# Python virtual environment
+venv/
+.venv/
+env/
+ENV/
+
+# Python cache
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Databases
+*.db
+*.sqlite3
+
+# Node / Frontend dependencies and builds
+node_modules/
+dist/
+build/
+.svelte-kit/
+.next/
+.nuxt/
+out/
+jspm_packages/
+web_modules/
+.npm
+.yarn
+
+# IDEs and editors
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# OS generated files
+Thumbs.db
+db.json
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
