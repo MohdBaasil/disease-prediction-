@@ -26,12 +26,12 @@ for db_file in ["hospital.db", "hospital_v2.db"]:
 # NOW import database after cleanup
 from backend.database.connection import engine, Base, get_db
 from backend.database.models import (
-    Department, User, Doctor, Patient, Visit, PrescriptionItem, MedicalReport, Notification, Appointment
+    Department, User, Doctor, Patient, Visit, PrescriptionItem, MedicalReport, Notification, Appointment, PredictionHistory
 )
 from backend.services.auth_service import get_password_hash
 
 # Route imports
-from backend.routes import auth, doctor, patient, queue, notification, reports, dashboard, appointments, disease
+from backend.routes import auth, doctor, patient, queue, notification, reports, dashboard, appointments, disease, patient_portal
 from backend.utils.websocket import manager
 
 # Create database tables automatically
@@ -62,6 +62,7 @@ app.include_router(notification.router)
 app.include_router(reports.router)
 app.include_router(dashboard.router)
 app.include_router(disease.router)
+app.include_router(patient_portal.router)
 
 from fastapi.staticfiles import StaticFiles
 # Mount static files directory to serve the frontend client

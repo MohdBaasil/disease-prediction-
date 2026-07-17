@@ -74,6 +74,7 @@ class Patient(Base):
     visits = relationship("Visit", back_populates="patient", cascade="all, delete")
     reports = relationship("MedicalReport", back_populates="patient", cascade="all, delete")
     disease_predictions = relationship("DiseasePredictionLog", back_populates="patient", cascade="all, delete")
+    prediction_histories = relationship("PredictionHistory", back_populates="patient", cascade="all, delete")
 
 class Appointment(Base):
     __tablename__ = "appointments"
@@ -237,3 +238,18 @@ class DiseasePredictionLog(Base):
 
     # Relationships
     patient = relationship("Patient", back_populates="disease_predictions")
+
+class PredictionHistory(Base):
+    __tablename__ = "prediction_history"
+
+    id = Column(Integer, primary_key=True, index=True)
+    patient_id = Column(Integer, ForeignKey("patients.id", ondelete="CASCADE"), nullable=False)
+    predicted_disease = Column(String, nullable=False)
+    confidence = Column(Float, nullable=False)
+    risk_level = Column(String, nullable=False)
+    symptoms = Column(Text, nullable=False)  # JSON formatted list of strings
+    prediction_time = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    # Relationships
+    patient = relationship("Patient", back_populates="prediction_histories")

@@ -222,6 +222,26 @@ export const patientService = {
     return response.data;
   },
 
+  getSymptoms: async () => {
+    const response = await api.get('/api/patient/symptoms');
+    return response.data;
+  },
+
+  predictPatientDisease: async (vitals, symptoms) => {
+    const response = await api.post('/api/patient/predict', { vitals, symptoms });
+    return response.data;
+  },
+
+  getPredictionHistory: async (params = {}) => {
+    const response = await api.get('/api/patient/predictions', { params });
+    return response.data;
+  },
+
+  getPredictionDetail: async (id) => {
+    const response = await api.get(`/api/patient/predictions/${id}`);
+    return response.data;
+  },
+
   getPrescriptionPdfUrl: (visitId) => {
     const token = localStorage.getItem('token');
     return `${API_BASE_URL}/api/patients/me/prescriptions/${visitId}/pdf?token=${token}`;

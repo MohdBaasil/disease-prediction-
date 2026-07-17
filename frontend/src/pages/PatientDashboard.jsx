@@ -61,16 +61,22 @@ function PatientDashboard() {
   const [diagnosisLoading, setDiagnosisLoading] = useState(false);
   const [diagnosisResult, setDiagnosisResult] = useState(null);
   const [diagnosisError, setDiagnosisError] = useState('');
-  const defaultVitals = { age: '', bmi: '', blood_glucose: '', heart_rate: '', temperature: '', systolic_bp: '' };
-  const defaultSymptoms = {
-    frequent_urination: 0, increased_thirst: 0, family_history_diabetes: 0,
-    shortness_of_breath: 0, wheezing: 0, chest_tightness: 0, coughing: 0,
-    throbbing_headache: 0, nausea: 0, light_sensitivity: 0, chest_pain: 0,
-    pain_radiating_arm_jaw: 0, sweating: 0, sudden_numbness_weakness: 0,
-    trouble_speaking: 0, confusion: 0, drooping_face: 0, shivering: 0, rapid_breathing: 0
-  };
+  const defaultVitals = { age: '', bmi: '24.5', blood_glucose: '90', heart_rate: '75', temperature: '98.2', systolic_bp: '115' };
   const [vitalsForm, setVitalsForm] = useState(defaultVitals);
-  const [symptomsForm, setSymptomsForm] = useState(defaultSymptoms);
+  const [vitalsCollapsed, setVitalsCollapsed] = useState(true);
+
+  // Dynamic Symptom Selection & History States
+  const [allSymptoms, setAllSymptoms] = useState([]);
+  const [symptomSearch, setSymptomSearch] = useState('');
+  const [selectedSymptoms, setSelectedSymptoms] = useState([]);
+  const [predictionHistory, setPredictionHistory] = useState([]);
+  const [diagnosisSubTab, setDiagnosisSubTab] = useState('new'); // 'new' or 'history'
+  
+  // History Filters
+  const [predHistorySearch, setPredHistorySearch] = useState('');
+  const [predHistoryRiskFilter, setPredHistoryRiskFilter] = useState('');
+  const [predHistorySortBy, setPredHistorySortBy] = useState('prediction_time');
+  const [predHistorySortOrder, setPredHistorySortOrder] = useState('desc');
 
   const loadAllData = async () => {
     try {
@@ -88,6 +94,10 @@ function PatientDashboard() {
         age: profile.age || '',
         gender: profile.gender || ''
       });
+      setVitalsForm(prev => ({
+        ...prev,
+        age: profile.age ? profile.age.toString() : ''
+      }));
 
       // 2. Queue stats
       const patientStats = await dashboardService.getPatientStats(profile.id);
@@ -124,6 +134,22 @@ function PatientDashboard() {
       setDoctors(docs);
       if (docs.length > 0 && !bookingForm.doctor_id) {
         setBookingForm(prev => ({ ...prev, doctor_id: docs[0].id.toString() }));
+      }
+
+      // 9. Dynamic symptoms
+      try {
+        const symsList = await patientService.getSymptoms();
+        setAllSymptoms(symsList);
+      } catch (err) {
+        console.error("Failed to load symptoms", err);
+      }
+
+      // 10. Predictions history
+      try {
+        const historyList = await patientService.getPredictionHistory();
+        setPredictionHistory(historyList);
+      } catch (err) {
+        console.error("Failed to load prediction history", err);
       }
 
     } catch (err) {
@@ -256,26 +282,38 @@ function PatientDashboard() {
 
   const handleDiagnosis = async (e) => {
     e.preventDefault();
+    if (selectedSymptoms.length === 0) {
+      setDiagnosisError("Please select at least one symptom to run prediction.");
+      return;
+    }
     setDiagnosisLoading(true);
     setDiagnosisError('');
     setDiagnosisResult(null);
     try {
       const vitals = {
-        age: parseInt(vitalsForm.age),
-        bmi: parseFloat(vitalsForm.bmi),
-        blood_glucose: parseInt(vitalsForm.blood_glucose),
-        heart_rate: parseInt(vitalsForm.heart_rate),
-        temperature: parseFloat(vitalsForm.temperature),
-        systolic_bp: parseInt(vitalsForm.systolic_bp)
+        age: parseInt(vitalsForm.age || patient?.age || 30),
+        bmi: parseFloat(vitalsForm.bmi || 24.5),
+        blood_glucose: parseInt(vitalsForm.blood_glucose || 90),
+        heart_rate: parseInt(vitalsForm.heart_rate || 75),
+        temperature: parseFloat(vitalsForm.temperature || 98.2),
+        systolic_bp: parseInt(vitalsForm.systolic_bp || 115)
       };
-      const result = await patientService.predictDisease(vitals, symptomsForm);
+      const result = await patientService.predictPatientDisease(vitals, selectedSymptoms);
       setDiagnosisResult(result);
+      
+      // Reload history list
+      const historyList = await patientService.getPredictionHistory();
+      setPredictionHistory(historyList);
     } catch (err) {
       console.error(err);
       setDiagnosisError(err.response?.data?.detail || 'Failed to run disease prediction. Please check your inputs and try again.');
     } finally {
       setDiagnosisLoading(false);
     }
+  };
+
+  const printPredictionReport = () => {
+    window.print();
   };
 
   const printPrescription = () => {
@@ -394,8 +432,8 @@ function PatientDashboard() {
           className={`w-full flex items-center space-x-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all ${activeTab === 'diagnosis' ? 'bg-gradient-to-r from-violet-600 to-purple-500 text-white shadow-md shadow-violet-200 dark:shadow-violet-900/30' : 'text-slate-650 hover:bg-slate-100/50 dark:hover:bg-slate-800/50'}`}
         >
           <Stethoscope className="h-5 w-5" />
-          <span>AI Diagnosis</span>
-          <span className="ml-auto text-[8px] font-black bg-white/20 text-white px-1.5 py-0.5 rounded-full hidden group-hover:flex">AI</span>
+          <span>Disease Diagnosis</span>
+          <span className="ml-auto text-[8px] font-black bg-white/20 text-white px-1.5 py-0.5 rounded-full">Reserved</span>
         </button>
 
         <button 
@@ -1287,378 +1325,638 @@ function PatientDashboard() {
           </div>
         )}
 
-        {/* ---------------- AI DISEASE DIAGNOSIS TAB ---------------- */}
+        {/* ---------------- DISEASE DIAGNOSIS TAB (RESERVED) ---------------- */}
+        {/* ---------------- DISEASE DIAGNOSIS TAB ---------------- */}
         {activeTab === 'diagnosis' && (
           <div className="space-y-6">
-            {/* Header */}
-            <div className="bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-600 rounded-3xl p-6 shadow-lg text-white relative overflow-hidden">
-              <div className="absolute -top-8 -right-8 w-40 h-40 bg-white/5 rounded-full blur-3xl" />
-              <div className="absolute bottom-0 left-1/2 w-32 h-32 bg-white/5 rounded-full blur-2xl" />
-              <div className="relative flex items-start justify-between">
-                <div>
-                  <div className="flex items-center space-x-2 mb-2">
-                    <Brain className="h-5 w-5 text-purple-200" />
-                    <span className="text-xs font-bold text-purple-200 uppercase tracking-widest">AI-Powered</span>
-                  </div>
-                  <h2 className="text-2xl font-black tracking-tight">Disease Diagnosis</h2>
-                  <p className="text-sm text-purple-200 mt-1 max-w-sm">Enter your vitals and symptoms. Our ensemble of 3 ML models will analyze and predict the most likely condition.</p>
-                </div>
-                <div className="bg-white/10 p-3 rounded-2xl backdrop-blur-sm">
-                  <Stethoscope className="h-8 w-8 text-white" />
-                </div>
-              </div>
-              <div className="mt-4 flex items-center space-x-4 text-xs text-purple-200">
-                <span className="flex items-center space-x-1"><BarChart3 className="h-3 w-3" /><span>Random Forest</span></span>
-                <span>•</span>
-                <span className="flex items-center space-x-1"><Brain className="h-3 w-3" /><span>Gradient Boosting</span></span>
-                <span>•</span>
-                <span className="flex items-center space-x-1"><Activity className="h-3 w-3" /><span>XGBoost</span></span>
-              </div>
+            
+            {/* Tab navigation headers */}
+            <div className="flex border-b border-slate-200 dark:border-slate-800 pb-px mb-4">
+              <button 
+                onClick={() => setDiagnosisSubTab('new')}
+                className={`pb-3 px-4 text-sm font-bold border-b-2 transition-all ${diagnosisSubTab === 'new' ? 'border-hospital-500 text-hospital-600 dark:text-hospital-450' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+              >
+                New AI Analysis
+              </button>
+              <button 
+                onClick={() => {
+                  setDiagnosisSubTab('history');
+                  patientService.getPredictionHistory().then(setPredictionHistory).catch(console.error);
+                }}
+                className={`pb-3 px-4 text-sm font-bold border-b-2 transition-all ${diagnosisSubTab === 'history' ? 'border-hospital-500 text-hospital-600 dark:text-hospital-450' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+              >
+                Prediction History Log
+              </button>
             </div>
 
-            {/* Disclaimer Banner */}
-            <div className="flex items-start space-x-3 p-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/50 rounded-2xl text-amber-700 dark:text-amber-300 text-xs">
-              <Info className="h-4 w-4 shrink-0 mt-0.5" />
-              <p><strong>Educational Use Only:</strong> This AI tool is for informational purposes and does not replace professional medical advice, diagnosis, or treatment. Always consult a qualified physician.</p>
-            </div>
-
-            {/* Input Form */}
-            <form onSubmit={handleDiagnosis} className="space-y-6">
-              {/* Vitals Section */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm">
-                <div className="flex items-center space-x-2 mb-5">
-                  <div className="bg-violet-100 dark:bg-violet-950/40 p-2 rounded-xl text-violet-600 dark:text-violet-400">
-                    <Activity className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-sm">Clinical Vitals</h3>
-                    <p className="text-[10px] text-slate-400">Enter your measured vital signs</p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {[
-                    { key: 'age', label: 'Age', unit: 'years', type: 'number', placeholder: '30' },
-                    { key: 'bmi', label: 'BMI', unit: 'kg/m²', type: 'number', placeholder: '24.5', step: '0.1' },
-                    { key: 'blood_glucose', label: 'Blood Glucose', unit: 'mg/dL', type: 'number', placeholder: '90' },
-                    { key: 'heart_rate', label: 'Heart Rate', unit: 'BPM', type: 'number', placeholder: '75' },
-                    { key: 'temperature', label: 'Body Temp', unit: '°F', type: 'number', placeholder: '98.2', step: '0.1' },
-                    { key: 'systolic_bp', label: 'Systolic BP', unit: 'mmHg', type: 'number', placeholder: '120' }
-                  ].map(({ key, label, unit, type, placeholder, step }) => (
-                    <div key={key} className="space-y-1">
-                      <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">{label} <span className="text-violet-400 font-normal normal-case">({unit})</span></label>
-                      <input
-                        required
-                        type={type}
-                        step={step || '1'}
-                        placeholder={placeholder}
-                        value={vitalsForm[key]}
-                        onChange={e => setVitalsForm(prev => ({ ...prev, [key]: e.target.value }))}
-                        className="w-full px-3 py-2.5 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 rounded-xl outline-none focus:ring-2 focus:ring-violet-400 focus:border-violet-400 text-sm text-slate-800 dark:text-white transition-all"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Symptoms Section */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm">
-                <div className="flex items-center space-x-2 mb-5">
-                  <div className="bg-rose-100 dark:bg-rose-950/40 p-2 rounded-xl text-rose-500 dark:text-rose-400">
-                    <Heart className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-sm">Symptom Checklist</h3>
-                    <p className="text-[10px] text-slate-400">Check all symptoms you are currently experiencing</p>
-                  </div>
-                </div>
-                {/* Symptoms grouped by category */}
-                {[
-                  { label: 'Metabolic / Endocrine', color: 'blue', keys: [
-                    { key: 'frequent_urination', label: 'Frequent Urination (Polyuria)' },
-                    { key: 'increased_thirst', label: 'Excessive Thirst (Polydipsia)' },
-                    { key: 'family_history_diabetes', label: 'Family History of Diabetes' }
-                  ]},
-                  { label: 'Respiratory / Chest', color: 'sky', keys: [
-                    { key: 'shortness_of_breath', label: 'Shortness of Breath' },
-                    { key: 'wheezing', label: 'Wheezing Sound' },
-                    { key: 'chest_tightness', label: 'Chest Tightness' },
-                    { key: 'coughing', label: 'Persistent Cough' },
-                    { key: 'rapid_breathing', label: 'Rapid Breathing' }
-                  ]},
-                  { label: 'Neurological / Head', color: 'violet', keys: [
-                    { key: 'throbbing_headache', label: 'Severe Throbbing Headache' },
-                    { key: 'light_sensitivity', label: 'Light / Sound Sensitivity' },
-                    { key: 'sudden_numbness_weakness', label: 'Sudden Numbness or Weakness' },
-                    { key: 'trouble_speaking', label: 'Slurred / Difficult Speech' },
-                    { key: 'drooping_face', label: 'Facial Drooping' },
-                    { key: 'confusion', label: 'Sudden Confusion' }
-                  ]},
-                  { label: 'Cardiac / Systemic', color: 'rose', keys: [
-                    { key: 'chest_pain', label: 'Chest Pain or Pressure' },
-                    { key: 'pain_radiating_arm_jaw', label: 'Pain Radiating to Arm or Jaw' },
-                    { key: 'sweating', label: 'Profuse Sweating' },
-                    { key: 'nausea', label: 'Nausea or Vomiting' },
-                    { key: 'shivering', label: 'Chills / Shivering / Rigors' }
-                  ]}
-                ].map(group => (
-                  <div key={group.label} className="mb-5">
-                    <span className={`text-[9px] font-black uppercase tracking-widest text-${group.color}-500 block mb-2 pl-1`}>{group.label}</span>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {group.keys.map(({ key, label }) => (
-                        <label key={key} className={`flex items-center space-x-3 p-3 rounded-xl border cursor-pointer transition-all hover:border-violet-300 dark:hover:border-violet-700 ${symptomsForm[key] === 1 ? 'bg-violet-50 dark:bg-violet-950/30 border-violet-300 dark:border-violet-700' : 'border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/20'}`}>
-                          <input
-                            type="checkbox"
-                            checked={symptomsForm[key] === 1}
-                            onChange={e => setSymptomsForm(prev => ({ ...prev, [key]: e.target.checked ? 1 : 0 }))}
-                            className="w-4 h-4 accent-violet-600 rounded"
-                          />
-                          <span className="text-xs font-medium text-slate-700 dark:text-slate-300">{label}</span>
-                        </label>
-                      ))}
+            {/* Sub-tab: New Prediction */}
+            {diagnosisSubTab === 'new' && (
+              <div className="space-y-6">
+                
+                {/* Intro Card */}
+                {!diagnosisResult && !diagnosisLoading && (
+                  <div className="bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-600 rounded-3xl p-6 shadow-lg text-white relative overflow-hidden">
+                    <div className="absolute -top-8 -right-8 w-40 h-40 bg-white/5 rounded-full blur-3xl" />
+                    <div className="absolute bottom-0 left-1/2 w-32 h-32 bg-white/5 rounded-full blur-2xl" />
+                    <div className="relative flex items-center justify-between">
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <Brain className="h-5 w-5 text-purple-200" />
+                          <span className="text-xs font-bold text-purple-200 uppercase tracking-widest">Ensemble Machine Learning</span>
+                        </div>
+                        <h2 className="text-2xl font-black tracking-tight">AI Disease Predictor</h2>
+                        <p className="text-sm text-purple-200 max-w-lg">
+                          Select your current symptoms and enter vital metrics. Our clinical ensemble model will evaluate and match indicators against 3 optimized ML algorithms (Random Forest, Gradient Boosting, and XGBoost).
+                        </p>
+                      </div>
+                      <div className="bg-white/10 p-3 rounded-2xl backdrop-blur-sm hidden md:block">
+                        <Stethoscope className="h-10 w-10 text-white" />
+                      </div>
                     </div>
                   </div>
-                ))}
-              </div>
+                )}
 
-              {/* Submit */}
-              <div className="flex items-center space-x-4">
-                <button
-                  type="submit"
-                  disabled={diagnosisLoading}
-                  className="flex-1 bg-gradient-to-r from-violet-600 to-purple-500 text-white font-bold py-3.5 px-8 rounded-2xl hover:from-violet-700 hover:to-purple-600 transition-all shadow-lg shadow-violet-200 dark:shadow-violet-900/40 disabled:opacity-60 flex items-center justify-center space-x-2"
-                >
-                  {diagnosisLoading ? (
-                    <><div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /><span>Analyzing...</span></>
-                  ) : (
-                    <><Brain className="h-5 w-5" /><span>Run AI Diagnosis</span><ChevronRight className="h-4 w-4" /></>
-                  )}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setVitalsForm(defaultVitals); setSymptomsForm(defaultSymptoms); setDiagnosisResult(null); setDiagnosisError(''); }}
-                  className="px-4 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all text-sm font-semibold"
-                >
-                  Reset
-                </button>
-              </div>
-            </form>
+                {/* Main Selector and Vitals view */}
+                {!diagnosisResult && !diagnosisLoading && (
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    
+                    {/* Symptoms Selector (Left 2 cols) */}
+                    <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4">
+                      <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
+                        <div>
+                          <h3 className="font-extrabold text-sm">Select Symptoms</h3>
+                          <p className="text-[10px] text-slate-400">Search and select all that apply</p>
+                        </div>
+                        {selectedSymptoms.length > 0 && (
+                          <button 
+                            type="button"
+                            onClick={() => setSelectedSymptoms([])}
+                            className="text-xs font-bold text-rose-500 hover:underline"
+                          >
+                            Clear All ({selectedSymptoms.length})
+                          </button>
+                        )}
+                      </div>
 
-            {/* Error */}
-            {diagnosisError && (
-              <div className="p-4 bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-800/50 rounded-2xl text-rose-600 dark:text-rose-400 text-sm flex items-center space-x-2">
-                <AlertCircle className="h-5 w-5 shrink-0" /><span>{diagnosisError}</span>
+                      {/* Search Bar */}
+                      <div className="relative">
+                        <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                        <input 
+                          type="text"
+                          placeholder="Search symptoms (e.g. fever, chest pain, coughing)..."
+                          value={symptomSearch}
+                          onChange={(e) => setSymptomSearch(e.target.value)}
+                          className="w-full pl-10 pr-4 py-2 border border-slate-200 dark:border-slate-800 bg-transparent rounded-xl outline-none focus:ring-1 focus:ring-hospital-500 text-xs"
+                        />
+                      </div>
+
+                      {/* Selected Symptoms Chips */}
+                      {selectedSymptoms.length > 0 && (
+                        <div className="flex flex-wrap gap-2 p-3 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-150 dark:border-slate-800">
+                          {selectedSymptoms.map((sym) => (
+                            <span 
+                              key={sym} 
+                              className="bg-hospital-50 dark:bg-hospital-950/40 text-hospital-600 dark:text-hospital-450 border border-hospital-100 dark:border-hospital-900/30 text-xs font-semibold pl-3 pr-1.5 py-1 rounded-full flex items-center space-x-1"
+                            >
+                              <span>{sym}</span>
+                              <button 
+                                type="button"
+                                onClick={() => setSelectedSymptoms(prev => prev.filter(s => s !== sym))}
+                                className="hover:bg-hospital-100 dark:hover:bg-hospital-900 rounded-full p-0.5 text-hospital-500"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Symptoms Checklist */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-80 overflow-y-auto pr-2">
+                        {allSymptoms
+                          .filter(sym => sym.toLowerCase().includes(symptomSearch.toLowerCase()))
+                          .map((sym) => {
+                            const isSelected = selectedSymptoms.includes(sym);
+                            return (
+                              <label 
+                                key={sym} 
+                                className={`flex items-center space-x-3 p-3 rounded-xl border cursor-pointer transition-all hover:border-hospital-300 dark:hover:border-hospital-700 ${isSelected ? 'bg-hospital-50/20 dark:bg-hospital-950/20 border-hospital-300 dark:border-hospital-700' : 'border-slate-200 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-800/10'}`}
+                              >
+                                <input 
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  onChange={() => {
+                                    if (isSelected) {
+                                      setSelectedSymptoms(prev => prev.filter(s => s !== sym));
+                                    } else {
+                                      setSelectedSymptoms(prev => [...prev, sym]);
+                                    }
+                                  }}
+                                  className="w-4 h-4 accent-hospital-600 rounded"
+                                />
+                                <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">{sym}</span>
+                              </label>
+                            );
+                          })}
+                      </div>
+
+                      {/* Predict Submit */}
+                      <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+                        <button
+                          type="button"
+                          onClick={handleDiagnosis}
+                          disabled={selectedSymptoms.length === 0}
+                          className="bg-hospital-500 text-white font-bold py-2.5 px-6 rounded-xl hover:bg-hospital-600 transition-colors shadow-sm disabled:opacity-50 flex items-center space-x-1.5"
+                        >
+                          <Brain className="h-4 w-4" />
+                          <span>Predict Disease</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Vitals Editor Panel (Right 1 col) */}
+                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4 self-start">
+                      <button 
+                        type="button"
+                        onClick={() => setVitalsCollapsed(prev => !prev)}
+                        className="w-full flex justify-between items-center text-left"
+                      >
+                        <div>
+                          <h3 className="font-extrabold text-sm">Clinical Vitals</h3>
+                          <p className="text-[10px] text-slate-400">Prefilled with patient normal values</p>
+                        </div>
+                        <span className="text-xs font-bold text-hospital-500 hover:underline">
+                          {vitalsCollapsed ? "Edit Vitals" : "Minimize"}
+                        </span>
+                      </button>
+
+                      {!vitalsCollapsed ? (
+                        <form className="space-y-3 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs">
+                          {[
+                            { key: 'age', label: 'Age (years)', type: 'number', placeholder: '30' },
+                            { key: 'bmi', label: 'BMI (kg/m²)', type: 'number', placeholder: '24.5', step: '0.1' },
+                            { key: 'blood_glucose', label: 'Blood Glucose (mg/dL)', type: 'number', placeholder: '90' },
+                            { key: 'heart_rate', label: 'Heart Rate (BPM)', type: 'number', placeholder: '75' },
+                            { key: 'temperature', label: 'Body Temp (°F)', type: 'number', placeholder: '98.2', step: '0.1' },
+                            { key: 'systolic_bp', label: 'Systolic BP (mmHg)', type: 'number', placeholder: '115' }
+                          ].map(({ key, label, type, placeholder, step }) => (
+                            <div key={key} className="space-y-1">
+                              <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">{label}</label>
+                              <input 
+                                type={type}
+                                step={step || '1'}
+                                placeholder={placeholder}
+                                value={vitalsForm[key]}
+                                onChange={(e) => setVitalsForm(prev => ({ ...prev, [key]: e.target.value }))}
+                                className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 bg-transparent rounded-xl outline-none focus:ring-1 focus:ring-hospital-500 bg-white dark:bg-slate-900"
+                              />
+                            </div>
+                          ))}
+                        </form>
+                      ) : (
+                        <div className="pt-3 border-t border-slate-100 dark:border-slate-800 grid grid-cols-2 gap-3 text-xs">
+                          <div>
+                            <span className="text-[9px] font-bold text-slate-450 block uppercase">Age</span>
+                            <span className="font-extrabold text-slate-700 dark:text-slate-300">{vitalsForm.age || patient?.age || '30'} yrs</span>
+                          </div>
+                          <div>
+                            <span className="text-[9px] font-bold text-slate-450 block uppercase">BMI</span>
+                            <span className="font-extrabold text-slate-700 dark:text-slate-300">{vitalsForm.bmi || '24.5'}</span>
+                          </div>
+                          <div>
+                            <span className="text-[9px] font-bold text-slate-450 block uppercase">Glucose</span>
+                            <span className="font-extrabold text-slate-700 dark:text-slate-300">{vitalsForm.blood_glucose || '90'} mg/dL</span>
+                          </div>
+                          <div>
+                            <span className="text-[9px] font-bold text-slate-450 block uppercase">Heart Rate</span>
+                            <span className="font-extrabold text-slate-700 dark:text-slate-300">{vitalsForm.heart_rate || '75'} BPM</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Loading Skeleton */}
+                {diagnosisLoading && (
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-sm space-y-6 animate-pulse">
+                    <div className="flex flex-col items-center space-y-3">
+                      <div className="w-16 h-16 bg-slate-250 dark:bg-slate-800 rounded-full flex items-center justify-center">
+                        <Brain className="h-8 w-8 text-slate-300" />
+                      </div>
+                      <div className="h-6 w-48 bg-slate-250 dark:bg-slate-800 rounded-lg"></div>
+                      <div className="h-4 w-64 bg-slate-100 dark:bg-slate-800/80 rounded-md"></div>
+                    </div>
+                    <div className="border-t border-slate-100 dark:border-slate-800 pt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-3">
+                        <div className="h-4 w-32 bg-slate-200 dark:bg-slate-800 rounded"></div>
+                        <div className="h-20 bg-slate-100 dark:bg-slate-800/60 rounded-xl"></div>
+                      </div>
+                      <div className="space-y-3">
+                        <div className="h-4 w-32 bg-slate-200 dark:bg-slate-800 rounded"></div>
+                        <div className="h-20 bg-slate-100 dark:bg-slate-800/60 rounded-xl"></div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Diagnosis Results Card */}
+                {diagnosisResult && (
+                  <div id="prediction-report-print" className="space-y-6 animate-fadeIn">
+                    
+                    {/* Header Controls (hide on print) */}
+                    <div className="flex justify-between items-center print:hidden">
+                      <button 
+                        onClick={() => setDiagnosisResult(null)}
+                        className="text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 flex items-center space-x-1"
+                      >
+                        <span>← Back to Diagnosis</span>
+                      </button>
+                      <div className="flex items-center space-x-2">
+                        <button 
+                          onClick={printPredictionReport}
+                          className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition-all shadow-sm"
+                        >
+                          <Printer className="h-4 w-4" />
+                          <span>Print / Download PDF</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Main Prediction Details */}
+                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-md relative overflow-hidden">
+                      <div className="absolute top-0 right-0 h-32 w-32 bg-hospital-500/5 rounded-full blur-3xl"></div>
+                      
+                      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-slate-100 dark:border-slate-800 pb-6 mb-6">
+                        <div>
+                          <span className="text-[9px] font-black text-hospital-500 uppercase tracking-widest block mb-1">AI Ensemble Prediction Report</span>
+                          <h2 className="text-3xl font-black tracking-tight">{diagnosisResult.predicted_disease}</h2>
+                          {diagnosisResult.details && (
+                            <p className="text-xs text-slate-400 mt-1">
+                              Specialty Specialty: <strong>{diagnosisResult.details.department} ({diagnosisResult.details.specialist})</strong>
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Date Time & ID */}
+                        <div className="text-left md:text-right text-xs text-slate-500 dark:text-slate-455">
+                          <span className="block font-bold">Prediction ID: #{diagnosisResult.id || "TEMP"}</span>
+                          <span className="block mt-0.5">Date: {new Date(diagnosisResult.prediction_time).toLocaleDateString()}</span>
+                          <span className="block mt-0.5">Time: {new Date(diagnosisResult.prediction_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        </div>
+                      </div>
+
+                      {/* Confidence Meter */}
+                      {(() => {
+                        const score = diagnosisResult.confidence_score !== undefined ? diagnosisResult.confidence_score : diagnosisResult.confidence;
+                        const pct = Math.round(score * 100);
+                        const isHigh = pct >= 80;
+                        const isMed = pct >= 50 && pct < 80;
+                        const meterColor = isHigh ? 'bg-emerald-500' : isMed ? 'bg-amber-400' : 'bg-rose-500';
+                        const textClass = isHigh ? 'text-emerald-600 dark:text-emerald-400' : isMed ? 'text-amber-550 dark:text-amber-450' : 'text-rose-500';
+                        const labelText = isHigh ? 'Excellent Confidence' : isMed ? 'Moderate Confidence' : 'Low Confidence';
+
+                        return (
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                            
+                            {/* Confidence Gauge */}
+                            <div className="bg-slate-50 dark:bg-slate-800/40 border border-slate-150 dark:border-slate-800 p-4 rounded-2xl flex flex-col justify-between">
+                              <div className="flex justify-between items-center mb-2">
+                                <span className="text-[9px] font-black text-slate-450 uppercase tracking-wider block">Model Confidence</span>
+                                <span className={`text-xs font-black uppercase tracking-wider ${textClass}`}>{labelText}</span>
+                              </div>
+                              <div className="flex items-baseline space-x-2">
+                                <span className="text-3xl font-black tracking-tight">{pct}%</span>
+                                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">agreement</span>
+                              </div>
+                              <div className="w-full bg-slate-200 dark:bg-slate-700 h-2.5 rounded-full overflow-hidden mt-3">
+                                <div className={`h-full ${meterColor} rounded-full`} style={{ width: `${pct}%` }}></div>
+                              </div>
+                            </div>
+
+                            {/* Risk Badges */}
+                            <div className="bg-slate-50 dark:bg-slate-800/40 border border-slate-150 dark:border-slate-800 p-4 rounded-2xl flex items-center justify-between">
+                              <div>
+                                <span className="text-[9px] font-black text-slate-450 uppercase tracking-wider block mb-1">Risk Evaluation</span>
+                                <span className={`px-3 py-1 rounded-xl text-xs font-black uppercase tracking-wider inline-block ${
+                                  diagnosisResult.risk_level === 'High' || diagnosisResult.risk_level === 'Critical' ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-450' :
+                                  diagnosisResult.risk_level === 'Medium' ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-450' :
+                                  'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-450'
+                                }`}>
+                                  {diagnosisResult.risk_level} Risk
+                                </span>
+                              </div>
+                              <div className="text-right">
+                                <span className="text-[9px] font-black text-slate-450 uppercase tracking-wider block mb-1">Severity Level</span>
+                                <span className="text-sm font-bold block">{diagnosisResult.details?.severity || "Mild"}</span>
+                              </div>
+                            </div>
+
+                            {/* Symptoms list log */}
+                            <div className="bg-slate-50 dark:bg-slate-800/40 border border-slate-150 dark:border-slate-800 p-4 rounded-2xl">
+                              <span className="text-[9px] font-black text-slate-450 uppercase tracking-wider block mb-2">Evaluated Symptoms</span>
+                              <div className="flex flex-wrap gap-1 max-h-16 overflow-y-auto pr-1">
+                                {diagnosisResult.symptoms.map(s => (
+                                  <span key={s} className="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-350 text-[9px] font-bold px-2 py-0.5 rounded">
+                                    {s}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()}
+
+                      {/* Details lookup sections */}
+                      {diagnosisResult.details && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-slate-100 dark:border-slate-800 text-xs leading-relaxed">
+                          
+                          {/* Disease Profile */}
+                          <div className="space-y-4">
+                            <div className="bg-slate-50 dark:bg-slate-800/20 p-4 rounded-2xl border border-slate-150 dark:border-slate-850 space-y-2">
+                              <h4 className="font-extrabold text-sm text-hospital-600 dark:text-hospital-450 flex items-center space-x-1.5">
+                                <Info className="h-4 w-4" />
+                                <span>Condition Profile</span>
+                              </h4>
+                              <p className="text-slate-650 dark:text-slate-300">{diagnosisResult.details.description}</p>
+                              <div className="border-t border-slate-100 dark:border-slate-850/80 pt-2 mt-2">
+                                <strong className="block text-[10px] text-slate-450 uppercase font-black">Probable Causes</strong>
+                                <span className="text-slate-500 dark:text-slate-400 text-xs block">{diagnosisResult.details.causes}</span>
+                              </div>
+                              <div className="grid grid-cols-2 gap-4 border-t border-slate-100 dark:border-slate-850/80 pt-2 mt-2">
+                                <div>
+                                  <strong className="block text-[10px] text-slate-450 uppercase font-black">Recovery Estimation</strong>
+                                  <span className="text-slate-500 dark:text-slate-400 text-xs font-bold block">Typically 1-2 weeks or managed</span>
+                                </div>
+                                <div>
+                                  <strong className="block text-[10px] text-slate-450 uppercase font-black">Typical Symptoms</strong>
+                                  <span className="text-slate-500 dark:text-slate-400 text-[10px] block truncate">{diagnosisResult.details.symptoms}</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Lifestyle guidance */}
+                            <div className="bg-slate-50 dark:bg-slate-800/20 p-4 rounded-2xl border border-slate-150 dark:border-slate-850 space-y-3">
+                              <h4 className="font-extrabold text-sm text-indigo-650 dark:text-indigo-400 flex items-center space-x-1.5">
+                                <Heart className="h-4 w-4" />
+                                <span>Lifestyle & Recovery Guidance</span>
+                              </h4>
+                              <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                  <strong className="block text-[10px] text-indigo-500 uppercase font-black mb-1">Recommended Diet</strong>
+                                  <span className="text-slate-650 dark:text-slate-350 block">{diagnosisResult.details.diet?.recommended}</span>
+                                  {diagnosisResult.details.diet?.avoid && (
+                                    <span className="text-rose-500 dark:text-rose-400 block mt-1">Avoid: {diagnosisResult.details.diet.avoid}</span>
+                                  )}
+                                </div>
+                                <div>
+                                  <strong className="block text-[10px] text-indigo-500 uppercase font-black mb-1">Workout & Exercise</strong>
+                                  <span className="text-slate-650 dark:text-slate-350 block">{diagnosisResult.details.workout}</span>
+                                </div>
+                              </div>
+                              <div className="border-t border-slate-100 dark:border-slate-850/85 pt-2">
+                                <strong className="block text-[10px] text-indigo-500 uppercase font-black mb-1">Precautions Checklist</strong>
+                                <ul className="list-disc list-inside text-slate-500 dark:text-slate-400 space-y-0.5">
+                                  {diagnosisResult.details.precautions.map((p, idx) => (
+                                    <li key={idx}>{p}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Clinical Interventions */}
+                          <div className="space-y-4">
+                            
+                            {/* Tests & Screenings */}
+                            {diagnosisResult.details.tests && diagnosisResult.details.tests.length > 0 && (
+                              <div className="bg-slate-50 dark:bg-slate-800/20 p-4 rounded-2xl border border-slate-150 dark:border-slate-850 space-y-2">
+                                <h4 className="font-extrabold text-sm text-teal-600 dark:text-teal-400 flex items-center space-x-1.5">
+                                  <FlaskConical className="h-4 w-4" />
+                                  <span>Suggested Clinical Investigations</span>
+                                </h4>
+                                <div className="space-y-2">
+                                  {diagnosisResult.details.tests.map((test, idx) => (
+                                    <div key={idx} className="bg-white dark:bg-slate-850 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800">
+                                      <strong className="text-slate-700 dark:text-slate-200 block">{test.name}</strong>
+                                      <span className="text-[10px] text-slate-450 block mt-0.5">Clinical rationale: {test.reason}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Medicines with Disclaimer */}
+                            {diagnosisResult.details.medicines && diagnosisResult.details.medicines.length > 0 && (
+                              <div className="bg-slate-50 dark:bg-slate-800/20 p-4 rounded-2xl border border-slate-150 dark:border-slate-850 space-y-3">
+                                <h4 className="font-extrabold text-sm text-rose-600 dark:text-rose-450 flex items-center space-x-1.5">
+                                  <Pill className="h-4 w-4" />
+                                  <span>Educational Medication Lookup</span>
+                                </h4>
+                                <div className="space-y-2">
+                                  {diagnosisResult.details.medicines.map((med, idx) => (
+                                    <div key={idx} className="bg-white dark:bg-slate-850 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 flex justify-between items-start">
+                                      <div>
+                                        <strong className="text-slate-700 dark:text-slate-200 block">{med.name}</strong>
+                                        <span className="text-[10px] text-slate-400 block">{med.notes}</span>
+                                      </div>
+                                      <span className="text-[9px] font-black text-rose-500 bg-rose-50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/40 px-2.5 py-0.5 rounded whitespace-nowrap">
+                                        {med.dosage}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+
+                                {/* Medicine Warning Disclaimer */}
+                                <div className="p-3 bg-amber-50/40 dark:bg-amber-950/10 border border-amber-200 dark:border-amber-900/40 rounded-xl">
+                                  <p className="text-[10px] text-amber-700 dark:text-amber-400 font-bold flex items-center space-x-1">
+                                    <AlertTriangle className="h-3 w-3 shrink-0" />
+                                    <span>AI Recommendation Only. Consult Your Doctor Before Taking Any Medicine.</span>
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Educational General Disclaimer */}
+                      <div className="mt-6 border-t border-slate-100 dark:border-slate-800 pt-4 text-center">
+                        <p className="text-[10px] text-slate-400 leading-relaxed max-w-2xl mx-auto italic">
+                          "This prediction is generated by an AI model for educational and decision-support purposes only. It is not a confirmed medical diagnosis. Please consult a qualified doctor before making medical decisions."
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
-            {/* Results Panel */}
-            {diagnosisResult && (() => {
-              const r = diagnosisResult;
-              const riskColor = r.risk_level === 'High' ? 'rose' : r.risk_level === 'Medium' ? 'amber' : 'emerald';
-              const riskBg = r.risk_level === 'High' ? 'bg-rose-500' : r.risk_level === 'Medium' ? 'bg-amber-400' : 'bg-emerald-500';
-              const confidencePct = Math.round(r.confidence_score * 100);
-
-              return (
-                <div className="space-y-5 animate-fadeIn">
-                  {/* Emergency Alert */}
-                  {r.is_emergency && (
-                    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-rose-600 to-red-500 p-5 text-white shadow-2xl shadow-rose-300 dark:shadow-rose-900/50">
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
-                      <div className="flex items-start space-x-4 relative">
-                        <div className="p-3 bg-white/20 rounded-2xl animate-pulse">
-                          <AlertTriangle className="h-8 w-8" />
-                        </div>
-                        <div>
-                          <h3 className="text-xl font-black tracking-tight">🚨 EMERGENCY DETECTED</h3>
-                          <p className="text-rose-100 text-sm mt-1">Predicted condition <strong>{r.predicted_disease}</strong> may require <strong>IMMEDIATE EMERGENCY MEDICAL ATTENTION</strong>. Do not wait. Call emergency services or go to the nearest Emergency Room immediately.</p>
-                          <p className="text-xs text-rose-200 mt-2 font-semibold">📞 Emergency: 911 / 999 / 112</p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Main Prediction Card */}
-                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-md">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-5 border-b border-slate-100 dark:border-slate-800">
-                      <div>
-                        <span className="text-[9px] font-black text-violet-500 uppercase tracking-widest block mb-1">Ensemble Prediction Result</span>
-                        <h3 className="text-2xl font-black text-slate-800 dark:text-white">{r.predicted_disease}</h3>
-                        <p className="text-xs text-slate-400 mt-0.5">Based on soft-voting ensemble of 3 ML models</p>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        {/* Confidence Meter */}
-                        <div className="text-center">
-                          <div className="relative w-20 h-20">
-                            <svg className="w-20 h-20 transform -rotate-90" viewBox="0 0 80 80">
-                              <circle cx="40" cy="40" r="32" fill="none" stroke="currentColor" strokeWidth="8" className="text-slate-100 dark:text-slate-800" />
-                              <circle cx="40" cy="40" r="32" fill="none" stroke="url(#confGrad)" strokeWidth="8"
-                                strokeDasharray={`${201 * confidencePct / 100} 201`} strokeLinecap="round" />
-                              <defs>
-                                <linearGradient id="confGrad" x1="0" y1="0" x2="1" y2="0">
-                                  <stop offset="0%" stopColor="#7c3aed" />
-                                  <stop offset="100%" stopColor="#a855f7" />
-                                </linearGradient>
-                              </defs>
-                            </svg>
-                            <span className="absolute inset-0 flex items-center justify-center text-lg font-black text-violet-600 dark:text-violet-400">{confidencePct}%</span>
-                          </div>
-                          <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Confidence</span>
-                        </div>
-                        {/* Risk Badge */}
-                        <div className={`${riskBg} text-white px-4 py-2 rounded-2xl text-center shadow-lg`}>
-                          <span className="text-[8px] font-black uppercase tracking-widest block opacity-80">Risk Level</span>
-                          <span className="text-base font-black">{r.risk_level}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Top 3 Predictions */}
-                    <div className="mt-5">
-                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-3">Top 3 Differential Predictions</span>
-                      <div className="space-y-2">
-                        {r.top_predictions.map((p, idx) => (
-                          <div key={p.disease} className="flex items-center space-x-3">
-                            <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black shrink-0 ${idx === 0 ? 'bg-violet-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>{idx + 1}</span>
-                            <div className="flex-1">
-                              <div className="flex justify-between items-center mb-0.5">
-                                <span className={`text-xs font-bold ${idx === 0 ? 'text-violet-600 dark:text-violet-400' : 'text-slate-600 dark:text-slate-400'}`}>{p.disease}</span>
-                                <span className="text-[10px] text-slate-400 font-semibold">{Math.round(p.probability * 100)}%</span>
-                              </div>
-                              <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                                <div className={`h-full rounded-full transition-all duration-700 ${idx === 0 ? 'bg-gradient-to-r from-violet-600 to-purple-400' : 'bg-slate-300 dark:bg-slate-600'}`} style={{ width: `${p.probability * 100}%` }} />
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+            {/* Sub-tab: History Log */}
+            {diagnosisSubTab === 'history' && (
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-100 dark:border-slate-800 pb-4 mb-2">
+                  <div>
+                    <h3 className="font-extrabold text-sm">Past Clinical Analyses</h3>
+                    <p className="text-[10px] text-slate-400">View and reprint past model reports</p>
                   </div>
 
-                  {/* Model Comparison */}
-                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm">
-                    <div className="flex items-center space-x-2 mb-4">
-                      <BarChart3 className="h-4 w-4 text-violet-500" />
-                      <h4 className="font-bold text-sm">Model-by-Model Comparison</h4>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                      {[
-                        { key: 'random_forest', label: 'Random Forest', icon: '🌲', color: 'green' },
-                        { key: 'gradient_boosting', label: 'Gradient Boost', icon: '🔥', color: 'orange' },
-                        { key: 'xgboost', label: 'XGBoost', icon: '⚡', color: 'yellow' }
-                      ].map(({ key, label, icon, color }) => {
-                        const m = r.comparisons[key];
-                        const matches = m.disease === r.predicted_disease;
-                        return (
-                          <div key={key} className={`p-4 rounded-2xl border text-center transition-all ${matches ? 'border-violet-300 dark:border-violet-700 bg-violet-50 dark:bg-violet-950/20' : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/30'}`}>
-                            <span className="text-2xl block mb-1">{icon}</span>
-                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider block">{label}</span>
-                            <span className={`text-xs font-black block mt-1 ${matches ? 'text-violet-600 dark:text-violet-400' : 'text-slate-600 dark:text-slate-400'}`}>{m.disease}</span>
-                            <span className="text-[10px] text-slate-400">{Math.round(m.probability * 100)}%</span>
-                            {matches && <span className="text-[8px] font-black text-violet-500 bg-violet-100 dark:bg-violet-900/40 px-2 py-0.5 rounded-full inline-block mt-1">✓ Agrees</span>}
-                          </div>
-                        );
-                      })}
-                    </div>
+                  {/* History Filters */}
+                  <div className="flex flex-wrap items-center gap-2 text-xs">
+                    <input 
+                      type="text"
+                      placeholder="Search disease..."
+                      value={predHistorySearch}
+                      onChange={(e) => setPredHistorySearch(e.target.value)}
+                      className="px-3 py-1.5 border border-slate-250 dark:border-slate-800 bg-transparent rounded-xl outline-none focus:ring-1 focus:ring-hospital-500 bg-white dark:bg-slate-900"
+                    />
+                    <select 
+                      value={predHistoryRiskFilter}
+                      onChange={(e) => setPredHistoryRiskFilter(e.target.value)}
+                      className="px-3 py-1.5 border border-slate-250 dark:border-slate-800 bg-transparent rounded-xl outline-none focus:ring-1 focus:ring-hospital-500 bg-white dark:bg-slate-900"
+                    >
+                      <option value="">All Risks</option>
+                      <option value="Low">Low Risk</option>
+                      <option value="Medium">Medium Risk</option>
+                      <option value="High">High Risk</option>
+                    </select>
+                    <select 
+                      value={predHistorySortBy}
+                      onChange={(e) => setPredHistorySortBy(e.target.value)}
+                      className="px-3 py-1.5 border border-slate-250 dark:border-slate-800 bg-transparent rounded-xl outline-none focus:ring-1 focus:ring-hospital-500 bg-white dark:bg-slate-900"
+                    >
+                      <option value="prediction_time">Sort by Date</option>
+                      <option value="confidence">Sort by Confidence</option>
+                    </select>
+                    <button 
+                      onClick={() => setPredHistorySortOrder(prev => prev === 'desc' ? 'asc' : 'desc')}
+                      className="px-2 py-1.5 border border-slate-250 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-850 font-bold"
+                    >
+                      {predHistorySortOrder === 'desc' ? '↓' : '↑'}
+                    </button>
                   </div>
-
-                  {/* XAI Reasons */}
-                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm">
-                    <div className="flex items-center space-x-2 mb-4">
-                      <Brain className="h-4 w-4 text-violet-500" />
-                      <h4 className="font-bold text-sm">Why This Prediction? <span className="text-[9px] text-violet-500 font-black uppercase tracking-wider ml-1">Explainable AI</span></h4>
-                    </div>
-                    <div className="space-y-2">
-                      {r.reasons.map((reason, idx) => (
-                        <div key={idx} className="flex items-start space-x-3 p-3 bg-violet-50 dark:bg-violet-950/20 border border-violet-100 dark:border-violet-900/40 rounded-xl">
-                          <div className="w-5 h-5 bg-violet-600 text-white rounded-full flex items-center justify-center text-[9px] font-black shrink-0 mt-0.5">{idx + 1}</div>
-                          <span className="text-xs text-slate-700 dark:text-slate-300 font-medium">{reason}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Recommendations Grid */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                    {/* Department & Doctors */}
-                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm space-y-4">
-                      <div className="flex items-center space-x-2">
-                        <Stethoscope className="h-4 w-4 text-teal-500" />
-                        <h4 className="font-bold text-sm">Recommended Department</h4>
-                      </div>
-                      <div className="p-4 bg-teal-50 dark:bg-teal-950/20 border border-teal-200 dark:border-teal-800/50 rounded-2xl">
-                        <span className="text-[9px] font-black text-teal-600 dark:text-teal-400 uppercase tracking-wider block">Suggested Specialty</span>
-                        <p className="text-sm font-extrabold text-teal-700 dark:text-teal-300 mt-0.5">{r.recommended_specialty}</p>
-                        <span className="text-[9px] text-teal-500/70 mt-1 block">Available in hospital: {r.mapped_db_dept}</span>
-                      </div>
-                      {r.recommended_doctors && r.recommended_doctors.length > 0 ? (
-                        <div className="space-y-2">
-                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider block">Available Doctors</span>
-                          {r.recommended_doctors.map(doc => (
-                            <div key={doc.id} className="flex items-center justify-between p-3 border border-slate-100 dark:border-slate-800 rounded-2xl hover:border-teal-300 dark:hover:border-teal-700 transition-all">
-                              <div className="flex items-center space-x-3">
-                                <div className="bg-teal-100 dark:bg-teal-950/40 p-2 rounded-xl">
-                                  <User className="h-4 w-4 text-teal-600 dark:text-teal-400" />
-                                </div>
-                                <div>
-                                  <span className="text-xs font-bold text-slate-800 dark:text-white block">{doc.name}</span>
-                                  <span className="text-[9px] text-slate-400">{doc.specialization} • Room {doc.room_number}</span>
-                                </div>
-                              </div>
-                              <button
-                                onClick={() => { setBookingForm(prev => ({ ...prev, doctor_id: doc.id.toString() })); setActiveTab('appointments'); setBookingModal(true); }}
-                                className="text-[9px] font-black text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/30 border border-teal-200 dark:border-teal-800 px-2.5 py-1 rounded-lg hover:bg-teal-100 dark:hover:bg-teal-900/40 transition-all"
-                              >
-                                Book
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-xs text-slate-400 text-center py-2">No doctors available in this department currently.</p>
-                      )}
-                    </div>
-
-                    {/* Lab Tests */}
-                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm space-y-4">
-                      <div className="flex items-center space-x-2">
-                        <FlaskConical className="h-4 w-4 text-blue-500" />
-                        <h4 className="font-bold text-sm">Suggested Laboratory Tests</h4>
-                      </div>
-                      <div className="space-y-2">
-                        {r.suggested_tests.map((test, idx) => (
-                          <div key={idx} className="flex items-center space-x-3 p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/40 rounded-xl">
-                            <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-[9px] font-black shrink-0">{idx + 1}</div>
-                            <span className="text-xs font-medium text-slate-700 dark:text-slate-300">{test}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Medicine Suggestions */}
-                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm space-y-4">
-                    <div className="flex items-center space-x-2">
-                      <Pill className="h-4 w-4 text-indigo-500" />
-                      <h4 className="font-bold text-sm">Educational Medicine Information</h4>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {r.suggested_medicines.map((med, idx) => (
-                        <div key={idx} className="flex items-start space-x-3 p-3 bg-indigo-50 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/40 rounded-xl">
-                          <Pill className="h-4 w-4 text-indigo-500 shrink-0 mt-0.5" />
-                          <span className="text-xs font-medium text-slate-700 dark:text-slate-300">{med}</span>
-                        </div>
-                      ))}
-                    </div>
-                    {/* Disclaimer */}
-                    <div className="mt-3 p-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/50 rounded-2xl">
-                      <p className="text-[10px] text-amber-700 dark:text-amber-300 font-semibold leading-relaxed">
-                        ⚠️ {r.medicine_disclaimer}
-                      </p>
-                    </div>
-                  </div>
-
                 </div>
-              );
-            })()}
+
+                {/* Predictions Table */}
+                {(() => {
+                  const filteredHistory = predictionHistory
+                    .filter(item => {
+                      const matchesSearch = item.predicted_disease.toLowerCase().includes(predHistorySearch.toLowerCase());
+                      const matchesRisk = predHistoryRiskFilter ? item.risk_level === predHistoryRiskFilter : true;
+                      return matchesSearch && matchesRisk;
+                    })
+                    .sort((a, b) => {
+                      let valA = a[predHistorySortBy];
+                      let valB = b[predHistorySortBy];
+                      if (predHistorySortBy === 'prediction_time') {
+                        valA = new Date(valA).getTime();
+                        valB = new Date(valB).getTime();
+                      }
+                      if (predHistorySortOrder === 'desc') {
+                        return valB - valA;
+                      } else {
+                        return valA - valB;
+                      }
+                    });
+
+                  return filteredHistory.length > 0 ? (
+                    <div className="overflow-x-auto text-xs">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-400 font-semibold uppercase tracking-wider text-[9px]">
+                            <th className="py-3 px-4">Date / Time</th>
+                            <th className="py-3 px-4">Predicted Condition</th>
+                            <th className="py-3 px-4">Confidence</th>
+                            <th className="py-3 px-4">Risk Badge</th>
+                            <th className="py-3 px-4">Symptom Tags</th>
+                            <th className="py-3 px-4">Consultation Status</th>
+                            <th className="py-3 px-4 text-right">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredHistory.map((item) => (
+                            <tr key={item.id} className="border-b border-slate-100 dark:border-slate-800/40 hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-all">
+                              <td className="py-3 px-4 text-slate-500 font-medium">
+                                {new Date(item.prediction_time).toLocaleDateString()} {new Date(item.prediction_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </td>
+                              <td className="py-3 px-4 font-black">{item.predicted_disease}</td>
+                              <td className="py-3 px-4 font-bold">{Math.round(item.confidence * 100)}%</td>
+                              <td className="py-3 px-4">
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase inline-block ${
+                                  item.risk_level === 'High' || item.risk_level === 'Critical' ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-455' :
+                                  item.risk_level === 'Medium' ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-455' :
+                                  'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-455'
+                                }`}>
+                                  {item.risk_level}
+                                </span>
+                              </td>
+                              <td className="py-3 px-4 text-slate-400 truncate max-w-xs font-semibold">
+                                {item.symptoms.join(', ')}
+                              </td>
+                              <td className="py-3 px-4 font-bold">
+                                <span className={`px-2 py-0.5 rounded text-[10px] inline-block ${
+                                  item.consultation_status === 'Scheduled' ? 'bg-teal-50 text-teal-600 dark:bg-teal-950/30' : 'bg-slate-100 text-slate-500 dark:bg-slate-850'
+                                }`}>
+                                  {item.consultation_status}
+                                </span>
+                              </td>
+                              <td className="py-3 px-4 text-right">
+                                <button 
+                                  onClick={async () => {
+                                    setDiagnosisLoading(true);
+                                    try {
+                                      const detail = await patientService.getPredictionDetail(item.id);
+                                      setDiagnosisResult(detail);
+                                      setDiagnosisSubTab('new');
+                                    } catch (err) {
+                                      console.error(err);
+                                      alert("Failed to load prediction report.");
+                                    } finally {
+                                      setDiagnosisLoading(false);
+                                    }
+                                  }}
+                                  className="text-hospital-600 dark:text-hospital-450 hover:underline font-bold"
+                                >
+                                  View Report
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 text-slate-400 text-sm">
+                      No prediction logs matches filters or logs exist.
+                    </div>
+                  );
+                })()}
+
+              </div>
+            )}
+            
+            {/* Inline print style rule */}
+            <style>{`
+              @media print {
+                body * {
+                  visibility: hidden;
+                }
+                #prediction-report-print, #prediction-report-print * {
+                  visibility: visible;
+                }
+                #prediction-report-print {
+                  position: absolute;
+                  left: 0;
+                  top: 0;
+                  width: 100%;
+                  background: white !important;
+                  color: black !important;
+                }
+                .print\\:hidden {
+                  display: none !important;
+                }
+              }
+            `}</style>
 
           </div>
         )}
