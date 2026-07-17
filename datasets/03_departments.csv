@@ -1,0 +1,20 @@
+Department_ID,Department_Name,Description
+DEPT001,Cardiology,Diagnosis and treatment of diseases of the heart and blood vessels.
+DEPT002,Pulmonology,Diagnosis and treatment of diseases of the lungs and respiratory tract.
+DEPT003,Nephrology / Urology,"Care of the kidneys, urinary tract, and male reproductive system."
+DEPT004,Gastroenterology,"Diagnosis and treatment of the digestive system, liver, and pancreas."
+DEPT005,Endocrinology,Care of hormonal and metabolic conditions such as diabetes and thyroid disorders.
+DEPT006,Dermatology,"Diagnosis and treatment of skin, hair, and nail conditions."
+DEPT007,Orthopedics,"Care of bones, joints, ligaments, tendons, and muscles."
+DEPT008,Neurology,"Diagnosis and treatment of disorders of the brain, spine, and nervous system."
+DEPT009,Psychiatry,Diagnosis and treatment of mental health and behavioral conditions.
+DEPT010,Obstetrics & Gynecology,"Care of pregnancy, childbirth, and the female reproductive system."
+DEPT011,Ophthalmology,Diagnosis and treatment of eye conditions and vision care.
+DEPT012,ENT (Otolaryngology),"Care of the ear, nose, throat, and related head/neck structures."
+DEPT013,Dentistry,"Diagnosis and treatment of teeth, gums, and oral health."
+DEPT014,Hematology,Diagnosis and treatment of blood disorders.
+DEPT015,Oncology,Diagnosis and treatment of cancer.
+DEPT016,General Medicine / Infectious Disease,Diagnosis and treatment of general and infectious illnesses.
+DEPT017,Immunology / Rheumatology,Care of autoimmune and immune-system-related conditions.
+DEPT018,Orthopedics / Trauma,Emergency and surgical care for injuries and trauma.
+DEPT019,General Medicine,First point of contact for diagnosis and treatment of general health conditions.

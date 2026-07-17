@@ -1,0 +1,201 @@
+Hospital_ID,Hospital_Name,Location,Contact,Email
+HOSP000001,Saint Joseph Medical Center,"1924 Main St, Chicago, IL",+1-555-125-5506,contact@saintjosephmedicalcenter.org
+HOSP000002,Chicago General Hospital,"4112 Main St, Boston, MA",+1-555-328-3286,contact@chicagogeneralhospital.org
+HOSP000003,Mercy Health Clinic,"1779 Main St, Houston, TX",+1-555-792-9935,contact@mercyhealthclinic.org
+HOSP000004,Swedish Covenant Hospital,"1524 Main St, San Francisco, CA",+1-555-704-7912,contact@swedishcovenanthospital.org
+HOSP000005,St. Jude Research Hospital,"620 Main St, New York, NY",+1-555-130-2535,contact@stjuderesearchhospital.org
+HOSP000006,Johns Hopkins Regional Care,"3682 Main St, Los Angeles, CA",+1-555-338-9279,contact@johnshopkinsregionalcare.org
+HOSP000007,Northwestern Medicine Center,"9963 Main St, Seattle, WA",+1-555-127-4257,contact@northwesternmedicinecenter.org
+HOSP000008,Mayo Clinic Care Center,"9028 Main St, Miami, FL",+1-555-529-4611,contact@mayocliniccarecenter.org
+HOSP000009,Kaiser Permanente Hospital,"7459 Main St, Denver, CO",+1-555-703-5557,contact@kaiserpermanentehospital.org
+HOSP000010,Memorial Sloan Kettering Center,"206 Main St, Atlanta, GA",+1-555-877-3615,contact@memorialsloanketteringcenter.org
+HOSP000011,Cleveland Clinic Regional,"7024 Main St, Phoenix, AZ",+1-555-448-5552,contact@clevelandclinicregional.org
+HOSP000012,Massachusetts General Hospital,"2647 Main St, Dallas, TX",+1-555-320-6514,contact@massachusettsgeneralhospital.org
+HOSP000013,UCSF Health Medical Center,"1774 Main St, Philadelphia, PA",+1-555-194-7224,contact@ucsfhealthmedicalcenter.org
+HOSP000014,Barnes-Jewish Hospital Center,"1684 Main St, Detroit, MI",+1-555-467-6635,contact@barnes-jewishhospitalcenter.org
+HOSP000015,Mount Sinai Medical Hospital,"9991 Main St, Minneapolis, MN",+1-555-370-1711,contact@mountsinaimedicalhospital.org
+HOSP000016,Brigham and Women's Clinic,"7627 Main St, Portland, OR",+1-555-649-3045,contact@brighamandwomensclinic.org
+HOSP000017,Stanford Health Care Center,"6301 Main St, San Diego, CA",+1-555-180-5803,contact@stanfordhealthcarecenter.org
+HOSP000018,UPMC Presbyterian Hospital,"6025 Main St, Austin, TX",+1-555-691-4150,contact@upmcpresbyterianhospital.org
+HOSP000019,NYU Langone Medical Clinic,"1239 Main St, Baltimore, MD",+1-555-146-4733,contact@nyulangonemedicalclinic.org
+HOSP000020,Vanderbilt Health Center,"4841 Main St, Charlotte, NC",+1-555-181-4814,contact@vanderbilthealthcenter.org
+HOSP000021,Cedars-Sinai Medical Center,"1754 Main St, Chicago, IL",+1-555-489-5554,contact@cedars-sinaimedicalcenter.org
+HOSP000022,Duke University Health System,"7528 Main St, Boston, MA",+1-555-750-6977,contact@dukeuniversityhealthsystem.org
+HOSP000023,Methodist Hospital Center,"2764 Main St, Houston, TX",+1-555-479-6820,contact@methodisthospitalcenter.org
+HOSP000024,Yale New Haven Health Clinic,"3532 Main St, San Francisco, CA",+1-555-786-5374,contact@yalenewhavenhealthclinic.org
+HOSP000025,Jefferson Health Center,"1269 Main St, New York, NY",+1-555-723-3803,contact@jeffersonhealthcenter.org
+HOSP000026,Advocate Lutheran General,"8851 Main St, Los Angeles, CA",+1-555-846-5010,contact@advocatelutherangeneral.org
+HOSP000027,Tufts Medical Center,"2777 Main St, Seattle, WA",+1-555-573-7216,contact@tuftsmedicalcenter.org
+HOSP000028,Baylor University Medical Clinic,"4522 Main St, Miami, FL",+1-555-755-4598,contact@bayloruniversitymedicalclinic.org
+HOSP000029,St. Luke's Health Center,"5413 Main St, Denver, CO",+1-555-963-1916,contact@stlukeshealthcenter.org
+HOSP000030,Northside General Hospital,"3852 Main St, Atlanta, GA",+1-555-941-1525,contact@northsidegeneralhospital.org
+HOSP000031,Saint Joseph Medical Center Phoenix,"5268 Main St, Phoenix, AZ",+1-555-510-5386,contact@saintjosephmedicalcenterphoenix.org
+HOSP000032,Chicago General Hospital Dallas,"1184 Main St, Dallas, TX",+1-555-316-6155,contact@chicagogeneralhospitaldallas.org
+HOSP000033,Mercy Health Clinic Philadelphia,"3583 Main St, Philadelphia, PA",+1-555-771-9179,contact@mercyhealthclinicphiladelphia.org
+HOSP000034,Swedish Covenant Hospital Detroit,"6582 Main St, Detroit, MI",+1-555-758-8517,contact@swedishcovenanthospitaldetroit.org
+HOSP000035,St. Jude Research Hospital Minneapolis,"2440 Main St, Minneapolis, MN",+1-555-371-3287,contact@stjuderesearchhospitalminneapolis.org
+HOSP000036,Johns Hopkins Regional Care Portland,"4140 Main St, Portland, OR",+1-555-862-9830,contact@johnshopkinsregionalcareportland.org
+HOSP000037,Northwestern Medicine Center San Diego,"4404 Main St, San Diego, CA",+1-555-864-8019,contact@northwesternmedicinecentersandiego.org
+HOSP000038,Mayo Clinic Care Center Austin,"9660 Main St, Austin, TX",+1-555-508-6930,contact@mayocliniccarecenteraustin.org
+HOSP000039,Kaiser Permanente Hospital Baltimore,"3693 Main St, Baltimore, MD",+1-555-241-9348,contact@kaiserpermanentehospitalbaltimore.org
+HOSP000040,Memorial Sloan Kettering Center Charlotte,"8185 Main St, Charlotte, NC",+1-555-193-1771,contact@memorialsloanketteringcentercharlotte.org
+HOSP000041,Cleveland Clinic Regional Chicago,"1896 Main St, Chicago, IL",+1-555-256-3621,contact@clevelandclinicregionalchicago.org
+HOSP000042,Massachusetts General Hospital Boston,"7016 Main St, Boston, MA",+1-555-710-2040,contact@massachusettsgeneralhospitalboston.org
+HOSP000043,UCSF Health Medical Center Houston,"6404 Main St, Houston, TX",+1-555-490-8668,contact@ucsfhealthmedicalcenterhouston.org
+HOSP000044,Barnes-Jewish Hospital Center San Francisco,"8769 Main St, San Francisco, CA",+1-555-357-1188,contact@barnes-jewishhospitalcentersanfrancisco.org
+HOSP000045,Mount Sinai Medical Hospital New York,"1976 Main St, New York, NY",+1-555-798-9797,contact@mountsinaimedicalhospitalnewyork.org
+HOSP000046,Brigham and Women's Clinic Los Angeles,"4471 Main St, Los Angeles, CA",+1-555-887-6573,contact@brighamandwomenscliniclosangeles.org
+HOSP000047,Stanford Health Care Center Seattle,"1927 Main St, Seattle, WA",+1-555-400-8123,contact@stanfordhealthcarecenterseattle.org
+HOSP000048,UPMC Presbyterian Hospital Miami,"2691 Main St, Miami, FL",+1-555-564-1053,contact@upmcpresbyterianhospitalmiami.org
+HOSP000049,NYU Langone Medical Clinic Denver,"4415 Main St, Denver, CO",+1-555-612-3927,contact@nyulangonemedicalclinicdenver.org
+HOSP000050,Vanderbilt Health Center Atlanta,"8417 Main St, Atlanta, GA",+1-555-208-5889,contact@vanderbilthealthcenteratlanta.org
+HOSP000051,Cedars-Sinai Medical Center Phoenix,"8417 Main St, Phoenix, AZ",+1-555-723-4258,contact@cedars-sinaimedicalcenterphoenix.org
+HOSP000052,Duke University Health System Dallas,"2604 Main St, Dallas, TX",+1-555-482-3646,contact@dukeuniversityhealthsystemdallas.org
+HOSP000053,Methodist Hospital Center Philadelphia,"8937 Main St, Philadelphia, PA",+1-555-897-9689,contact@methodisthospitalcenterphiladelphia.org
+HOSP000054,Yale New Haven Health Clinic Detroit,"109 Main St, Detroit, MI",+1-555-713-6310,contact@yalenewhavenhealthclinicdetroit.org
+HOSP000055,Jefferson Health Center Minneapolis,"8105 Main St, Minneapolis, MN",+1-555-119-2832,contact@jeffersonhealthcenterminneapolis.org
+HOSP000056,Advocate Lutheran General Portland,"6047 Main St, Portland, OR",+1-555-999-6038,contact@advocatelutherangeneralportland.org
+HOSP000057,Tufts Medical Center San Diego,"4023 Main St, San Diego, CA",+1-555-159-4946,contact@tuftsmedicalcentersandiego.org
+HOSP000058,Baylor University Medical Clinic Austin,"9395 Main St, Austin, TX",+1-555-180-2403,contact@bayloruniversitymedicalclinicaustin.org
+HOSP000059,St. Luke's Health Center Baltimore,"8062 Main St, Baltimore, MD",+1-555-935-2133,contact@stlukeshealthcenterbaltimore.org
+HOSP000060,Northside General Hospital Charlotte,"8827 Main St, Charlotte, NC",+1-555-884-3060,contact@northsidegeneralhospitalcharlotte.org
+HOSP000061,Saint Joseph Medical Center Chicago,"2203 Main St, Chicago, IL",+1-555-775-8787,contact@saintjosephmedicalcenterchicago.org
+HOSP000062,Chicago General Hospital Boston,"9107 Main St, Boston, MA",+1-555-269-5342,contact@chicagogeneralhospitalboston.org
+HOSP000063,Mercy Health Clinic Houston,"8745 Main St, Houston, TX",+1-555-993-7932,contact@mercyhealthclinichouston.org
+HOSP000064,Swedish Covenant Hospital San Francisco,"3570 Main St, San Francisco, CA",+1-555-652-4295,contact@swedishcovenanthospitalsanfrancisco.org
+HOSP000065,St. Jude Research Hospital New York,"5207 Main St, New York, NY",+1-555-508-7118,contact@stjuderesearchhospitalnewyork.org
+HOSP000066,Johns Hopkins Regional Care Los Angeles,"7277 Main St, Los Angeles, CA",+1-555-629-8397,contact@johnshopkinsregionalcarelosangeles.org
+HOSP000067,Northwestern Medicine Center Seattle,"2082 Main St, Seattle, WA",+1-555-353-4681,contact@northwesternmedicinecenterseattle.org
+HOSP000068,Mayo Clinic Care Center Miami,"1149 Main St, Miami, FL",+1-555-446-1344,contact@mayocliniccarecentermiami.org
+HOSP000069,Kaiser Permanente Hospital Denver,"9738 Main St, Denver, CO",+1-555-667-4770,contact@kaiserpermanentehospitaldenver.org
+HOSP000070,Memorial Sloan Kettering Center Atlanta,"9741 Main St, Atlanta, GA",+1-555-325-1117,contact@memorialsloanketteringcenteratlanta.org
+HOSP000071,Cleveland Clinic Regional Phoenix,"1263 Main St, Phoenix, AZ",+1-555-824-1964,contact@clevelandclinicregionalphoenix.org
+HOSP000072,Massachusetts General Hospital Dallas,"3850 Main St, Dallas, TX",+1-555-169-1514,contact@massachusettsgeneralhospitaldallas.org
+HOSP000073,UCSF Health Medical Center Philadelphia,"5513 Main St, Philadelphia, PA",+1-555-172-9423,contact@ucsfhealthmedicalcenterphiladelphia.org
+HOSP000074,Barnes-Jewish Hospital Center Detroit,"3999 Main St, Detroit, MI",+1-555-385-8953,contact@barnes-jewishhospitalcenterdetroit.org
+HOSP000075,Mount Sinai Medical Hospital Minneapolis,"3610 Main St, Minneapolis, MN",+1-555-652-3167,contact@mountsinaimedicalhospitalminneapolis.org
+HOSP000076,Brigham and Women's Clinic Portland,"9455 Main St, Portland, OR",+1-555-690-8744,contact@brighamandwomensclinicportland.org
+HOSP000077,Stanford Health Care Center San Diego,"4081 Main St, San Diego, CA",+1-555-903-8749,contact@stanfordhealthcarecentersandiego.org
+HOSP000078,UPMC Presbyterian Hospital Austin,"6769 Main St, Austin, TX",+1-555-294-2545,contact@upmcpresbyterianhospitalaustin.org
+HOSP000079,NYU Langone Medical Clinic Baltimore,"1688 Main St, Baltimore, MD",+1-555-774-8062,contact@nyulangonemedicalclinicbaltimore.org
+HOSP000080,Vanderbilt Health Center Charlotte,"5904 Main St, Charlotte, NC",+1-555-533-7735,contact@vanderbilthealthcentercharlotte.org
+HOSP000081,Cedars-Sinai Medical Center Chicago,"7751 Main St, Chicago, IL",+1-555-984-1887,contact@cedars-sinaimedicalcenterchicago.org
+HOSP000082,Duke University Health System Boston,"1712 Main St, Boston, MA",+1-555-162-7596,contact@dukeuniversityhealthsystemboston.org
+HOSP000083,Methodist Hospital Center Houston,"5659 Main St, Houston, TX",+1-555-919-2790,contact@methodisthospitalcenterhouston.org
+HOSP000084,Yale New Haven Health Clinic San Francisco,"4173 Main St, San Francisco, CA",+1-555-296-4116,contact@yalenewhavenhealthclinicsanfrancisco.org
+HOSP000085,Jefferson Health Center New York,"8886 Main St, New York, NY",+1-555-559-3296,contact@jeffersonhealthcenternewyork.org
+HOSP000086,Advocate Lutheran General Los Angeles,"7012 Main St, Los Angeles, CA",+1-555-287-5563,contact@advocatelutherangenerallosangeles.org
+HOSP000087,Tufts Medical Center Seattle,"7679 Main St, Seattle, WA",+1-555-355-2235,contact@tuftsmedicalcenterseattle.org
+HOSP000088,Baylor University Medical Clinic Miami,"7360 Main St, Miami, FL",+1-555-927-2604,contact@bayloruniversitymedicalclinicmiami.org
+HOSP000089,St. Luke's Health Center Denver,"928 Main St, Denver, CO",+1-555-767-9856,contact@stlukeshealthcenterdenver.org
+HOSP000090,Northside General Hospital Atlanta,"341 Main St, Atlanta, GA",+1-555-195-4872,contact@northsidegeneralhospitalatlanta.org
+HOSP000091,Saint Joseph Medical Center Phoenix #90,"2824 Main St, Phoenix, AZ",+1-555-516-8956,contact@saintjosephmedicalcenterphoenix#90.org
+HOSP000092,Chicago General Hospital Dallas #91,"7986 Main St, Dallas, TX",+1-555-318-7570,contact@chicagogeneralhospitaldallas#91.org
+HOSP000093,Mercy Health Clinic Philadelphia #92,"1060 Main St, Philadelphia, PA",+1-555-268-7209,contact@mercyhealthclinicphiladelphia#92.org
+HOSP000094,Swedish Covenant Hospital Detroit #93,"135 Main St, Detroit, MI",+1-555-499-5345,contact@swedishcovenanthospitaldetroit#93.org
+HOSP000095,St. Jude Research Hospital Minneapolis #94,"7554 Main St, Minneapolis, MN",+1-555-392-7930,contact@stjuderesearchhospitalminneapolis#94.org
+HOSP000096,Johns Hopkins Regional Care Portland #95,"9205 Main St, Portland, OR",+1-555-777-8973,contact@johnshopkinsregionalcareportland#95.org
+HOSP000097,Northwestern Medicine Center San Diego #96,"2636 Main St, San Diego, CA",+1-555-294-5861,contact@northwesternmedicinecentersandiego#96.org
+HOSP000098,Mayo Clinic Care Center Austin #97,"3666 Main St, Austin, TX",+1-555-159-9883,contact@mayocliniccarecenteraustin#97.org
+HOSP000099,Kaiser Permanente Hospital Baltimore #98,"1098 Main St, Baltimore, MD",+1-555-865-6138,contact@kaiserpermanentehospitalbaltimore#98.org
+HOSP000100,Memorial Sloan Kettering Center Charlotte #99,"1036 Main St, Charlotte, NC",+1-555-151-8811,contact@memorialsloanketteringcentercharlotte#99.org
+HOSP000101,Cleveland Clinic Regional Chicago #100,"8338 Main St, Chicago, IL",+1-555-973-9701,contact@clevelandclinicregionalchicago#100.org
+HOSP000102,Massachusetts General Hospital Boston #101,"2679 Main St, Boston, MA",+1-555-158-9320,contact@massachusettsgeneralhospitalboston#101.org
+HOSP000103,UCSF Health Medical Center Houston #102,"1412 Main St, Houston, TX",+1-555-971-4044,contact@ucsfhealthmedicalcenterhouston#102.org
+HOSP000104,Barnes-Jewish Hospital Center San Francisco #103,"1222 Main St, San Francisco, CA",+1-555-709-2113,contact@barnes-jewishhospitalcentersanfrancisco#103.org
+HOSP000105,Mount Sinai Medical Hospital New York #104,"3953 Main St, New York, NY",+1-555-513-2964,contact@mountsinaimedicalhospitalnewyork#104.org
+HOSP000106,Brigham and Women's Clinic Los Angeles #105,"9433 Main St, Los Angeles, CA",+1-555-352-1651,contact@brighamandwomenscliniclosangeles#105.org
+HOSP000107,Stanford Health Care Center Seattle #106,"1443 Main St, Seattle, WA",+1-555-529-9565,contact@stanfordhealthcarecenterseattle#106.org
+HOSP000108,UPMC Presbyterian Hospital Miami #107,"5283 Main St, Miami, FL",+1-555-367-4346,contact@upmcpresbyterianhospitalmiami#107.org
+HOSP000109,NYU Langone Medical Clinic Denver #108,"5247 Main St, Denver, CO",+1-555-344-5351,contact@nyulangonemedicalclinicdenver#108.org
+HOSP000110,Vanderbilt Health Center Atlanta #109,"6584 Main St, Atlanta, GA",+1-555-234-5915,contact@vanderbilthealthcenteratlanta#109.org
+HOSP000111,Cedars-Sinai Medical Center Phoenix #110,"7591 Main St, Phoenix, AZ",+1-555-423-2188,contact@cedars-sinaimedicalcenterphoenix#110.org
+HOSP000112,Duke University Health System Dallas #111,"252 Main St, Dallas, TX",+1-555-569-2638,contact@dukeuniversityhealthsystemdallas#111.org
+HOSP000113,Methodist Hospital Center Philadelphia #112,"1300 Main St, Philadelphia, PA",+1-555-650-4492,contact@methodisthospitalcenterphiladelphia#112.org
+HOSP000114,Yale New Haven Health Clinic Detroit #113,"8388 Main St, Detroit, MI",+1-555-371-3170,contact@yalenewhavenhealthclinicdetroit#113.org
+HOSP000115,Jefferson Health Center Minneapolis #114,"5818 Main St, Minneapolis, MN",+1-555-170-5002,contact@jeffersonhealthcenterminneapolis#114.org
+HOSP000116,Advocate Lutheran General Portland #115,"6154 Main St, Portland, OR",+1-555-391-3584,contact@advocatelutherangeneralportland#115.org
+HOSP000117,Tufts Medical Center San Diego #116,"7279 Main St, San Diego, CA",+1-555-953-9900,contact@tuftsmedicalcentersandiego#116.org
+HOSP000118,Baylor University Medical Clinic Austin #117,"5056 Main St, Austin, TX",+1-555-726-9666,contact@bayloruniversitymedicalclinicaustin#117.org
+HOSP000119,St. Luke's Health Center Baltimore #118,"228 Main St, Baltimore, MD",+1-555-783-5905,contact@stlukeshealthcenterbaltimore#118.org
+HOSP000120,Northside General Hospital Charlotte #119,"1797 Main St, Charlotte, NC",+1-555-999-3200,contact@northsidegeneralhospitalcharlotte#119.org
+HOSP000121,Saint Joseph Medical Center Chicago #120,"4433 Main St, Chicago, IL",+1-555-218-2753,contact@saintjosephmedicalcenterchicago#120.org
+HOSP000122,Chicago General Hospital Boston #121,"9164 Main St, Boston, MA",+1-555-259-5462,contact@chicagogeneralhospitalboston#121.org
+HOSP000123,Mercy Health Clinic Houston #122,"4716 Main St, Houston, TX",+1-555-719-4450,contact@mercyhealthclinichouston#122.org
+HOSP000124,Swedish Covenant Hospital San Francisco #123,"5717 Main St, San Francisco, CA",+1-555-308-5325,contact@swedishcovenanthospitalsanfrancisco#123.org
+HOSP000125,St. Jude Research Hospital New York #124,"8380 Main St, New York, NY",+1-555-600-5114,contact@stjuderesearchhospitalnewyork#124.org
+HOSP000126,Johns Hopkins Regional Care Los Angeles #125,"932 Main St, Los Angeles, CA",+1-555-194-7939,contact@johnshopkinsregionalcarelosangeles#125.org
+HOSP000127,Northwestern Medicine Center Seattle #126,"4633 Main St, Seattle, WA",+1-555-145-1058,contact@northwesternmedicinecenterseattle#126.org
+HOSP000128,Mayo Clinic Care Center Miami #127,"5564 Main St, Miami, FL",+1-555-889-3143,contact@mayocliniccarecentermiami#127.org
+HOSP000129,Kaiser Permanente Hospital Denver #128,"4391 Main St, Denver, CO",+1-555-265-8239,contact@kaiserpermanentehospitaldenver#128.org
+HOSP000130,Memorial Sloan Kettering Center Atlanta #129,"9138 Main St, Atlanta, GA",+1-555-822-8007,contact@memorialsloanketteringcenteratlanta#129.org
+HOSP000131,Cleveland Clinic Regional Phoenix #130,"9289 Main St, Phoenix, AZ",+1-555-109-2832,contact@clevelandclinicregionalphoenix#130.org
+HOSP000132,Massachusetts General Hospital Dallas #131,"1332 Main St, Dallas, TX",+1-555-807-3442,contact@massachusettsgeneralhospitaldallas#131.org
+HOSP000133,UCSF Health Medical Center Philadelphia #132,"9038 Main St, Philadelphia, PA",+1-555-136-7049,contact@ucsfhealthmedicalcenterphiladelphia#132.org
+HOSP000134,Barnes-Jewish Hospital Center Detroit #133,"9643 Main St, Detroit, MI",+1-555-665-3426,contact@barnes-jewishhospitalcenterdetroit#133.org
+HOSP000135,Mount Sinai Medical Hospital Minneapolis #134,"7141 Main St, Minneapolis, MN",+1-555-230-1685,contact@mountsinaimedicalhospitalminneapolis#134.org
+HOSP000136,Brigham and Women's Clinic Portland #135,"5150 Main St, Portland, OR",+1-555-473-1653,contact@brighamandwomensclinicportland#135.org
+HOSP000137,Stanford Health Care Center San Diego #136,"5962 Main St, San Diego, CA",+1-555-315-5088,contact@stanfordhealthcarecentersandiego#136.org
+HOSP000138,UPMC Presbyterian Hospital Austin #137,"1784 Main St, Austin, TX",+1-555-462-7658,contact@upmcpresbyterianhospitalaustin#137.org
+HOSP000139,NYU Langone Medical Clinic Baltimore #138,"2632 Main St, Baltimore, MD",+1-555-342-3662,contact@nyulangonemedicalclinicbaltimore#138.org
+HOSP000140,Vanderbilt Health Center Charlotte #139,"3000 Main St, Charlotte, NC",+1-555-522-1406,contact@vanderbilthealthcentercharlotte#139.org
+HOSP000141,Cedars-Sinai Medical Center Chicago #140,"3038 Main St, Chicago, IL",+1-555-854-6442,contact@cedars-sinaimedicalcenterchicago#140.org
+HOSP000142,Duke University Health System Boston #141,"6845 Main St, Boston, MA",+1-555-921-5065,contact@dukeuniversityhealthsystemboston#141.org
+HOSP000143,Methodist Hospital Center Houston #142,"4471 Main St, Houston, TX",+1-555-263-2771,contact@methodisthospitalcenterhouston#142.org
+HOSP000144,Yale New Haven Health Clinic San Francisco #143,"6367 Main St, San Francisco, CA",+1-555-993-1634,contact@yalenewhavenhealthclinicsanfrancisco#143.org
+HOSP000145,Jefferson Health Center New York #144,"7811 Main St, New York, NY",+1-555-327-4269,contact@jeffersonhealthcenternewyork#144.org
+HOSP000146,Advocate Lutheran General Los Angeles #145,"7641 Main St, Los Angeles, CA",+1-555-458-6000,contact@advocatelutherangenerallosangeles#145.org
+HOSP000147,Tufts Medical Center Seattle #146,"3828 Main St, Seattle, WA",+1-555-328-1387,contact@tuftsmedicalcenterseattle#146.org
+HOSP000148,Baylor University Medical Clinic Miami #147,"3264 Main St, Miami, FL",+1-555-508-6378,contact@bayloruniversitymedicalclinicmiami#147.org
+HOSP000149,St. Luke's Health Center Denver #148,"4664 Main St, Denver, CO",+1-555-985-2137,contact@stlukeshealthcenterdenver#148.org
+HOSP000150,Northside General Hospital Atlanta #149,"4673 Main St, Atlanta, GA",+1-555-459-9346,contact@northsidegeneralhospitalatlanta#149.org
+HOSP000151,Saint Joseph Medical Center Phoenix #150,"6648 Main St, Phoenix, AZ",+1-555-795-9785,contact@saintjosephmedicalcenterphoenix#150.org
+HOSP000152,Chicago General Hospital Dallas #151,"5525 Main St, Dallas, TX",+1-555-128-2889,contact@chicagogeneralhospitaldallas#151.org
+HOSP000153,Mercy Health Clinic Philadelphia #152,"4379 Main St, Philadelphia, PA",+1-555-282-5349,contact@mercyhealthclinicphiladelphia#152.org
+HOSP000154,Swedish Covenant Hospital Detroit #153,"726 Main St, Detroit, MI",+1-555-211-8119,contact@swedishcovenanthospitaldetroit#153.org
+HOSP000155,St. Jude Research Hospital Minneapolis #154,"5763 Main St, Minneapolis, MN",+1-555-846-6139,contact@stjuderesearchhospitalminneapolis#154.org
+HOSP000156,Johns Hopkins Regional Care Portland #155,"7249 Main St, Portland, OR",+1-555-720-9379,contact@johnshopkinsregionalcareportland#155.org
+HOSP000157,Northwestern Medicine Center San Diego #156,"1994 Main St, San Diego, CA",+1-555-494-4114,contact@northwesternmedicinecentersandiego#156.org
+HOSP000158,Mayo Clinic Care Center Austin #157,"4273 Main St, Austin, TX",+1-555-145-8144,contact@mayocliniccarecenteraustin#157.org
+HOSP000159,Kaiser Permanente Hospital Baltimore #158,"127 Main St, Baltimore, MD",+1-555-632-9821,contact@kaiserpermanentehospitalbaltimore#158.org
+HOSP000160,Memorial Sloan Kettering Center Charlotte #159,"3328 Main St, Charlotte, NC",+1-555-472-8066,contact@memorialsloanketteringcentercharlotte#159.org
+HOSP000161,Cleveland Clinic Regional Chicago #160,"1246 Main St, Chicago, IL",+1-555-780-6409,contact@clevelandclinicregionalchicago#160.org
+HOSP000162,Massachusetts General Hospital Boston #161,"5243 Main St, Boston, MA",+1-555-779-3041,contact@massachusettsgeneralhospitalboston#161.org
+HOSP000163,UCSF Health Medical Center Houston #162,"5020 Main St, Houston, TX",+1-555-619-6067,contact@ucsfhealthmedicalcenterhouston#162.org
+HOSP000164,Barnes-Jewish Hospital Center San Francisco #163,"6791 Main St, San Francisco, CA",+1-555-434-7592,contact@barnes-jewishhospitalcentersanfrancisco#163.org
+HOSP000165,Mount Sinai Medical Hospital New York #164,"4944 Main St, New York, NY",+1-555-667-3085,contact@mountsinaimedicalhospitalnewyork#164.org
+HOSP000166,Brigham and Women's Clinic Los Angeles #165,"3243 Main St, Los Angeles, CA",+1-555-530-7211,contact@brighamandwomenscliniclosangeles#165.org
+HOSP000167,Stanford Health Care Center Seattle #166,"2951 Main St, Seattle, WA",+1-555-730-5930,contact@stanfordhealthcarecenterseattle#166.org
+HOSP000168,UPMC Presbyterian Hospital Miami #167,"6753 Main St, Miami, FL",+1-555-661-1006,contact@upmcpresbyterianhospitalmiami#167.org
+HOSP000169,NYU Langone Medical Clinic Denver #168,"5078 Main St, Denver, CO",+1-555-393-4443,contact@nyulangonemedicalclinicdenver#168.org
+HOSP000170,Vanderbilt Health Center Atlanta #169,"7143 Main St, Atlanta, GA",+1-555-904-6279,contact@vanderbilthealthcenteratlanta#169.org
+HOSP000171,Cedars-Sinai Medical Center Phoenix #170,"7718 Main St, Phoenix, AZ",+1-555-552-8244,contact@cedars-sinaimedicalcenterphoenix#170.org
+HOSP000172,Duke University Health System Dallas #171,"3601 Main St, Dallas, TX",+1-555-623-8752,contact@dukeuniversityhealthsystemdallas#171.org
+HOSP000173,Methodist Hospital Center Philadelphia #172,"2880 Main St, Philadelphia, PA",+1-555-774-2389,contact@methodisthospitalcenterphiladelphia#172.org
+HOSP000174,Yale New Haven Health Clinic Detroit #173,"4749 Main St, Detroit, MI",+1-555-627-6491,contact@yalenewhavenhealthclinicdetroit#173.org
+HOSP000175,Jefferson Health Center Minneapolis #174,"1630 Main St, Minneapolis, MN",+1-555-938-4848,contact@jeffersonhealthcenterminneapolis#174.org
+HOSP000176,Advocate Lutheran General Portland #175,"5185 Main St, Portland, OR",+1-555-330-4262,contact@advocatelutherangeneralportland#175.org
+HOSP000177,Tufts Medical Center San Diego #176,"2514 Main St, San Diego, CA",+1-555-125-1757,contact@tuftsmedicalcentersandiego#176.org
+HOSP000178,Baylor University Medical Clinic Austin #177,"4111 Main St, Austin, TX",+1-555-586-2193,contact@bayloruniversitymedicalclinicaustin#177.org
+HOSP000179,St. Luke's Health Center Baltimore #178,"7561 Main St, Baltimore, MD",+1-555-524-4185,contact@stlukeshealthcenterbaltimore#178.org
+HOSP000180,Northside General Hospital Charlotte #179,"6391 Main St, Charlotte, NC",+1-555-606-7547,contact@northsidegeneralhospitalcharlotte#179.org
+HOSP000181,Saint Joseph Medical Center Chicago #180,"4097 Main St, Chicago, IL",+1-555-251-1090,contact@saintjosephmedicalcenterchicago#180.org
+HOSP000182,Chicago General Hospital Boston #181,"1846 Main St, Boston, MA",+1-555-897-7965,contact@chicagogeneralhospitalboston#181.org
+HOSP000183,Mercy Health Clinic Houston #182,"3685 Main St, Houston, TX",+1-555-280-9486,contact@mercyhealthclinichouston#182.org
+HOSP000184,Swedish Covenant Hospital San Francisco #183,"7711 Main St, San Francisco, CA",+1-555-151-5082,contact@swedishcovenanthospitalsanfrancisco#183.org
+HOSP000185,St. Jude Research Hospital New York #184,"2088 Main St, New York, NY",+1-555-567-3184,contact@stjuderesearchhospitalnewyork#184.org
+HOSP000186,Johns Hopkins Regional Care Los Angeles #185,"7712 Main St, Los Angeles, CA",+1-555-783-9702,contact@johnshopkinsregionalcarelosangeles#185.org
+HOSP000187,Northwestern Medicine Center Seattle #186,"9257 Main St, Seattle, WA",+1-555-709-6198,contact@northwesternmedicinecenterseattle#186.org
+HOSP000188,Mayo Clinic Care Center Miami #187,"7351 Main St, Miami, FL",+1-555-727-9270,contact@mayocliniccarecentermiami#187.org
+HOSP000189,Kaiser Permanente Hospital Denver #188,"7091 Main St, Denver, CO",+1-555-950-9976,contact@kaiserpermanentehospitaldenver#188.org
+HOSP000190,Memorial Sloan Kettering Center Atlanta #189,"7405 Main St, Atlanta, GA",+1-555-262-8777,contact@memorialsloanketteringcenteratlanta#189.org
+HOSP000191,Cleveland Clinic Regional Phoenix #190,"7473 Main St, Phoenix, AZ",+1-555-365-5050,contact@clevelandclinicregionalphoenix#190.org
+HOSP000192,Massachusetts General Hospital Dallas #191,"4643 Main St, Dallas, TX",+1-555-884-9540,contact@massachusettsgeneralhospitaldallas#191.org
+HOSP000193,UCSF Health Medical Center Philadelphia #192,"8039 Main St, Philadelphia, PA",+1-555-741-4919,contact@ucsfhealthmedicalcenterphiladelphia#192.org
+HOSP000194,Barnes-Jewish Hospital Center Detroit #193,"4599 Main St, Detroit, MI",+1-555-550-2269,contact@barnes-jewishhospitalcenterdetroit#193.org
+HOSP000195,Mount Sinai Medical Hospital Minneapolis #194,"4781 Main St, Minneapolis, MN",+1-555-340-5451,contact@mountsinaimedicalhospitalminneapolis#194.org
+HOSP000196,Brigham and Women's Clinic Portland #195,"5602 Main St, Portland, OR",+1-555-427-9849,contact@brighamandwomensclinicportland#195.org
+HOSP000197,Stanford Health Care Center San Diego #196,"1420 Main St, San Diego, CA",+1-555-241-3471,contact@stanfordhealthcarecentersandiego#196.org
+HOSP000198,UPMC Presbyterian Hospital Austin #197,"3888 Main St, Austin, TX",+1-555-492-3503,contact@upmcpresbyterianhospitalaustin#197.org
+HOSP000199,NYU Langone Medical Clinic Baltimore #198,"3605 Main St, Baltimore, MD",+1-555-165-7797,contact@nyulangonemedicalclinicbaltimore#198.org
+HOSP000200,Vanderbilt Health Center Charlotte #199,"6778 Main St, Charlotte, NC",+1-555-438-9890,contact@vanderbilthealthcentercharlotte#199.org

@@ -1,0 +1,156 @@
+Disease_Name,Department
+Actinic Keratosis,Dermatology
+Acute Bronchiolitis,Pulmonology
+Acute Bronchitis,Pulmonology
+Acute Bronchospasm,Pulmonology
+Acute Gastroenteritis,Gastroenterology
+Acute Kidney Injury,Nephrology / Urology
+Acute Pancreatitis,Gastroenterology
+Acute Sinusitis,Pulmonology
+Allergy,Immunology / Rheumatology
+Amyotrophic Lateral Sclerosis,Neurology
+Anemia,Hematology
+Angina,Cardiology
+Anxiety,Psychiatry
+Appendicitis,Gastroenterology
+Arthritis,Orthopedics
+Arthritis Of The Hip,Orthopedics
+Asthma,Pulmonology
+Benign Prostatic Hyperplasia (bph),Obstetrics & Gynecology
+Brachial Neuritis,General Medicine
+Bronchitis,Pulmonology
+Bursitis,Orthopedics
+Cancer,Oncology
+Carpal Tunnel Syndrome,Orthopedics
+Cholecystitis,Nephrology / Urology
+Chronic Back Pain,Orthopedics
+Chronic Constipation,Gastroenterology
+Chronic Kidney Disease,Nephrology / Urology
+Chronic Liver Disease,Gastroenterology
+Chronic Obstructive Pulmonary Disease (copd),Pulmonology
+Cirrhosis,Gastroenterology
+Common Cold,General Medicine / Infectious Disease
+Complex Regional Pain Syndrome,General Medicine
+Concussion,Neurology
+Conjunctivitis,Ophthalmology
+Conjunctivitis Due To Allergy,Ophthalmology
+Contact Dermatitis,Dermatology
+Copd,Pulmonology
+Cornea Infection,Ophthalmology
+Coronary Artery Disease,Cardiology
+Covid-19,General Medicine / Infectious Disease
+Covid19,General Medicine / Infectious Disease
+Crohn Disease,Gastroenterology
+Croup,General Medicine
+Cystic Fibrosis,Pulmonology
+Cystitis,Nephrology / Urology
+Degenerative Disc Disease,General Medicine
+Dementia,Neurology
+Dengue,General Medicine / Infectious Disease
+Dental Caries,Dentistry
+Depression,Psychiatry
+Dermatitis,Dermatology
+Developmental Disability,Psychiatry
+Diabetes,Endocrinology
+Diaper Rash,Dermatology
+Diverticulitis,Gastroenterology
+Drug Reaction,General Medicine
+Ear Drum Damage,ENT (Otolaryngology)
+Eczema,Dermatology
+Ehlers Danlos Syndrome,General Medicine
+Epilepsy,Neurology
+Esophagitis,Gastroenterology
+Eustachian Tube Dysfunction (ear Disorder),ENT (Otolaryngology)
+Fanconi Anemia,Hematology
+Flu,General Medicine / Infectious Disease
+Food Poisoning,General Medicine
+Fungal Infection Of The Hair,General Medicine / Infectious Disease
+Gallstone,Gastroenterology
+Gastritis,General Medicine
+Gastrointestinal Hemorrhage,Gastroenterology
+Gaucher Disease,General Medicine
+Generalized Anxiety Disorder,Psychiatry
+Gout,Orthopedics
+Gum Disease,Dentistry
+Heart Attack,Cardiology
+Heart Disease,Cardiology
+Heart Failure,Cardiology
+Hemorrhoids,General Medicine
+Herniated Disk,Gastroenterology
+Hiatal Hernia,Gastroenterology
+Hyperemesis Gravidarum,General Medicine
+Hypertension,Cardiology
+Hypertensive Heart Disease,Cardiology
+Hyperthyroidism,Endocrinology
+Hypoglycemia,Endocrinology
+Hypothyroidism,Endocrinology
+Ibs,Gastroenterology
+Idiopathic Excessive Menstruation,Obstetrics & Gynecology
+Idiopathic Irregular Menstrual Cycle,Obstetrics & Gynecology
+Idiopathic Painful Menstruation,Obstetrics & Gynecology
+Infectious Gastroenteritis,Gastroenterology
+Inflammatory Bowel Disease,Gastroenterology
+Influenza,General Medicine / Infectious Disease
+Injury To The Arm,Orthopedics / Trauma
+Injury To The Leg,Orthopedics / Trauma
+Injury To The Trunk,Orthopedics / Trauma
+Irritable Bowel Syndrome,Gastroenterology
+Liver Disease,Gastroenterology
+Macular Degeneration,Ophthalmology
+Marfan Syndrome,General Medicine
+Marijuana Abuse,General Medicine
+Metabolic Syndrome,Endocrinology
+Migraine,Neurology
+Multiple Sclerosis,Neurology
+Niemann Pick Disease,General Medicine
+Noninfectious Gastroenteritis,Gastroenterology
+Nose Disorder,General Medicine
+Obesity,Endocrinology
+Obstructive Sleep Apnea (osa),General Medicine
+Osteoarthritis,Orthopedics
+Osteopetrosis,Orthopedics
+Otitis Externa (swimmers Ear),ENT (Otolaryngology)
+Otitis Media,ENT (Otolaryngology)
+Pain After An Operation,Orthopedics / Trauma
+Panic Disorder,Psychiatry
+Parkinsons,Neurology
+Pelvic Inflammatory Disease,General Medicine
+Peptic Ulcer Disease,Gastroenterology
+Peripheral Nerve Disorder,General Medicine
+Personality Disorder,Psychiatry
+Pneumonia,Pulmonology
+Polycystic Ovary Syndrome,General Medicine
+Problem During Pregnancy,Obstetrics & Gynecology
+Psoriasis,Dermatology
+Pyogenic Skin Infection,Dermatology
+Rectal Disorder,General Medicine
+Schizophrenia,Psychiatry
+Seasonal Allergies (hay Fever),General Medicine / Infectious Disease
+Sebaceous Cyst,General Medicine
+Sepsis,General Medicine / Infectious Disease
+Sickle Cell Crisis,Hematology
+Sinus Bradycardia,Pulmonology
+Sinusitis,Pulmonology
+Skin Pigmentation Disorder,Dermatology
+Skin Polyp,Dermatology
+Spinal Muscular Atrophy,Orthopedics
+Spinal Stenosis,Orthopedics
+Spondylosis,General Medicine
+Spontaneous Abortion,General Medicine
+Sprain Or Strain,Orthopedics
+Strep Throat,General Medicine
+Stroke,Neurology
+Stye,General Medicine
+Systemic Lupus Erythematosus,Immunology / Rheumatology
+Temporary Or Benign Blood In Urine,Hematology
+Threatened Pregnancy,Obstetrics & Gynecology
+Thyroid Disorder,Endocrinology
+Tuberculosis,Pulmonology
+Type2 Diabetes,Endocrinology
+Typhoid Fever,General Medicine / Infectious Disease
+Ulcer,Gastroenterology
+Ulcerative Colitis,Gastroenterology
+Urinary Tract Infection,Nephrology / Urology
+Vaginal Cyst,Obstetrics & Gynecology
+Vaginitis,Obstetrics & Gynecology
+Vulvodynia,General Medicine

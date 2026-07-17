@@ -1,0 +1,156 @@
+Disease,Risk_Level,Severity,Emergency
+Actinic Keratosis,Low,Mild,0
+Acute Bronchiolitis,Low,Mild,0
+Acute Bronchitis,Medium,Moderate,0
+Acute Bronchospasm,High,Severe,1
+Acute Gastroenteritis,Low,Mild,0
+Acute Kidney Injury,High,Severe,1
+Acute Pancreatitis,High,Severe,1
+Acute Sinusitis,Low,Mild,0
+Allergy,Low,Mild,0
+Amyotrophic Lateral Sclerosis,High,Severe,0
+Anemia,Low,Mild,0
+Angina,Low,Mild,0
+Anxiety,Low,Mild,0
+Appendicitis,High,Severe,1
+Arthritis,Medium,Moderate,0
+Arthritis Of The Hip,Medium,Moderate,0
+Asthma,Medium,Moderate,0
+Benign Prostatic Hyperplasia (bph),Low,Mild,0
+Brachial Neuritis,Low,Mild,0
+Bronchitis,Medium,Moderate,0
+Bursitis,Low,Mild,0
+Cancer,High,Severe,0
+Carpal Tunnel Syndrome,Low,Mild,0
+Cholecystitis,Low,Mild,0
+Chronic Back Pain,Low,Mild,0
+Chronic Constipation,Low,Mild,0
+Chronic Kidney Disease,Medium,Moderate,0
+Chronic Liver Disease,Low,Mild,0
+Chronic Obstructive Pulmonary Disease (copd),High,Severe,0
+Cirrhosis,High,Severe,0
+Common Cold,Low,Mild,0
+Complex Regional Pain Syndrome,Low,Mild,0
+Concussion,Low,Mild,0
+Conjunctivitis,Low,Mild,0
+Conjunctivitis Due To Allergy,Low,Mild,0
+Contact Dermatitis,Low,Mild,0
+Copd,High,Severe,0
+Cornea Infection,Low,Mild,0
+Coronary Artery Disease,Low,Mild,0
+Covid-19,Low,Mild,0
+Covid19,Low,Mild,0
+Crohn Disease,Medium,Moderate,0
+Croup,High,Severe,1
+Cystic Fibrosis,Low,Mild,0
+Cystitis,Low,Mild,0
+Degenerative Disc Disease,Low,Mild,0
+Dementia,Low,Mild,0
+Dengue,Low,Mild,0
+Dental Caries,Low,Mild,0
+Depression,Low,Mild,0
+Dermatitis,Low,Mild,0
+Developmental Disability,Low,Mild,0
+Diabetes,Medium,Moderate,0
+Diaper Rash,Low,Mild,0
+Diverticulitis,Low,Mild,0
+Drug Reaction,Low,Mild,0
+Ear Drum Damage,Low,Mild,0
+Eczema,Low,Mild,0
+Ehlers Danlos Syndrome,Low,Mild,0
+Epilepsy,Medium,Moderate,0
+Esophagitis,Low,Mild,0
+Eustachian Tube Dysfunction (ear Disorder),Low,Mild,0
+Fanconi Anemia,High,Severe,0
+Flu,Low,Mild,0
+Food Poisoning,Low,Mild,0
+Fungal Infection Of The Hair,Low,Mild,0
+Gallstone,Low,Mild,0
+Gastritis,Low,Mild,0
+Gastrointestinal Hemorrhage,High,Severe,1
+Gaucher Disease,High,Severe,0
+Generalized Anxiety Disorder,Low,Mild,0
+Gout,Low,Mild,0
+Gum Disease,Low,Mild,0
+Heart Attack,High,Severe,1
+Heart Disease,Low,Mild,0
+Heart Failure,High,Severe,0
+Hemorrhoids,Low,Mild,0
+Herniated Disk,Low,Mild,0
+Hiatal Hernia,Low,Mild,0
+Hyperemesis Gravidarum,Low,Mild,0
+Hypertension,Medium,Moderate,0
+Hypertensive Heart Disease,Medium,Moderate,0
+Hyperthyroidism,Low,Mild,0
+Hypoglycemia,Low,Mild,0
+Hypothyroidism,Low,Mild,0
+Ibs,Low,Mild,0
+Idiopathic Excessive Menstruation,Low,Mild,0
+Idiopathic Irregular Menstrual Cycle,Low,Mild,0
+Idiopathic Painful Menstruation,Low,Mild,0
+Infectious Gastroenteritis,Low,Mild,0
+Inflammatory Bowel Disease,Medium,Moderate,0
+Influenza,Low,Mild,0
+Injury To The Arm,Low,Mild,0
+Injury To The Leg,Low,Mild,0
+Injury To The Trunk,Low,Mild,0
+Irritable Bowel Syndrome,Low,Mild,0
+Liver Disease,Low,Mild,0
+Macular Degeneration,Low,Mild,0
+Marfan Syndrome,High,Severe,0
+Marijuana Abuse,Low,Mild,0
+Metabolic Syndrome,Low,Mild,0
+Migraine,Low,Mild,0
+Multiple Sclerosis,High,Severe,0
+Niemann Pick Disease,High,Severe,0
+Noninfectious Gastroenteritis,Low,Mild,0
+Nose Disorder,Low,Mild,0
+Obesity,Low,Mild,0
+Obstructive Sleep Apnea (osa),Low,Mild,0
+Osteoarthritis,Medium,Moderate,0
+Osteopetrosis,High,Severe,0
+Otitis Externa (swimmers Ear),Low,Mild,0
+Otitis Media,Low,Mild,0
+Pain After An Operation,Low,Mild,0
+Panic Disorder,Low,Mild,0
+Parkinsons,Low,Mild,0
+Pelvic Inflammatory Disease,Low,Mild,0
+Peptic Ulcer Disease,Low,Mild,0
+Peripheral Nerve Disorder,Low,Mild,0
+Personality Disorder,Low,Mild,0
+Pneumonia,Medium,Moderate,0
+Polycystic Ovary Syndrome,Low,Mild,0
+Problem During Pregnancy,Low,Mild,0
+Psoriasis,Low,Mild,0
+Pyogenic Skin Infection,Low,Mild,0
+Rectal Disorder,Low,Mild,0
+Schizophrenia,Low,Mild,0
+Seasonal Allergies (hay Fever),Low,Mild,0
+Sebaceous Cyst,Low,Mild,0
+Sepsis,High,Severe,1
+Sickle Cell Crisis,High,Severe,1
+Sinus Bradycardia,Low,Mild,0
+Sinusitis,Low,Mild,0
+Skin Pigmentation Disorder,Low,Mild,0
+Skin Polyp,Low,Mild,0
+Spinal Muscular Atrophy,High,Severe,0
+Spinal Stenosis,Low,Mild,0
+Spondylosis,Low,Mild,0
+Spontaneous Abortion,High,Severe,1
+Sprain Or Strain,Low,Mild,0
+Strep Throat,Low,Mild,0
+Stroke,High,Severe,1
+Stye,Low,Mild,0
+Systemic Lupus Erythematosus,High,Severe,0
+Temporary Or Benign Blood In Urine,Low,Mild,0
+Threatened Pregnancy,High,Severe,1
+Thyroid Disorder,Low,Mild,0
+Tuberculosis,High,Severe,0
+Type2 Diabetes,Medium,Moderate,0
+Typhoid Fever,Low,Mild,0
+Ulcer,Low,Mild,0
+Ulcerative Colitis,Medium,Moderate,0
+Urinary Tract Infection,Low,Mild,0
+Vaginal Cyst,Low,Mild,0
+Vaginitis,Low,Mild,0
+Vulvodynia,Low,Mild,0

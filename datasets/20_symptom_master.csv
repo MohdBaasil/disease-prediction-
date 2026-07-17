@@ -1,0 +1,29 @@
+Symptom_ID,Symptom_Name,Severity_Level,Description
+SYM001,Abdominal Pain,Low,Clinical symptom indicator for Abdominal Pain.
+SYM002,Anxiety,High,Clinical symptom indicator for Anxiety.
+SYM003,Appetite Loss,Low,Clinical symptom indicator for Appetite Loss.
+SYM004,Back Pain,High,Clinical symptom indicator for Back Pain.
+SYM005,Blurred Vision,Low,Clinical symptom indicator for Blurred Vision.
+SYM006,Chest Pain,Low,Clinical symptom indicator for Chest Pain.
+SYM007,Cough,Medium,Clinical symptom indicator for Cough.
+SYM008,Depression,High,Clinical symptom indicator for Depression.
+SYM009,Diarrhea,High,Clinical symptom indicator for Diarrhea.
+SYM010,Dizziness,Medium,Clinical symptom indicator for Dizziness.
+SYM011,Fatigue,Low,Clinical symptom indicator for Fatigue.
+SYM012,Fever,Low,Clinical symptom indicator for Fever.
+SYM013,Headache,Medium,Clinical symptom indicator for Headache.
+SYM014,Insomnia,Medium,Clinical symptom indicator for Insomnia.
+SYM015,Joint Pain,High,Clinical symptom indicator for Joint Pain.
+SYM016,Muscle Pain,Medium,Clinical symptom indicator for Muscle Pain.
+SYM017,Nausea,Low,Clinical symptom indicator for Nausea.
+SYM018,Rash,Medium,Clinical symptom indicator for Rash.
+SYM019,Runny Nose,Low,Clinical symptom indicator for Runny Nose.
+SYM020,Shortness Of Breath,Low,Clinical symptom indicator for Shortness Of Breath.
+SYM021,Sneezing,Low,Clinical symptom indicator for Sneezing.
+SYM022,Sore Throat,Low,Clinical symptom indicator for Sore Throat.
+SYM023,Sweating,Low,Clinical symptom indicator for Sweating.
+SYM024,Swelling,High,Clinical symptom indicator for Swelling.
+SYM025,Tremors,Low,Clinical symptom indicator for Tremors.
+SYM026,Vomiting,Low,Clinical symptom indicator for Vomiting.
+SYM027,Weight Gain,High,Clinical symptom indicator for Weight Gain.
+SYM028,Weight Loss,High,Clinical symptom indicator for Weight Loss.

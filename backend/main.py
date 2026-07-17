@@ -87,11 +87,13 @@ from backend.database.seed_from_csv import seed_db_from_csv
 def seed_data():
     db = next(get_db())
     try:
-        print("Checking default seed data...")
+        print("Checking default seed data...", flush=True)
         csv_path = os.path.join(os.getcwd(), "healthcare_dataset.csv")
+        print("Invoking seed_db_from_csv...", flush=True)
         seed_db_from_csv(db, csv_path)
+        print("seed_db_from_csv finished successfully.", flush=True)
     except Exception as e:
-        print(f"Error seeding database: {e}")
+        print(f"Error seeding database: {e}", flush=True)
     finally:
         db.close()
 

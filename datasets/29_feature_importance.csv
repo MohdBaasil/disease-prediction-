@@ -1,0 +1,91 @@
+Feature_ID,Feature_Name,Importance_Score,Model_Name
+IMP0001,Age,0.14549,Random Forest
+IMP0002,Age,0.03261,XGBoost
+IMP0003,Age,0.27707,Gradient Boosting
+IMP0004,Gender_Encoded,0.05372,Random Forest
+IMP0005,Gender_Encoded,0.03045,XGBoost
+IMP0006,Gender_Encoded,0.04516,Gradient Boosting
+IMP0007,symptom_abdominal_pain,0.03199,Random Forest
+IMP0008,symptom_abdominal_pain,0.03291,XGBoost
+IMP0009,symptom_abdominal_pain,0.02279,Gradient Boosting
+IMP0010,symptom_anxiety,0.0282,Random Forest
+IMP0011,symptom_anxiety,0.03343,XGBoost
+IMP0012,symptom_anxiety,0.02682,Gradient Boosting
+IMP0013,symptom_appetite_loss,0.02785,Random Forest
+IMP0014,symptom_appetite_loss,0.03411,XGBoost
+IMP0015,symptom_appetite_loss,0.02556,Gradient Boosting
+IMP0016,symptom_back_pain,0.02738,Random Forest
+IMP0017,symptom_back_pain,0.03192,XGBoost
+IMP0018,symptom_back_pain,0.02135,Gradient Boosting
+IMP0019,symptom_blurred_vision,0.03043,Random Forest
+IMP0020,symptom_blurred_vision,0.0334,XGBoost
+IMP0021,symptom_blurred_vision,0.02517,Gradient Boosting
+IMP0022,symptom_chest_pain,0.02906,Random Forest
+IMP0023,symptom_chest_pain,0.03471,XGBoost
+IMP0024,symptom_chest_pain,0.03251,Gradient Boosting
+IMP0025,symptom_cough,0.02877,Random Forest
+IMP0026,symptom_cough,0.03289,XGBoost
+IMP0027,symptom_cough,0.02109,Gradient Boosting
+IMP0028,symptom_depression,0.02959,Random Forest
+IMP0029,symptom_depression,0.03418,XGBoost
+IMP0030,symptom_depression,0.02458,Gradient Boosting
+IMP0031,symptom_diarrhea,0.02769,Random Forest
+IMP0032,symptom_diarrhea,0.03366,XGBoost
+IMP0033,symptom_diarrhea,0.01988,Gradient Boosting
+IMP0034,symptom_dizziness,0.02789,Random Forest
+IMP0035,symptom_dizziness,0.03308,XGBoost
+IMP0036,symptom_dizziness,0.01947,Gradient Boosting
+IMP0037,symptom_fatigue,0.03139,Random Forest
+IMP0038,symptom_fatigue,0.03332,XGBoost
+IMP0039,symptom_fatigue,0.0273,Gradient Boosting
+IMP0040,symptom_fever,0.02858,Random Forest
+IMP0041,symptom_fever,0.03397,XGBoost
+IMP0042,symptom_fever,0.02039,Gradient Boosting
+IMP0043,symptom_headache,0.02725,Random Forest
+IMP0044,symptom_headache,0.03358,XGBoost
+IMP0045,symptom_headache,0.03082,Gradient Boosting
+IMP0046,symptom_insomnia,0.02811,Random Forest
+IMP0047,symptom_insomnia,0.03365,XGBoost
+IMP0048,symptom_insomnia,0.02441,Gradient Boosting
+IMP0049,symptom_joint_pain,0.02439,Random Forest
+IMP0050,symptom_joint_pain,0.0318,XGBoost
+IMP0051,symptom_joint_pain,0.02322,Gradient Boosting
+IMP0052,symptom_muscle_pain,0.02767,Random Forest
+IMP0053,symptom_muscle_pain,0.03247,XGBoost
+IMP0054,symptom_muscle_pain,0.02428,Gradient Boosting
+IMP0055,symptom_nausea,0.02968,Random Forest
+IMP0056,symptom_nausea,0.03405,XGBoost
+IMP0057,symptom_nausea,0.02363,Gradient Boosting
+IMP0058,symptom_rash,0.02942,Random Forest
+IMP0059,symptom_rash,0.03333,XGBoost
+IMP0060,symptom_rash,0.02375,Gradient Boosting
+IMP0061,symptom_runny_nose,0.0296,Random Forest
+IMP0062,symptom_runny_nose,0.03506,XGBoost
+IMP0063,symptom_runny_nose,0.02434,Gradient Boosting
+IMP0064,symptom_shortness_of_breath,0.0294,Random Forest
+IMP0065,symptom_shortness_of_breath,0.03443,XGBoost
+IMP0066,symptom_shortness_of_breath,0.024,Gradient Boosting
+IMP0067,symptom_sneezing,0.02912,Random Forest
+IMP0068,symptom_sneezing,0.03357,XGBoost
+IMP0069,symptom_sneezing,0.02377,Gradient Boosting
+IMP0070,symptom_sore_throat,0.02948,Random Forest
+IMP0071,symptom_sore_throat,0.03291,XGBoost
+IMP0072,symptom_sore_throat,0.02536,Gradient Boosting
+IMP0073,symptom_sweating,0.02681,Random Forest
+IMP0074,symptom_sweating,0.03314,XGBoost
+IMP0075,symptom_sweating,0.02042,Gradient Boosting
+IMP0076,symptom_swelling,0.02692,Random Forest
+IMP0077,symptom_swelling,0.03314,XGBoost
+IMP0078,symptom_swelling,0.02267,Gradient Boosting
+IMP0079,symptom_tremors,0.02832,Random Forest
+IMP0080,symptom_tremors,0.03324,XGBoost
+IMP0081,symptom_tremors,0.02524,Gradient Boosting
+IMP0082,symptom_vomiting,0.02752,Random Forest
+IMP0083,symptom_vomiting,0.0329,XGBoost
+IMP0084,symptom_vomiting,0.02699,Gradient Boosting
+IMP0085,symptom_weight_gain,0.02808,Random Forest
+IMP0086,symptom_weight_gain,0.03349,XGBoost
+IMP0087,symptom_weight_gain,0.02397,Gradient Boosting
+IMP0088,symptom_weight_loss,0.03019,Random Forest
+IMP0089,symptom_weight_loss,0.0346,XGBoost
+IMP0090,symptom_weight_loss,0.02401,Gradient Boosting

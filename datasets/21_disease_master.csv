@@ -1,0 +1,156 @@
+Disease_ID,Disease_Name,Description,Department_ID,Severity_Level
+DIS001,Actinic Keratosis,"Actinic keratosis is a rough, scaly patch on the skin caused by prolonged sun exposure, and is considered a precancerous condition that can develop into squamous cell carcinoma.",DEPT006,Low
+DIS002,Acute Bronchiolitis,"Acute bronchiolitis is a common lower respiratory tract infection in infants, usually caused by RSV, leading to wheezing, coughing, and difficulty breathing.",DEPT002,Low
+DIS003,Acute Bronchitis,"Acute bronchitis is inflammation of the bronchial tubes in the lungs, typically caused by a viral infection, resulting in cough, mucus production, chest discomfort, and low-grade fever.",DEPT002,Medium
+DIS004,Acute Bronchospasm,"Acute bronchospasm is a sudden constriction of the muscles in the walls of the bronchioles, often triggered by asthma or allergens, causing wheezing and difficulty breathing.",DEPT002,High
+DIS005,Acute Gastroenteritis,Requires Clinical Validation,DEPT004,Low
+DIS006,Acute Kidney Injury,"Acute kidney injury (AKI) is a sudden loss of kidney function due to illness, injury, or toxins, leading to buildup of waste products in the blood.",DEPT003,High
+DIS007,Acute Pancreatitis,"Acute pancreatitis is a sudden inflammation of the pancreas that causes severe abdominal pain, nausea, vomiting, and elevated pancreatic enzymes, often due to gallstones or alcohol use.",DEPT004,High
+DIS008,Acute Sinusitis,"Acute sinusitis is a temporary inflammation or infection of the sinuses, usually following a cold, causing nasal congestion, facial pain, pressure, and headache.",DEPT002,Low
+DIS009,Allergy,"An allergy is an overreaction of the immune system to substances like pollen, food, or medications, causing symptoms like sneezing, itching, rash, or anaphylaxis.",DEPT017,Low
+DIS010,Amyotrophic Lateral Sclerosis,Requires Clinical Validation,DEPT008,High
+DIS011,Anemia,Requires Clinical Validation,DEPT014,Low
+DIS012,Angina,"Angina is chest pain or discomfort due to reduced blood flow to the heart muscle, often triggered by exertion or stress, and relieved by rest or medication.",DEPT001,Low
+DIS013,Anxiety,"Anxiety is a mental health condition characterized by excessive worry, nervousness, or fear that interferes with daily activities, often accompanied by physical symptoms like restlessness, sweating, or rapid heartbeat.",DEPT009,Low
+DIS014,Appendicitis,"Appendicitis is inflammation of the appendix, usually requiring surgery, and causes sudden lower right abdominal pain, nausea, and fever.",DEPT004,High
+DIS015,Arthritis,Requires Clinical Validation,DEPT007,Medium
+DIS016,Arthritis Of The Hip,"Arthritis of the hip involves inflammation and degeneration of the hip joint cartilage, leading to pain, stiffness, and reduced mobility, commonly due to osteoarthritis.",DEPT007,Medium
+DIS017,Asthma,"Asthma is a chronic inflammatory disease of the airways causing recurrent wheezing, breathlessness, chest tightness, and coughing, often triggered by allergens, exercise, or cold air.",DEPT002,Medium
+DIS018,Benign Prostatic Hyperplasia (bph),"BPH is a non-cancerous enlargement of the prostate gland in older men, causing difficulty urinating, weak stream, or frequent urination, especially at night.",DEPT010,Low
+DIS019,Brachial Neuritis,"Brachial neuritis is inflammation of the brachial plexus nerves, causing sudden shoulder and arm pain followed by weakness or numbness.",DEPT019,Low
+DIS020,Bronchitis,Requires Clinical Validation,DEPT002,Medium
+DIS021,Bursitis,"Bursitis is inflammation of the bursae—small fluid-filled sacs that cushion bones and joints—causing joint pain, swelling, and limited movement, often from repetitive motion or pressure.",DEPT007,Low
+DIS022,Cancer,Requires Clinical Validation,DEPT015,High
+DIS023,Carpal Tunnel Syndrome,"Carpal tunnel syndrome is a condition caused by compression of the median nerve in the wrist, leading to numbness, tingling, and weakness in the hand and fingers.",DEPT007,Low
+DIS024,Cholecystitis,"Cholecystitis is inflammation of the gallbladder, often due to gallstones, causing severe upper abdominal pain, fever, nausea, and tenderness.",DEPT003,Low
+DIS025,Chronic Back Pain,"Chronic back pain is persistent or recurring pain in the back lasting more than three months, often due to structural issues, nerve damage, or degenerative conditions.",DEPT007,Low
+DIS026,Chronic Constipation,"Chronic constipation is a long-term condition characterized by infrequent or difficult bowel movements, often accompanied by abdominal discomfort or bloating.",DEPT004,Low
+DIS027,Chronic Kidney Disease,Requires Clinical Validation,DEPT003,Medium
+DIS028,Chronic Liver Disease,Requires Clinical Validation,DEPT004,Low
+DIS029,Chronic Obstructive Pulmonary Disease (copd),"COPD is a group of progressive lung diseases, including emphysema and chronic bronchitis, characterized by airflow limitation, coughing, wheezing, and shortness of breath.",DEPT002,High
+DIS030,Cirrhosis,Requires Clinical Validation,DEPT004,High
+DIS031,Common Cold,"The common cold is a viral infection of the upper respiratory tract, typically causing sneezing, sore throat, nasal congestion, cough, and mild fever.",DEPT016,Low
+DIS032,Complex Regional Pain Syndrome,"Complex regional pain syndrome (CRPS) is a chronic pain condition usually affecting a limb after injury, with symptoms including burning pain, swelling, and sensitivity to touch.",DEPT019,Low
+DIS033,Concussion,"A concussion is a mild traumatic brain injury caused by a blow to the head or body, resulting in temporary loss of brain function, such as confusion, memory loss, or dizziness.",DEPT008,Low
+DIS034,Conjunctivitis,"Conjunctivitis (pink eye) is inflammation of the conjunctiva of the eye due to infection or allergy, resulting in redness, discharge, and eye irritation.",DEPT011,Low
+DIS035,Conjunctivitis Due To Allergy,"Allergic conjunctivitis is inflammation of the conjunctiva (eye lining) caused by allergens like pollen or dust, leading to red, itchy, watery eyes without infectious discharge.",DEPT011,Low
+DIS036,Contact Dermatitis,"Contact dermatitis is a skin inflammation caused by exposure to an irritant or allergen, resulting in redness, itching, blisters, or dryness.",DEPT006,Low
+DIS037,Copd,Requires Clinical Validation,DEPT002,High
+DIS038,Cornea Infection,"Cornea infection (keratitis) is an infection of the transparent front part of the eye, usually caused by bacteria, fungi, or viruses, leading to eye pain, redness, blurred vision, and light sensitivity.",DEPT011,Low
+DIS039,Coronary Artery Disease,Requires Clinical Validation,DEPT001,Low
+DIS040,Covid-19,Requires Clinical Validation,DEPT016,Low
+DIS041,Covid19,Requires Clinical Validation,DEPT016,Low
+DIS042,Crohn Disease,Requires Clinical Validation,DEPT004,Medium
+DIS043,Croup,"Croup is a viral infection that causes swelling of the airway in young children, leading to a barking cough, hoarseness, and difficulty breathing, often worse at night.",DEPT019,High
+DIS044,Cystic Fibrosis,Requires Clinical Validation,DEPT002,Low
+DIS045,Cystitis,"Cystitis is inflammation of the bladder, usually from a bacterial infection, leading to frequent, painful urination and lower abdominal discomfort.",DEPT003,Low
+DIS046,Degenerative Disc Disease,"Degenerative disc disease is a condition where spinal discs break down over time, leading to back pain, reduced flexibility, and sometimes nerve compression.",DEPT019,Low
+DIS047,Dementia,Requires Clinical Validation,DEPT008,Low
+DIS048,Dengue,Requires Clinical Validation,DEPT016,Low
+DIS049,Dental Caries,"Dental caries (tooth decay) is the destruction of tooth enamel due to acids produced by bacteria feeding on sugars, leading to cavities, tooth pain, and infection if untreated.",DEPT013,Low
+DIS050,Depression,"Depression is a mental health disorder characterized by persistent sadness, loss of interest or pleasure, fatigue, and changes in sleep or appetite, significantly impacting daily life.",DEPT009,Low
+DIS051,Dermatitis,Requires Clinical Validation,DEPT006,Low
+DIS052,Developmental Disability,"Developmental disabilities are chronic conditions that begin in childhood and affect physical, learning, language, or behavioral areas, such as autism or intellectual disability.",DEPT009,Low
+DIS053,Diabetes,Requires Clinical Validation,DEPT005,Medium
+DIS054,Diaper Rash,"Diaper rash is skin irritation in the diaper area of infants or adults using diapers, often caused by moisture, friction, or infection.",DEPT006,Low
+DIS055,Diverticulitis,"Diverticulitis is inflammation or infection of small pouches (diverticula) in the colon wall, leading to abdominal pain, fever, and changes in bowel habits.",DEPT004,Low
+DIS056,Drug Reaction,"A drug reaction is an adverse response to a medication, ranging from mild rashes or stomach upset to severe allergic responses like Stevens-Johnson syndrome or anaphylaxis.",DEPT019,Low
+DIS057,Ear Drum Damage,"Ear drum damage (tympanic membrane perforation) is a tear or hole in the eardrum due to infection, injury, or loud noise, which may cause pain, hearing loss, or drainage.",DEPT012,Low
+DIS058,Eczema,"Eczema (atopic dermatitis) is a chronic skin condition that causes itchy, inflamed, red, and dry skin, often triggered by allergens, stress, or irritants.",DEPT006,Low
+DIS059,Ehlers Danlos Syndrome,Requires Clinical Validation,DEPT019,Low
+DIS060,Epilepsy,Requires Clinical Validation,DEPT008,Medium
+DIS061,Esophagitis,"Esophagitis is inflammation of the esophagus, commonly due to acid reflux, infections, or medications, causing pain when swallowing and chest discomfort.",DEPT004,Low
+DIS062,Eustachian Tube Dysfunction (ear Disorder),"Eustachian tube dysfunction occurs when the tube connecting the middle ear to the throat becomes blocked or fails to open, causing pressure, pain, or hearing issues.",DEPT012,Low
+DIS063,Fanconi Anemia,Requires Clinical Validation,DEPT014,High
+DIS064,Flu,Requires Clinical Validation,DEPT016,Low
+DIS065,Food Poisoning,Requires Clinical Validation,DEPT019,Low
+DIS066,Fungal Infection Of The Hair,"Fungal infection of the hair, or tinea capitis, is a scalp infection caused by dermatophyte fungi, resulting in scaly patches, hair loss, and sometimes black dots or swelling.",DEPT016,Low
+DIS067,Gallstone,"Gallstones are hardened deposits of digestive fluid in the gallbladder that can block bile flow, causing abdominal pain, nausea, and sometimes infection.",DEPT004,Low
+DIS068,Gastritis,Requires Clinical Validation,DEPT019,Low
+DIS069,Gastrointestinal Hemorrhage,"Gastrointestinal hemorrhage is bleeding that occurs anywhere along the digestive tract, often presenting as vomiting blood or black, tarry stools, and can be caused by ulcers, varices, or cancer.",DEPT004,High
+DIS070,Gaucher Disease,Requires Clinical Validation,DEPT019,High
+DIS071,Generalized Anxiety Disorder,Requires Clinical Validation,DEPT009,Low
+DIS072,Gout,"Gout is a form of inflammatory arthritis caused by buildup of uric acid crystals in joints, leading to sudden, severe pain, redness, and swelling, often in the big toe.",DEPT007,Low
+DIS073,Gum Disease,"Gum disease (periodontal disease) is an infection and inflammation of the gums and surrounding tissues, often caused by poor oral hygiene, leading to bleeding, receding gums, and tooth loss.",DEPT013,Low
+DIS074,Heart Attack,"A heart attack (myocardial infarction) occurs when blood flow to part of the heart is blocked, leading to chest pain, shortness of breath, nausea, and potentially life-threatening damage to heart muscle.",DEPT001,High
+DIS075,Heart Disease,Requires Clinical Validation,DEPT001,Low
+DIS076,Heart Failure,"Heart failure is a condition where the heart can't pump blood effectively, leading to fatigue, shortness of breath, fluid retention, and reduced exercise capacity.",DEPT001,High
+DIS077,Hemorrhoids,"Hemorrhoids are swollen veins in the anus or rectum that cause pain, itching, bleeding, or discomfort during bowel movements.",DEPT019,Low
+DIS078,Herniated Disk,"A herniated disk occurs when the inner gel-like core of a spinal disc bulges out through a tear, pressing on nearby nerves and causing back pain, numbness, or weakness.",DEPT004,Low
+DIS079,Hiatal Hernia,"A hiatal hernia occurs when the upper part of the stomach pushes through the diaphragm into the chest cavity, often causing symptoms like heartburn, reflux, and chest pain.",DEPT004,Low
+DIS080,Hyperemesis Gravidarum,"Hyperemesis gravidarum is a severe form of morning sickness in pregnancy, leading to persistent nausea, vomiting, dehydration, and weight loss.",DEPT019,Low
+DIS081,Hypertension,Requires Clinical Validation,DEPT001,Medium
+DIS082,Hypertensive Heart Disease,"Hypertensive heart disease includes conditions caused by chronic high blood pressure, such as heart failure, thickened heart muscle, or coronary artery disease.",DEPT001,Medium
+DIS083,Hyperthyroidism,Requires Clinical Validation,DEPT005,Low
+DIS084,Hypoglycemia,"Hypoglycemia is a condition characterized by abnormally low blood sugar levels, often causing shakiness, sweating, confusion, irritability, or fainting, common in diabetics on insulin.",DEPT005,Low
+DIS085,Hypothyroidism,Requires Clinical Validation,DEPT005,Low
+DIS086,Ibs,Requires Clinical Validation,DEPT004,Low
+DIS087,Idiopathic Excessive Menstruation,Idiopathic excessive menstruation refers to abnormally heavy or prolonged menstrual bleeding without an identifiable underlying medical cause.,DEPT010,Low
+DIS088,Idiopathic Irregular Menstrual Cycle,"Idiopathic irregular menstrual cycle refers to inconsistent or unpredictable menstrual periods without a clear medical cause, often linked to hormonal imbalance.",DEPT010,Low
+DIS089,Idiopathic Painful Menstruation,"Idiopathic painful menstruation (primary dysmenorrhea) is severe menstrual cramping without an identifiable medical condition, often starting in adolescence.",DEPT010,Low
+DIS090,Infectious Gastroenteritis,"Infectious gastroenteritis is an intestinal infection caused by viruses, bacteria, or parasites, leading to symptoms like diarrhea, vomiting, abdominal cramps, and fever.",DEPT004,Low
+DIS091,Inflammatory Bowel Disease,Requires Clinical Validation,DEPT004,Medium
+DIS092,Influenza,Requires Clinical Validation,DEPT016,Low
+DIS093,Injury To The Arm,"Injury to the arm refers to damage to muscles, bones, ligaments, or skin in the arm area from trauma, leading to pain, swelling, bruising, or limited movement.",DEPT018,Low
+DIS094,Injury To The Leg,"Injury to the leg includes trauma to any part of the leg such as the thigh, knee, shin, or ankle, potentially involving muscles, bones, or ligaments.",DEPT018,Low
+DIS095,Injury To The Trunk,"Injury to the trunk includes trauma to the chest, abdomen, or back areas, possibly involving internal organs, muscles, or bones, and can range from minor bruises to serious internal damage.",DEPT018,Low
+DIS096,Irritable Bowel Syndrome,Requires Clinical Validation,DEPT004,Low
+DIS097,Liver Disease,"Liver disease refers to a range of disorders affecting the liver, such as hepatitis, fatty liver, or cirrhosis, potentially causing jaundice, fatigue, and liver dysfunction.",DEPT004,Low
+DIS098,Macular Degeneration,"Macular degeneration is an eye disorder that damages the macula, the part of the retina responsible for central vision, leading to blurred or loss of central vision, typically in older adults.",DEPT011,Low
+DIS099,Marfan Syndrome,Requires Clinical Validation,DEPT019,High
+DIS100,Marijuana Abuse,"Marijuana abuse refers to the excessive or harmful use of cannabis, which can lead to cognitive impairment, altered judgment, addiction, and long-term mental health issues.",DEPT019,Low
+DIS101,Metabolic Syndrome,Requires Clinical Validation,DEPT005,Low
+DIS102,Migraine,Requires Clinical Validation,DEPT008,Low
+DIS103,Multiple Sclerosis,"Multiple sclerosis (MS) is an autoimmune disease where the immune system attacks the protective sheath of nerves, leading to weakness, vision problems, and coordination issues.",DEPT008,High
+DIS104,Niemann Pick Disease,Requires Clinical Validation,DEPT019,High
+DIS105,Noninfectious Gastroenteritis,"Noninfectious gastroenteritis refers to inflammation of the stomach and intestines not caused by infection, but by irritants like medications, alcohol, or food intolerances.",DEPT004,Low
+DIS106,Nose Disorder,"Nose disorders include structural or inflammatory issues such as deviated septum, nasal polyps, or rhinitis, causing congestion, breathing difficulty, or nosebleeds.",DEPT019,Low
+DIS107,Obesity,Requires Clinical Validation,DEPT005,Low
+DIS108,Obstructive Sleep Apnea (osa),"OSA is a sleep disorder where the throat muscles intermittently relax and block the airway, causing repeated pauses in breathing during sleep and leading to poor rest and fatigue.",DEPT019,Low
+DIS109,Osteoarthritis,Requires Clinical Validation,DEPT007,Medium
+DIS110,Osteopetrosis,Requires Clinical Validation,DEPT007,High
+DIS111,Otitis Externa (swimmers Ear),"Otitis externa is an infection of the outer ear canal, often due to trapped water and bacteria, leading to ear pain, itching, swelling, and discharge.",DEPT012,Low
+DIS112,Otitis Media,"Otitis media is a middle ear infection that commonly affects children, causing ear pain, fever, irritability, and sometimes fluid discharge from the ear.",DEPT012,Low
+DIS113,Pain After An Operation,"Pain after an operation (postoperative pain) is discomfort or soreness at the surgical site, which may be due to tissue injury, inflammation, or healing processes.",DEPT018,Low
+DIS114,Panic Disorder,"Panic disorder is a mental health condition marked by sudden, unexpected panic attacks—intense periods of fear or discomfort—often accompanied by physical symptoms like chest pain, rapid heartbeat, shortness of breath, or dizziness.",DEPT009,Low
+DIS115,Parkinsons,Requires Clinical Validation,DEPT008,Low
+DIS116,Pelvic Inflammatory Disease,"Pelvic inflammatory disease (PID) is an infection of the female reproductive organs, often caused by sexually transmitted bacteria, leading to abdominal pain, fever, and abnormal discharge.",DEPT019,Low
+DIS117,Peptic Ulcer Disease,Requires Clinical Validation,DEPT004,Low
+DIS118,Peripheral Nerve Disorder,"Peripheral nerve disorders affect the nerves outside the brain and spinal cord, leading to numbness, weakness, pain, or coordination problems.",DEPT019,Low
+DIS119,Personality Disorder,"Personality disorders are mental health conditions involving rigid and unhealthy patterns of thinking, functioning, and behaving that impair social or occupational life.",DEPT009,Low
+DIS120,Pneumonia,"Pneumonia is an infection of the lungs caused by bacteria, viruses, or fungi, resulting in cough, fever, chest pain, and difficulty breathing due to inflammation and fluid in the lungs.",DEPT002,Medium
+DIS121,Polycystic Ovary Syndrome,Requires Clinical Validation,DEPT019,Low
+DIS122,Problem During Pregnancy,"Problems during pregnancy refer to medical complications such as gestational diabetes, preeclampsia, or fetal growth restriction that can affect the health of the mother or baby during gestation.",DEPT010,Low
+DIS123,Psoriasis,"Psoriasis is a chronic autoimmune skin condition causing rapid skin cell growth that results in thick, scaly, red patches, often on the elbows, knees, or scalp.",DEPT006,Low
+DIS124,Pyogenic Skin Infection,"A pyogenic skin infection is a bacterial infection of the skin that produces pus, such as abscesses, boils, or cellulitis, often caused by Staphylococcus aureus.",DEPT006,Low
+DIS125,Rectal Disorder,"Rectal disorders include conditions affecting the rectum such as hemorrhoids, fissures, or prolapse, often causing pain, bleeding, or difficulty during bowel movements.",DEPT019,Low
+DIS126,Schizophrenia,"Schizophrenia is a severe psychiatric disorder involving distortions in thinking, perception, emotions, language, and behavior, often with hallucinations or delusions.",DEPT009,Low
+DIS127,Seasonal Allergies (hay Fever),"Seasonal allergies, or hay fever, are allergic reactions to airborne allergens like pollen, causing sneezing, nasal congestion, itchy eyes, and throat irritation, often during specific seasons.",DEPT016,Low
+DIS128,Sebaceous Cyst,"A sebaceous cyst is a noncancerous bump beneath the skin, filled with oily material, often caused by blocked sebaceous glands.",DEPT019,Low
+DIS129,Sepsis,"Sepsis is a life-threatening response to infection where the body’s immune system causes widespread inflammation, leading to tissue damage, organ failure, and possibly death.",DEPT016,High
+DIS130,Sickle Cell Crisis,"Sickle cell crisis is a painful episode in people with sickle cell disease, where misshapen red blood cells block blood flow, causing severe pain, fatigue, and potential organ damage.",DEPT014,High
+DIS131,Sinus Bradycardia,"Sinus bradycardia is a slower than normal heart rate originating from the sinus node, which may be normal in athletes or caused by medications or medical conditions.",DEPT002,Low
+DIS132,Sinusitis,Requires Clinical Validation,DEPT002,Low
+DIS133,Skin Pigmentation Disorder,"Skin pigmentation disorders involve changes in skin color due to excess or lack of melanin, such as vitiligo, melasma, or hyperpigmentation.",DEPT006,Low
+DIS134,Skin Polyp,"A skin polyp (skin tag) is a small, benign growth of skin that typically appears in areas where skin rubs together, like the neck, armpits, or groin.",DEPT006,Low
+DIS135,Spinal Muscular Atrophy,Requires Clinical Validation,DEPT007,High
+DIS136,Spinal Stenosis,"Spinal stenosis is the narrowing of the spinal canal, often due to arthritis or disc problems, leading to back pain, numbness, and weakness in the legs.",DEPT007,Low
+DIS137,Spondylosis,"Spondylosis is a degenerative condition affecting the spine due to aging, resulting in stiffness, pain, and reduced mobility due to wear and tear on spinal discs and joints.",DEPT019,Low
+DIS138,Spontaneous Abortion,"Spontaneous abortion (miscarriage) is the loss of a pregnancy before 20 weeks, often due to genetic issues or unknown causes, and may involve bleeding and cramping.",DEPT019,High
+DIS139,Sprain Or Strain,"A sprain is a stretched or torn ligament, while a strain is a stretched or torn muscle or tendon; both cause pain, swelling, and limited movement.",DEPT007,Low
+DIS140,Strep Throat,"Strep throat is a bacterial throat infection caused by Streptococcus pyogenes, leading to sore throat, fever, swollen glands, and red tonsils with white patches.",DEPT019,Low
+DIS141,Stroke,Requires Clinical Validation,DEPT008,High
+DIS142,Stye,"A stye is a red, painful lump near the edge of the eyelid caused by a bacterial infection of an oil gland, often resolving on its own or with warm compresses.",DEPT019,Low
+DIS143,Systemic Lupus Erythematosus,Requires Clinical Validation,DEPT017,High
+DIS144,Temporary Or Benign Blood In Urine,"Temporary or benign hematuria is the presence of blood in the urine without a serious underlying cause, sometimes triggered by exercise, medications, or mild infections.",DEPT014,Low
+DIS145,Threatened Pregnancy,"A threatened pregnancy refers to early pregnancy complications, such as vaginal bleeding or cramping, that may suggest a risk of miscarriage but with a still viable fetus.",DEPT010,High
+DIS146,Thyroid Disorder,Requires Clinical Validation,DEPT005,Low
+DIS147,Tuberculosis,Requires Clinical Validation,DEPT002,High
+DIS148,Type2 Diabetes,Requires Clinical Validation,DEPT005,Medium
+DIS149,Typhoid Fever,Requires Clinical Validation,DEPT016,Low
+DIS150,Ulcer,Requires Clinical Validation,DEPT004,Low
+DIS151,Ulcerative Colitis,Requires Clinical Validation,DEPT004,Medium
+DIS152,Urinary Tract Infection,"A urinary tract infection (UTI) is an infection in any part of the urinary system, commonly the bladder, causing pain during urination, urgency, and cloudy or strong-smelling urine.",DEPT003,Low
+DIS153,Vaginal Cyst,"A vaginal cyst is a fluid-filled sac that forms along the vaginal wall, often benign and asymptomatic, but can sometimes cause discomfort or pain if enlarged or infected.",DEPT010,Low
+DIS154,Vaginitis,"Vaginitis is inflammation of the vaginal tissue, typically caused by infections (bacterial, fungal, or parasitic), hormonal imbalances, or irritants, resulting in discharge, itching, pain, or burning during urination.",DEPT010,Low
+DIS155,Vulvodynia,"Vulvodynia is chronic pain or discomfort around the opening of the vagina (vulva) with no identifiable cause, often described as burning, stinging, or irritation.",DEPT019,Low
