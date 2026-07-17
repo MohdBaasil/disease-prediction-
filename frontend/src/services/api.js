@@ -217,6 +217,11 @@ export const patientService = {
     return response.data;
   },
 
+  predictDisease: async (vitals, symptoms) => {
+    const response = await api.post('/api/patients/predict-disease', { vitals, symptoms });
+    return response.data;
+  },
+
   getPrescriptionPdfUrl: (visitId) => {
     const token = localStorage.getItem('token');
     return `${API_BASE_URL}/api/patients/me/prescriptions/${visitId}/pdf?token=${token}`;

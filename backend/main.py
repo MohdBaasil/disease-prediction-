@@ -31,7 +31,7 @@ from backend.database.models import (
 from backend.services.auth_service import get_password_hash
 
 # Route imports
-from backend.routes import auth, doctor, patient, queue, notification, reports, dashboard, appointments
+from backend.routes import auth, doctor, patient, queue, notification, reports, dashboard, appointments, disease
 from backend.utils.websocket import manager
 
 # Create database tables automatically
@@ -61,6 +61,7 @@ app.include_router(appointments.router)
 app.include_router(notification.router)
 app.include_router(reports.router)
 app.include_router(dashboard.router)
+app.include_router(disease.router)
 
 from fastapi.staticfiles import StaticFiles
 # Mount static files directory to serve the frontend client
