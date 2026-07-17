@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { 
   User, Calendar, Clipboard, FileText, Bell, Search, Edit2, 
   Trash2, RefreshCw, Printer, Download, Eye, Plus, ArrowRight,
-  CheckCircle, AlertCircle, Clock, Heart, Activity, FileSpreadsheet, ShieldAlert
+  CheckCircle, AlertCircle, Clock, Heart, Activity, FileSpreadsheet, ShieldAlert,
+  Stethoscope, Brain, AlertTriangle, FlaskConical, Pill, ChevronRight, BarChart3, Info
 } from 'lucide-react';
 import { 
   patientService, dashboardService, queueService, 
@@ -10,7 +11,7 @@ import {
 } from '../services/api';
 
 function PatientDashboard() {
-  // Tabs: profile, appointments, prescription, history, medicines, reports, notifications
+  // Tabs: profile, appointments, prescription, history, medicines, reports, notifications, diagnosis
   const [activeTab, setActiveTab] = useState('appointments');
   const [patient, setPatient] = useState(null);
   const [stats, setStats] = useState(null);
@@ -55,6 +56,21 @@ function PatientDashboard() {
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  // Disease Diagnosis AI states
+  const [diagnosisLoading, setDiagnosisLoading] = useState(false);
+  const [diagnosisResult, setDiagnosisResult] = useState(null);
+  const [diagnosisError, setDiagnosisError] = useState('');
+  const defaultVitals = { age: '', bmi: '', blood_glucose: '', heart_rate: '', temperature: '', systolic_bp: '' };
+  const defaultSymptoms = {
+    frequent_urination: 0, increased_thirst: 0, family_history_diabetes: 0,
+    shortness_of_breath: 0, wheezing: 0, chest_tightness: 0, coughing: 0,
+    throbbing_headache: 0, nausea: 0, light_sensitivity: 0, chest_pain: 0,
+    pain_radiating_arm_jaw: 0, sweating: 0, sudden_numbness_weakness: 0,
+    trouble_speaking: 0, confusion: 0, drooping_face: 0, shivering: 0, rapid_breathing: 0
+  };
+  const [vitalsForm, setVitalsForm] = useState(defaultVitals);
+  const [symptomsForm, setSymptomsForm] = useState(defaultSymptoms);
 
   const loadAllData = async () => {
     try {
@@ -238,6 +254,30 @@ function PatientDashboard() {
     }
   };
 
+  const handleDiagnosis = async (e) => {
+    e.preventDefault();
+    setDiagnosisLoading(true);
+    setDiagnosisError('');
+    setDiagnosisResult(null);
+    try {
+      const vitals = {
+        age: parseInt(vitalsForm.age),
+        bmi: parseFloat(vitalsForm.bmi),
+        blood_glucose: parseInt(vitalsForm.blood_glucose),
+        heart_rate: parseInt(vitalsForm.heart_rate),
+        temperature: parseFloat(vitalsForm.temperature),
+        systolic_bp: parseInt(vitalsForm.systolic_bp)
+      };
+      const result = await patientService.predictDisease(vitals, symptomsForm);
+      setDiagnosisResult(result);
+    } catch (err) {
+      console.error(err);
+      setDiagnosisError(err.response?.data?.detail || 'Failed to run disease prediction. Please check your inputs and try again.');
+    } finally {
+      setDiagnosisLoading(false);
+    }
+  };
+
   const printPrescription = () => {
     if (latestVisit) {
       const url = patientService.getPrescriptionPdfUrl(latestVisit.id);
@@ -347,6 +387,15 @@ function PatientDashboard() {
               {notifications.length}
             </span>
           )}
+        </button>
+
+        <button 
+          onClick={() => setActiveTab('diagnosis')}
+          className={`w-full flex items-center space-x-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all ${activeTab === 'diagnosis' ? 'bg-gradient-to-r from-violet-600 to-purple-500 text-white shadow-md shadow-violet-200 dark:shadow-violet-900/30' : 'text-slate-650 hover:bg-slate-100/50 dark:hover:bg-slate-800/50'}`}
+        >
+          <Stethoscope className="h-5 w-5" />
+          <span>AI Diagnosis</span>
+          <span className="ml-auto text-[8px] font-black bg-white/20 text-white px-1.5 py-0.5 rounded-full hidden group-hover:flex">AI</span>
         </button>
 
         <button 
@@ -1235,6 +1284,382 @@ function PatientDashboard() {
                 )}
               </div>
             )}
+          </div>
+        )}
+
+        {/* ---------------- AI DISEASE DIAGNOSIS TAB ---------------- */}
+        {activeTab === 'diagnosis' && (
+          <div className="space-y-6">
+            {/* Header */}
+            <div className="bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-600 rounded-3xl p-6 shadow-lg text-white relative overflow-hidden">
+              <div className="absolute -top-8 -right-8 w-40 h-40 bg-white/5 rounded-full blur-3xl" />
+              <div className="absolute bottom-0 left-1/2 w-32 h-32 bg-white/5 rounded-full blur-2xl" />
+              <div className="relative flex items-start justify-between">
+                <div>
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Brain className="h-5 w-5 text-purple-200" />
+                    <span className="text-xs font-bold text-purple-200 uppercase tracking-widest">AI-Powered</span>
+                  </div>
+                  <h2 className="text-2xl font-black tracking-tight">Disease Diagnosis</h2>
+                  <p className="text-sm text-purple-200 mt-1 max-w-sm">Enter your vitals and symptoms. Our ensemble of 3 ML models will analyze and predict the most likely condition.</p>
+                </div>
+                <div className="bg-white/10 p-3 rounded-2xl backdrop-blur-sm">
+                  <Stethoscope className="h-8 w-8 text-white" />
+                </div>
+              </div>
+              <div className="mt-4 flex items-center space-x-4 text-xs text-purple-200">
+                <span className="flex items-center space-x-1"><BarChart3 className="h-3 w-3" /><span>Random Forest</span></span>
+                <span>•</span>
+                <span className="flex items-center space-x-1"><Brain className="h-3 w-3" /><span>Gradient Boosting</span></span>
+                <span>•</span>
+                <span className="flex items-center space-x-1"><Activity className="h-3 w-3" /><span>XGBoost</span></span>
+              </div>
+            </div>
+
+            {/* Disclaimer Banner */}
+            <div className="flex items-start space-x-3 p-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/50 rounded-2xl text-amber-700 dark:text-amber-300 text-xs">
+              <Info className="h-4 w-4 shrink-0 mt-0.5" />
+              <p><strong>Educational Use Only:</strong> This AI tool is for informational purposes and does not replace professional medical advice, diagnosis, or treatment. Always consult a qualified physician.</p>
+            </div>
+
+            {/* Input Form */}
+            <form onSubmit={handleDiagnosis} className="space-y-6">
+              {/* Vitals Section */}
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm">
+                <div className="flex items-center space-x-2 mb-5">
+                  <div className="bg-violet-100 dark:bg-violet-950/40 p-2 rounded-xl text-violet-600 dark:text-violet-400">
+                    <Activity className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm">Clinical Vitals</h3>
+                    <p className="text-[10px] text-slate-400">Enter your measured vital signs</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {[
+                    { key: 'age', label: 'Age', unit: 'years', type: 'number', placeholder: '30' },
+                    { key: 'bmi', label: 'BMI', unit: 'kg/m²', type: 'number', placeholder: '24.5', step: '0.1' },
+                    { key: 'blood_glucose', label: 'Blood Glucose', unit: 'mg/dL', type: 'number', placeholder: '90' },
+                    { key: 'heart_rate', label: 'Heart Rate', unit: 'BPM', type: 'number', placeholder: '75' },
+                    { key: 'temperature', label: 'Body Temp', unit: '°F', type: 'number', placeholder: '98.2', step: '0.1' },
+                    { key: 'systolic_bp', label: 'Systolic BP', unit: 'mmHg', type: 'number', placeholder: '120' }
+                  ].map(({ key, label, unit, type, placeholder, step }) => (
+                    <div key={key} className="space-y-1">
+                      <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">{label} <span className="text-violet-400 font-normal normal-case">({unit})</span></label>
+                      <input
+                        required
+                        type={type}
+                        step={step || '1'}
+                        placeholder={placeholder}
+                        value={vitalsForm[key]}
+                        onChange={e => setVitalsForm(prev => ({ ...prev, [key]: e.target.value }))}
+                        className="w-full px-3 py-2.5 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 rounded-xl outline-none focus:ring-2 focus:ring-violet-400 focus:border-violet-400 text-sm text-slate-800 dark:text-white transition-all"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Symptoms Section */}
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm">
+                <div className="flex items-center space-x-2 mb-5">
+                  <div className="bg-rose-100 dark:bg-rose-950/40 p-2 rounded-xl text-rose-500 dark:text-rose-400">
+                    <Heart className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm">Symptom Checklist</h3>
+                    <p className="text-[10px] text-slate-400">Check all symptoms you are currently experiencing</p>
+                  </div>
+                </div>
+                {/* Symptoms grouped by category */}
+                {[
+                  { label: 'Metabolic / Endocrine', color: 'blue', keys: [
+                    { key: 'frequent_urination', label: 'Frequent Urination (Polyuria)' },
+                    { key: 'increased_thirst', label: 'Excessive Thirst (Polydipsia)' },
+                    { key: 'family_history_diabetes', label: 'Family History of Diabetes' }
+                  ]},
+                  { label: 'Respiratory / Chest', color: 'sky', keys: [
+                    { key: 'shortness_of_breath', label: 'Shortness of Breath' },
+                    { key: 'wheezing', label: 'Wheezing Sound' },
+                    { key: 'chest_tightness', label: 'Chest Tightness' },
+                    { key: 'coughing', label: 'Persistent Cough' },
+                    { key: 'rapid_breathing', label: 'Rapid Breathing' }
+                  ]},
+                  { label: 'Neurological / Head', color: 'violet', keys: [
+                    { key: 'throbbing_headache', label: 'Severe Throbbing Headache' },
+                    { key: 'light_sensitivity', label: 'Light / Sound Sensitivity' },
+                    { key: 'sudden_numbness_weakness', label: 'Sudden Numbness or Weakness' },
+                    { key: 'trouble_speaking', label: 'Slurred / Difficult Speech' },
+                    { key: 'drooping_face', label: 'Facial Drooping' },
+                    { key: 'confusion', label: 'Sudden Confusion' }
+                  ]},
+                  { label: 'Cardiac / Systemic', color: 'rose', keys: [
+                    { key: 'chest_pain', label: 'Chest Pain or Pressure' },
+                    { key: 'pain_radiating_arm_jaw', label: 'Pain Radiating to Arm or Jaw' },
+                    { key: 'sweating', label: 'Profuse Sweating' },
+                    { key: 'nausea', label: 'Nausea or Vomiting' },
+                    { key: 'shivering', label: 'Chills / Shivering / Rigors' }
+                  ]}
+                ].map(group => (
+                  <div key={group.label} className="mb-5">
+                    <span className={`text-[9px] font-black uppercase tracking-widest text-${group.color}-500 block mb-2 pl-1`}>{group.label}</span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {group.keys.map(({ key, label }) => (
+                        <label key={key} className={`flex items-center space-x-3 p-3 rounded-xl border cursor-pointer transition-all hover:border-violet-300 dark:hover:border-violet-700 ${symptomsForm[key] === 1 ? 'bg-violet-50 dark:bg-violet-950/30 border-violet-300 dark:border-violet-700' : 'border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/20'}`}>
+                          <input
+                            type="checkbox"
+                            checked={symptomsForm[key] === 1}
+                            onChange={e => setSymptomsForm(prev => ({ ...prev, [key]: e.target.checked ? 1 : 0 }))}
+                            className="w-4 h-4 accent-violet-600 rounded"
+                          />
+                          <span className="text-xs font-medium text-slate-700 dark:text-slate-300">{label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Submit */}
+              <div className="flex items-center space-x-4">
+                <button
+                  type="submit"
+                  disabled={diagnosisLoading}
+                  className="flex-1 bg-gradient-to-r from-violet-600 to-purple-500 text-white font-bold py-3.5 px-8 rounded-2xl hover:from-violet-700 hover:to-purple-600 transition-all shadow-lg shadow-violet-200 dark:shadow-violet-900/40 disabled:opacity-60 flex items-center justify-center space-x-2"
+                >
+                  {diagnosisLoading ? (
+                    <><div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /><span>Analyzing...</span></>
+                  ) : (
+                    <><Brain className="h-5 w-5" /><span>Run AI Diagnosis</span><ChevronRight className="h-4 w-4" /></>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setVitalsForm(defaultVitals); setSymptomsForm(defaultSymptoms); setDiagnosisResult(null); setDiagnosisError(''); }}
+                  className="px-4 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all text-sm font-semibold"
+                >
+                  Reset
+                </button>
+              </div>
+            </form>
+
+            {/* Error */}
+            {diagnosisError && (
+              <div className="p-4 bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-800/50 rounded-2xl text-rose-600 dark:text-rose-400 text-sm flex items-center space-x-2">
+                <AlertCircle className="h-5 w-5 shrink-0" /><span>{diagnosisError}</span>
+              </div>
+            )}
+
+            {/* Results Panel */}
+            {diagnosisResult && (() => {
+              const r = diagnosisResult;
+              const riskColor = r.risk_level === 'High' ? 'rose' : r.risk_level === 'Medium' ? 'amber' : 'emerald';
+              const riskBg = r.risk_level === 'High' ? 'bg-rose-500' : r.risk_level === 'Medium' ? 'bg-amber-400' : 'bg-emerald-500';
+              const confidencePct = Math.round(r.confidence_score * 100);
+
+              return (
+                <div className="space-y-5 animate-fadeIn">
+                  {/* Emergency Alert */}
+                  {r.is_emergency && (
+                    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-rose-600 to-red-500 p-5 text-white shadow-2xl shadow-rose-300 dark:shadow-rose-900/50">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
+                      <div className="flex items-start space-x-4 relative">
+                        <div className="p-3 bg-white/20 rounded-2xl animate-pulse">
+                          <AlertTriangle className="h-8 w-8" />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-black tracking-tight">🚨 EMERGENCY DETECTED</h3>
+                          <p className="text-rose-100 text-sm mt-1">Predicted condition <strong>{r.predicted_disease}</strong> may require <strong>IMMEDIATE EMERGENCY MEDICAL ATTENTION</strong>. Do not wait. Call emergency services or go to the nearest Emergency Room immediately.</p>
+                          <p className="text-xs text-rose-200 mt-2 font-semibold">📞 Emergency: 911 / 999 / 112</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Main Prediction Card */}
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-md">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-5 border-b border-slate-100 dark:border-slate-800">
+                      <div>
+                        <span className="text-[9px] font-black text-violet-500 uppercase tracking-widest block mb-1">Ensemble Prediction Result</span>
+                        <h3 className="text-2xl font-black text-slate-800 dark:text-white">{r.predicted_disease}</h3>
+                        <p className="text-xs text-slate-400 mt-0.5">Based on soft-voting ensemble of 3 ML models</p>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        {/* Confidence Meter */}
+                        <div className="text-center">
+                          <div className="relative w-20 h-20">
+                            <svg className="w-20 h-20 transform -rotate-90" viewBox="0 0 80 80">
+                              <circle cx="40" cy="40" r="32" fill="none" stroke="currentColor" strokeWidth="8" className="text-slate-100 dark:text-slate-800" />
+                              <circle cx="40" cy="40" r="32" fill="none" stroke="url(#confGrad)" strokeWidth="8"
+                                strokeDasharray={`${201 * confidencePct / 100} 201`} strokeLinecap="round" />
+                              <defs>
+                                <linearGradient id="confGrad" x1="0" y1="0" x2="1" y2="0">
+                                  <stop offset="0%" stopColor="#7c3aed" />
+                                  <stop offset="100%" stopColor="#a855f7" />
+                                </linearGradient>
+                              </defs>
+                            </svg>
+                            <span className="absolute inset-0 flex items-center justify-center text-lg font-black text-violet-600 dark:text-violet-400">{confidencePct}%</span>
+                          </div>
+                          <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Confidence</span>
+                        </div>
+                        {/* Risk Badge */}
+                        <div className={`${riskBg} text-white px-4 py-2 rounded-2xl text-center shadow-lg`}>
+                          <span className="text-[8px] font-black uppercase tracking-widest block opacity-80">Risk Level</span>
+                          <span className="text-base font-black">{r.risk_level}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Top 3 Predictions */}
+                    <div className="mt-5">
+                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-3">Top 3 Differential Predictions</span>
+                      <div className="space-y-2">
+                        {r.top_predictions.map((p, idx) => (
+                          <div key={p.disease} className="flex items-center space-x-3">
+                            <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black shrink-0 ${idx === 0 ? 'bg-violet-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>{idx + 1}</span>
+                            <div className="flex-1">
+                              <div className="flex justify-between items-center mb-0.5">
+                                <span className={`text-xs font-bold ${idx === 0 ? 'text-violet-600 dark:text-violet-400' : 'text-slate-600 dark:text-slate-400'}`}>{p.disease}</span>
+                                <span className="text-[10px] text-slate-400 font-semibold">{Math.round(p.probability * 100)}%</span>
+                              </div>
+                              <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                                <div className={`h-full rounded-full transition-all duration-700 ${idx === 0 ? 'bg-gradient-to-r from-violet-600 to-purple-400' : 'bg-slate-300 dark:bg-slate-600'}`} style={{ width: `${p.probability * 100}%` }} />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Model Comparison */}
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm">
+                    <div className="flex items-center space-x-2 mb-4">
+                      <BarChart3 className="h-4 w-4 text-violet-500" />
+                      <h4 className="font-bold text-sm">Model-by-Model Comparison</h4>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      {[
+                        { key: 'random_forest', label: 'Random Forest', icon: '🌲', color: 'green' },
+                        { key: 'gradient_boosting', label: 'Gradient Boost', icon: '🔥', color: 'orange' },
+                        { key: 'xgboost', label: 'XGBoost', icon: '⚡', color: 'yellow' }
+                      ].map(({ key, label, icon, color }) => {
+                        const m = r.comparisons[key];
+                        const matches = m.disease === r.predicted_disease;
+                        return (
+                          <div key={key} className={`p-4 rounded-2xl border text-center transition-all ${matches ? 'border-violet-300 dark:border-violet-700 bg-violet-50 dark:bg-violet-950/20' : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/30'}`}>
+                            <span className="text-2xl block mb-1">{icon}</span>
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider block">{label}</span>
+                            <span className={`text-xs font-black block mt-1 ${matches ? 'text-violet-600 dark:text-violet-400' : 'text-slate-600 dark:text-slate-400'}`}>{m.disease}</span>
+                            <span className="text-[10px] text-slate-400">{Math.round(m.probability * 100)}%</span>
+                            {matches && <span className="text-[8px] font-black text-violet-500 bg-violet-100 dark:bg-violet-900/40 px-2 py-0.5 rounded-full inline-block mt-1">✓ Agrees</span>}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* XAI Reasons */}
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm">
+                    <div className="flex items-center space-x-2 mb-4">
+                      <Brain className="h-4 w-4 text-violet-500" />
+                      <h4 className="font-bold text-sm">Why This Prediction? <span className="text-[9px] text-violet-500 font-black uppercase tracking-wider ml-1">Explainable AI</span></h4>
+                    </div>
+                    <div className="space-y-2">
+                      {r.reasons.map((reason, idx) => (
+                        <div key={idx} className="flex items-start space-x-3 p-3 bg-violet-50 dark:bg-violet-950/20 border border-violet-100 dark:border-violet-900/40 rounded-xl">
+                          <div className="w-5 h-5 bg-violet-600 text-white rounded-full flex items-center justify-center text-[9px] font-black shrink-0 mt-0.5">{idx + 1}</div>
+                          <span className="text-xs text-slate-700 dark:text-slate-300 font-medium">{reason}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Recommendations Grid */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                    {/* Department & Doctors */}
+                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm space-y-4">
+                      <div className="flex items-center space-x-2">
+                        <Stethoscope className="h-4 w-4 text-teal-500" />
+                        <h4 className="font-bold text-sm">Recommended Department</h4>
+                      </div>
+                      <div className="p-4 bg-teal-50 dark:bg-teal-950/20 border border-teal-200 dark:border-teal-800/50 rounded-2xl">
+                        <span className="text-[9px] font-black text-teal-600 dark:text-teal-400 uppercase tracking-wider block">Suggested Specialty</span>
+                        <p className="text-sm font-extrabold text-teal-700 dark:text-teal-300 mt-0.5">{r.recommended_specialty}</p>
+                        <span className="text-[9px] text-teal-500/70 mt-1 block">Available in hospital: {r.mapped_db_dept}</span>
+                      </div>
+                      {r.recommended_doctors && r.recommended_doctors.length > 0 ? (
+                        <div className="space-y-2">
+                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider block">Available Doctors</span>
+                          {r.recommended_doctors.map(doc => (
+                            <div key={doc.id} className="flex items-center justify-between p-3 border border-slate-100 dark:border-slate-800 rounded-2xl hover:border-teal-300 dark:hover:border-teal-700 transition-all">
+                              <div className="flex items-center space-x-3">
+                                <div className="bg-teal-100 dark:bg-teal-950/40 p-2 rounded-xl">
+                                  <User className="h-4 w-4 text-teal-600 dark:text-teal-400" />
+                                </div>
+                                <div>
+                                  <span className="text-xs font-bold text-slate-800 dark:text-white block">{doc.name}</span>
+                                  <span className="text-[9px] text-slate-400">{doc.specialization} • Room {doc.room_number}</span>
+                                </div>
+                              </div>
+                              <button
+                                onClick={() => { setBookingForm(prev => ({ ...prev, doctor_id: doc.id.toString() })); setActiveTab('appointments'); setBookingModal(true); }}
+                                className="text-[9px] font-black text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/30 border border-teal-200 dark:border-teal-800 px-2.5 py-1 rounded-lg hover:bg-teal-100 dark:hover:bg-teal-900/40 transition-all"
+                              >
+                                Book
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-xs text-slate-400 text-center py-2">No doctors available in this department currently.</p>
+                      )}
+                    </div>
+
+                    {/* Lab Tests */}
+                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm space-y-4">
+                      <div className="flex items-center space-x-2">
+                        <FlaskConical className="h-4 w-4 text-blue-500" />
+                        <h4 className="font-bold text-sm">Suggested Laboratory Tests</h4>
+                      </div>
+                      <div className="space-y-2">
+                        {r.suggested_tests.map((test, idx) => (
+                          <div key={idx} className="flex items-center space-x-3 p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/40 rounded-xl">
+                            <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-[9px] font-black shrink-0">{idx + 1}</div>
+                            <span className="text-xs font-medium text-slate-700 dark:text-slate-300">{test}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Medicine Suggestions */}
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm space-y-4">
+                    <div className="flex items-center space-x-2">
+                      <Pill className="h-4 w-4 text-indigo-500" />
+                      <h4 className="font-bold text-sm">Educational Medicine Information</h4>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {r.suggested_medicines.map((med, idx) => (
+                        <div key={idx} className="flex items-start space-x-3 p-3 bg-indigo-50 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/40 rounded-xl">
+                          <Pill className="h-4 w-4 text-indigo-500 shrink-0 mt-0.5" />
+                          <span className="text-xs font-medium text-slate-700 dark:text-slate-300">{med}</span>
+                        </div>
+                      ))}
+                    </div>
+                    {/* Disclaimer */}
+                    <div className="mt-3 p-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/50 rounded-2xl">
+                      <p className="text-[10px] text-amber-700 dark:text-amber-300 font-semibold leading-relaxed">
+                        ⚠️ {r.medicine_disclaimer}
+                      </p>
+                    </div>
+                  </div>
+
+                </div>
+              );
+            })()}
+
           </div>
         )}
 
