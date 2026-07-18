@@ -75,6 +75,10 @@ class Patient(Base):
     reports = relationship("MedicalReport", back_populates="patient", cascade="all, delete")
     disease_predictions = relationship("DiseasePredictionLog", back_populates="patient", cascade="all, delete")
     prediction_histories = relationship("PredictionHistory", back_populates="patient", cascade="all, delete")
+    chat_histories = relationship("ChatHistory", back_populates="patient", cascade="all, delete")
+    health_score_histories = relationship("HealthScoreHistory", back_populates="patient", cascade="all, delete")
+    risk_alerts = relationship("RiskAlert", back_populates="patient", cascade="all, delete")
+    care_plans = relationship("CarePlan", back_populates="patient", cascade="all, delete")
 
 class Appointment(Base):
     __tablename__ = "appointments"
@@ -253,3 +257,64 @@ class PredictionHistory(Base):
 
     # Relationships
     patient = relationship("Patient", back_populates="prediction_histories")
+
+class ChatHistory(Base):
+    __tablename__ = "chat_histories"
+
+    id = Column(Integer, primary_key=True, index=True)
+    patient_id = Column(Integer, ForeignKey("patients.id", ondelete="CASCADE"), nullable=False)
+    sender = Column(String, nullable=False)  # "user", "assistant"
+    message = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    # Relationships
+    patient = relationship("Patient", back_populates="chat_histories")
+
+class HealthScoreHistory(Base):
+    __tablename__ = "health_score_histories"
+
+    id = Column(Integer, primary_key=True, index=True)
+    patient_id = Column(Integer, ForeignKey("patients.id", ondelete="CASCADE"), nullable=False)
+    score = Column(Integer, nullable=False)
+    risk_category = Column(String, nullable=False)
+    trend = Column(String, nullable=False)
+    confidence = Column(Float, nullable=False)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    # Relationships
+    patient = relationship("Patient", back_populates="health_score_histories")
+
+class RiskAlert(Base):
+    __tablename__ = "risk_alerts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    patient_id = Column(Integer, ForeignKey("patients.id", ondelete="CASCADE"), nullable=False)
+    alert_type = Column(String, nullable=False)
+    priority = Column(String, nullable=False)  # "Critical", "High", "Medium", "Low"
+    description = Column(Text, nullable=False)
+    is_resolved = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    # Relationships
+    patient = relationship("Patient", back_populates="risk_alerts")
+
+class CarePlan(Base):
+    __tablename__ = "care_plans"
+
+    id = Column(Integer, primary_key=True, index=True)
+    patient_id = Column(Integer, ForeignKey("patients.id", ondelete="CASCADE"), nullable=False)
+    diet_recommendations = Column(Text, nullable=True)
+    exercise_suggestions = Column(Text, nullable=True)
+    medication_reminders = Column(Text, nullable=True)
+    lifestyle_improvements = Column(Text, nullable=True)
+    preventive_care = Column(Text, nullable=True)
+    vaccinations = Column(Text, nullable=True)
+    sleep_recommendations = Column(Text, nullable=True)
+    hydration_goals = Column(Text, nullable=True)
+    is_approved = Column(Boolean, default=False)
+    doctor_id = Column(Integer, ForeignKey("doctors.id", ondelete="SET NULL"), nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    # Relationships
+    patient = relationship("Patient", back_populates="care_plans")
+    doctor = relationship("Doctor")

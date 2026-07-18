@@ -301,6 +301,133 @@ export const reportsService = {
   }
 };
 
+// Advanced Analytics Services
+export const analyticsService = {
+  getAdminAnalytics: async (params) => {
+    const response = await api.get('/api/analytics/admin/analytics', { params });
+    return response.data;
+  },
+  getAdminCharts: async (params) => {
+    const response = await api.get('/api/analytics/admin/charts', { params });
+    return response.data;
+  },
+  getHighRiskPatients: async () => {
+    const response = await api.get('/api/analytics/admin/high-risk-patients');
+    return response.data;
+  },
+  getRecentActivities: async () => {
+    const response = await api.get('/api/analytics/admin/recent-activities');
+    return response.data;
+  },
+  getDoctorAnalytics: async (doctorId, params) => {
+    const response = await api.get('/api/analytics/doctor/analytics', {
+      params: { doctor_id: doctorId, ...params }
+    });
+    return response.data;
+  },
+  getDoctorCharts: async (doctorId, params) => {
+    const response = await api.get('/api/analytics/doctor/charts', {
+      params: { doctor_id: doctorId, ...params }
+    });
+    return response.data;
+  },
+  getDoctorInsights: async (doctorId, params) => {
+    const response = await api.get('/api/analytics/doctor/insights', {
+      params: { doctor_id: doctorId, ...params }
+    });
+    return response.data;
+  },
+  getPredictionAnalytics: async (params) => {
+    const response = await api.get('/api/analytics/predictions/analytics', { params });
+    return response.data;
+  }
+};
+
+
+// Smart Clinical Workspace Services
+export const clinicalService = {
+  getPatientSummary: async (patientId) => {
+    const response = await api.get('/api/clinical/patient-summary', {
+      params: { patient_id: patientId }
+    });
+    return response.data;
+  },
+  getTimeline: async (patientId) => {
+    const response = await api.get('/api/clinical/timeline', {
+      params: { patient_id: patientId }
+    });
+    return response.data;
+  },
+  getAssistantSummary: async (data) => {
+    const response = await api.post('/api/clinical/assistant', data);
+    return response.data;
+  },
+  getPrescriptionScreening: async (data) => {
+    const response = await api.post('/api/clinical/prescription-assistant', data);
+    return response.data;
+  },
+  getFollowupRecommendation: async (data) => {
+    const response = await api.post('/api/clinical/followup', data);
+    return response.data;
+  },
+  getPatientFlags: async (data) => {
+    const response = await api.post('/api/clinical/flags', data);
+    return response.data;
+  },
+  getClinicalDecisionSupport: async (data) => {
+    const response = await api.post('/api/clinical/recommendations', data);
+    return response.data;
+  }
+};
+
+// AI Intelligence Services
+export const aiService = {
+  getHealthScore: async (patientId) => {
+    const response = await api.get(`/api/ai/health-score/${patientId}`);
+    return response.data;
+  },
+  getTimeline: async (patientId) => {
+    const response = await api.get(`/api/ai/timeline/${patientId}`);
+    return response.data;
+  },
+  sendMessage: async (patientId, message) => {
+    const response = await api.post('/api/ai/chat', { patient_id: patientId, message });
+    return response.data;
+  },
+  uploadOcrReport: async (patientId, fileName, fileContent = null) => {
+    const response = await api.post('/api/ai/ocr-report', { patient_id: patientId, file_name: fileName, file_content: fileContent });
+    return response.data;
+  },
+  saveOcrReport: async (data) => {
+    const response = await api.post('/api/ai/ocr-report/save', data);
+    return response.data;
+  },
+  submitVoiceSymptoms: async (patientId, audioBase64) => {
+    const response = await api.post('/api/ai/voice-symptoms', { patient_id: patientId, audio_base_64: audioBase64 });
+    return response.data;
+  },
+  getCarePlan: async (patientId) => {
+    const response = await api.get(`/api/ai/care-plan/${patientId}`);
+    return response.data;
+  },
+  updateCarePlan: async (patientId, data) => {
+    const response = await api.post(`/api/ai/care-plan/${patientId}`, data);
+    return response.data;
+  },
+  getRiskAlerts: async (patientId) => {
+    const response = await api.get(`/api/ai/risk-alerts/${patientId}`);
+    return response.data;
+  },
+  getHealthInsights: async (patientId) => {
+    const response = await api.get(`/api/ai/health-insights/${patientId}`);
+    return response.data;
+  },
+  getPatientSummary: async (patientId) => {
+    const response = await api.get(`/api/ai/patient-summary/${patientId}`);
+    return response.data;
+  }
+};
+
 // WebSocket Service Creator
 export const createQueueWebSocket = (onMessageCallback) => {
   const wsProto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';

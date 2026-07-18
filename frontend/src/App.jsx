@@ -3,9 +3,18 @@ import { HashRouter as Router, Routes, Route, Navigate, Link } from 'react-route
 import { Sun, Moon, LogOut, Activity } from 'lucide-react';
 import Login from './pages/Login';
 import PatientDashboard from './pages/PatientDashboard';
+import Home from './pages/patient/Home';
+import MyHealth from './pages/patient/MyHealth';
+import HealthScore from './pages/patient/HealthScore';
+import Appointments from './pages/patient/Appointments';
+import Prescriptions from './pages/patient/Prescriptions';
+import Reports from './pages/patient/Reports';
+import AIChat from "./pages/patient/AIChat";
+import Profile from './pages/patient/Profile';
 import ReceptionistDashboard from './pages/ReceptionistDashboard';
 import DoctorDashboard from './pages/DoctorDashboard';
 import AdminDashboard from './pages/AdminDashboard';
+import PatientLayout from './layouts/PatientLayout';
 import { authService } from './services/api';
 
 function App() {
@@ -14,8 +23,8 @@ function App() {
 
   useEffect(() => {
     // Check dark mode preference
-    const isDark = localStorage.getItem('theme') === 'dark' || 
-                   (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    const isDark = localStorage.getItem('theme') === 'dark' ||
+      (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
     setDarkMode(isDark);
     if (isDark) {
       document.documentElement.classList.add('dark');
@@ -64,7 +73,7 @@ function App() {
   return (
     <Router>
       <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
-        
+
         {/* Navigation Bar */}
         <nav className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -80,7 +89,7 @@ function App() {
                   <span className="text-xs block text-slate-500 dark:text-slate-400 font-medium">Smart Queue Management</span>
                 </div>
               </div>
-              
+
               <div className="flex items-center space-x-4">
                 {/* Theme Toggle */}
                 <button
@@ -114,55 +123,65 @@ function App() {
         {/* Main Content Area */}
         <main className="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
           <Routes>
-            <Route 
-              path="/login" 
-              element={user ? <Navigate to={`/${user.role.toLowerCase()}`} replace /> : <Login onLoginSuccess={setUser} />} 
+            <Route
+              path="/login"
+              element={user ? <Navigate to={`/${user.role.toLowerCase()}`} replace /> : <Login onLoginSuccess={setUser} />}
             />
-            
-            <Route 
-              path="/patient" 
+
+            <Route
+              path="/patient"
               element={
                 <ProtectedRoute allowedRoles={["Patient"]}>
-                  <PatientDashboard />
+                  <PatientLayout />
                 </ProtectedRoute>
-              } 
-            />
-            
-            <Route 
-              path="/receptionist" 
+              }
+            >
+              <Route index element={<Navigate to="home" replace />} />
+              <Route path="home" element={<Home />} />
+              <Route path="health" element={<MyHealth />} />
+              <Route path="health-score" element={<HealthScore />} />
+              <Route path="appointments" element={<Appointments />} />
+              <Route path="prescriptions" element={<Prescriptions />} />
+              <Route path="reports" element={<Reports />} />
+              <Route path="ai-chat" element={<AIChat />} />
+              <Route path="profile" element={<Profile />} />
+            </Route>
+
+            <Route
+              path="/receptionist"
               element={
                 <ProtectedRoute allowedRoles={["Receptionist", "Admin"]}>
                   <ReceptionistDashboard />
                 </ProtectedRoute>
-              } 
+              }
             />
-            
-            <Route 
-              path="/doctor" 
+
+            <Route
+              path="/doctor"
               element={
                 <ProtectedRoute allowedRoles={["Doctor"]}>
                   <DoctorDashboard />
                 </ProtectedRoute>
-              } 
+              }
             />
-            
-            <Route 
-              path="/admin" 
+
+            <Route
+              path="/admin"
               element={
                 <ProtectedRoute allowedRoles={["Admin"]}>
                   <AdminDashboard />
                 </ProtectedRoute>
-              } 
+              }
             />
 
             {/* Catch-all redirect */}
-            <Route 
-              path="*" 
-              element={<Navigate to={user ? `/${user.role.toLowerCase()}` : "/login"} replace />} 
+            <Route
+              path="*"
+              element={<Navigate to={user ? `/${user.role.toLowerCase()}` : "/login"} replace />}
             />
           </Routes>
         </main>
-        
+
         {/* Footer */}
         <footer className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-4 text-center text-xs text-slate-500 dark:text-slate-400">
           &copy; {new Date().getFullYear()} AcuraQueue AI-Powered Patient Flow. All rights reserved.

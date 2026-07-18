@@ -10,7 +10,7 @@ from backend.database.schemas import (
     PatientCreate, PatientResponse, ConsultationResponse, PatientProfileUpdate,
     VisitResponse, PrescriptionItemResponse, MedicalReportResponse, NotificationResponse
 )
-from backend.services.auth_service import get_password_hash, RoleChecker, get_current_user
+from backend.services.auth_service import get_password_hash, RoleChecker, get_current_user, get_current_user_optional
 
 router = APIRouter(prefix="/api/patients", tags=["Patients"])
 
@@ -31,7 +31,7 @@ receptionist_or_admin = RoleChecker(["Admin", "Receptionist"])
 def register_patient(
     patient_in: PatientCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(RoleChecker(["Admin", "Receptionist", "Patient"]))
+    current_user: Optional[User] = Depends(get_current_user_optional)
 ):
     # Determine user linkage
     user_id = None
@@ -54,17 +54,30 @@ def register_patient(
         db.commit()
         db.refresh(new_user)
         user_id = new_user.id
-
-    # If the user is self-registering as a patient, associate with their active user account
-    elif current_user.role == "Patient":
-        # Check if this user already has a patient profile
-        existing_patient = db.query(Patient).filter(Patient.user_id == current_user.id).first()
-        if existing_patient:
+        
+    # If not registering with username/password, authentication is required
+    else:
+        if not current_user:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="You have already registered a patient profile"
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Authentication required to register patient walk-in profile"
             )
-        user_id = current_user.id
+        if current_user.role not in ["Admin", "Receptionist", "Patient"]:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You do not have permission to register a patient profile"
+            )
+
+        # If the user is self-registering as a patient, associate with their active user account
+        if current_user.role == "Patient":
+            # Check if this user already has a patient profile
+            existing_patient = db.query(Patient).filter(Patient.user_id == current_user.id).first()
+            if existing_patient:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="You have already registered a patient profile"
+                )
+            user_id = current_user.id
 
     patient = Patient(
         user_id=user_id,
@@ -79,7 +92,7 @@ def register_patient(
 
     # Audit log
     log = AuditLog(
-        user_id=current_user.id,
+        user_id=current_user.id if current_user else patient.user_id,
         action="Register Patient",
         details=f"Registered patient {patient.name} (id: {patient.id})"
     )

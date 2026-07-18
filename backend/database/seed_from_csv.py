@@ -5,7 +5,7 @@ import random
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 from backend.database.models import (
-    Department, User, Doctor, Patient, Appointment, Queue, Visit, PrescriptionItem, MedicalReport, Notification
+    Department, User, Doctor, Patient, Appointment, Queue, Visit, PrescriptionItem, MedicalReport, Notification, Consultation, PredictionHistory
 )
 from backend.services.auth_service import get_password_hash
 
@@ -225,6 +225,14 @@ def seed_db_from_csv(db: Session, base_csv_path: str):
         queue_df = load_csv_safe("15_queue.csv", datasets_dir)
         doctor_dept_ids = {idx + 1: d_profiles["department_id"] for idx, d_profiles in enumerate(doctor_profiles)}
         
+        # Load department codes to generate proper token names
+        depts = db.query(Department).all()
+        dept_info = {d.id: d.code.upper() for d in depts}
+        
+        # Initialize token and position counters per department
+        dept_token_counters = {}
+        dept_position_counters = {}
+        
         queue_mappings = []
         for idx, row in queue_df.iterrows():
             p_id = patient_csv_to_db_id.get(row["Patient_ID"])
@@ -232,16 +240,35 @@ def seed_db_from_csv(db: Session, base_csv_path: str):
             dept_id = doctor_dept_ids.get(d_id, 1)
             
             if p_id:
+                dept_code = dept_info.get(dept_id, "GEN")
+                if dept_id not in dept_token_counters:
+                    dept_token_counters[dept_id] = 0
+                dept_token_counters[dept_id] += 1
+                
+                # Generate unique sequential token number (e.g., GEN001)
+                token_num = f"{dept_code}{dept_token_counters[dept_id]:03d}"
+                
+                status = row["Status"]
+                
+                # Assign sequential queue positions for Waiting patients
+                if status == "Waiting":
+                    if dept_id not in dept_position_counters:
+                        dept_position_counters[dept_id] = 0
+                    dept_position_counters[dept_id] += 1
+                    pos = dept_position_counters[dept_id]
+                else:
+                    pos = 1
+                
                 queue_mappings.append({
-                    "token_number": row["Token_Number"],
+                    "token_number": token_num,
                     "department_id": dept_id,
                     "doctor_id": d_id,
                     "patient_id": p_id,
                     "priority_level": 3,
-                    "status": row["Status"],
+                    "status": status,
                     "checked_in_time": datetime.datetime.utcnow() - datetime.timedelta(minutes=random.randint(10, 120)),
                     "estimated_wait_time": float(str(row["Estimated_Wait_Time"]).lower().replace(" min", "").replace("s", "").strip()),
-                    "position": int(row["Queue_Position"])
+                    "position": pos
                 })
                 
         db.bulk_insert_mappings(Queue, queue_mappings)
@@ -354,6 +381,91 @@ def seed_db_from_csv(db: Session, base_csv_path: str):
         print("Notifications seeding complete.", flush=True)
     except Exception as e:
         print(f"ERROR seeding Notifications: {e}", flush=True)
+        db.rollback()
+        raise e
+
+    # 10. Seed Consultations from the Visits
+    print("Starting Consultations seeding...", flush=True)
+    try:
+        consultation_mappings = []
+        visits = db.query(Visit).all()
+        visit_prescriptions = {}
+        for p_item in db.query(PrescriptionItem).all():
+            if p_item.visit_id not in visit_prescriptions:
+                visit_prescriptions[p_item.visit_id] = []
+            visit_prescriptions[p_item.visit_id].append(p_item.medicine_name)
+            
+        for v in visits:
+            med_list = visit_prescriptions.get(v.id, ["Paracetamol 500mg"])
+            prescription_text = ", ".join(med_list)
+            consultation_mappings.append({
+                "doctor_id": v.doctor_id,
+                "patient_id": v.patient_id,
+                "symptoms": v.chief_complaint or "Routine check-up",
+                "diagnosis": v.diagnosis or "Unremarkable",
+                "prescription": prescription_text,
+                "duration_minutes": random.randint(10, 25),
+                "created_at": v.visit_date
+            })
+            
+        db.bulk_insert_mappings(Consultation, consultation_mappings)
+        db.commit()
+        print("Consultations seeding complete.", flush=True)
+    except Exception as e:
+        print(f"ERROR seeding Consultations: {e}", flush=True)
+        db.rollback()
+        raise e
+
+    # 11. Seed PredictionHistory
+    print("Starting Prediction History seeding...", flush=True)
+    try:
+        import json
+        ph_mappings = []
+        diseases = ["Diabetes", "Asthma", "Migraine", "Heart Attack", "Stroke", "Sepsis", "Common Cold"]
+        risk_levels = {
+            "Diabetes": ["Medium", "High"],
+            "Asthma": ["Low", "Medium", "High"],
+            "Migraine": ["Low", "Medium"],
+            "Heart Attack": ["High", "Critical"],
+            "Stroke": ["High", "Critical"],
+            "Sepsis": ["Critical"],
+            "Common Cold": ["Low"]
+        }
+        disease_symptoms = {
+            "Diabetes": ["Frequent Urination", "Increased Thirst", "Family History Of Diabetes"],
+            "Asthma": ["Shortness Of Breath", "Wheezing", "Chest Tightness", "Cough"],
+            "Migraine": ["Throbbing Headache", "Nausea", "Light Sensitivity"],
+            "Heart Attack": ["Chest Pain", "Pain Radiating To Arm Or Jaw", "Sweating"],
+            "Stroke": ["Sudden Numbness Or Weakness", "Trouble Speaking", "Confusion", "Drooping Face"],
+            "Sepsis": ["Shivering", "Rapid Breathing", "Confusion"],
+            "Common Cold": ["Cough", "Shivering"]
+        }
+        
+        patient_ids = [p.id for p in db.query(Patient.id).all()]
+        if patient_ids:
+            for _ in range(2000):
+                p_id = random.choice(patient_ids)
+                disease = random.choice(diseases)
+                risk = random.choice(risk_levels[disease])
+                symptom_list = disease_symptoms[disease]
+                random_days = random.randint(0, 365)
+                pred_time = datetime.datetime.utcnow() - datetime.timedelta(days=random_days, hours=random.randint(0, 23))
+                
+                ph_mappings.append({
+                    "patient_id": p_id,
+                    "predicted_disease": disease,
+                    "confidence": round(random.uniform(0.65, 0.98), 2),
+                    "risk_level": risk,
+                    "symptoms": json.dumps(symptom_list),
+                    "prediction_time": pred_time,
+                    "created_at": pred_time
+                })
+            
+            db.bulk_insert_mappings(PredictionHistory, ph_mappings)
+            db.commit()
+        print("Prediction History seeding complete.", flush=True)
+    except Exception as e:
+        print(f"ERROR seeding Prediction History: {e}", flush=True)
         db.rollback()
         raise e
 

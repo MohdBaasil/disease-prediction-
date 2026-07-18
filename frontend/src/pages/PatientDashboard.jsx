@@ -9,10 +9,11 @@ import {
   patientService, dashboardService, queueService, 
   appointmentsService, doctorService, createQueueWebSocket 
 } from '../services/api';
+import PatientAIPortal from './PatientAIPortal';
 
-function PatientDashboard() {
+function PatientDashboard({ initialTab = 'appointments' }) {
   // Tabs: profile, appointments, prescription, history, medicines, reports, notifications, diagnosis
-  const [activeTab, setActiveTab] = useState('appointments');
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [patient, setPatient] = useState(null);
   const [stats, setStats] = useState(null);
   
@@ -434,6 +435,15 @@ function PatientDashboard() {
           <Stethoscope className="h-5 w-5" />
           <span>Disease Diagnosis</span>
           <span className="ml-auto text-[8px] font-black bg-white/20 text-white px-1.5 py-0.5 rounded-full">Reserved</span>
+        </button>
+
+        <button 
+          onClick={() => setActiveTab('ai_portal')}
+          className={`w-full flex items-center space-x-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all ${activeTab === 'ai_portal' ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-md' : 'text-slate-650 hover:bg-slate-100/50 dark:hover:bg-slate-800/50'}`}
+        >
+          <Sparkles className="h-5 w-5" />
+          <span>AI Health & Care</span>
+          <span className="ml-auto text-[8px] font-black bg-white/25 text-white px-1.5 py-0.5 rounded-full">New</span>
         </button>
 
         <button 
@@ -1959,6 +1969,11 @@ function PatientDashboard() {
             `}</style>
 
           </div>
+        )}
+
+        {/* ---------------- AI HEALTH PORTAL TAB ---------------- */}
+        {activeTab === 'ai_portal' && patient && (
+          <PatientAIPortal patientId={patient.id} />
         )}
 
       </div>
