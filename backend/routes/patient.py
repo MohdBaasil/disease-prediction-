@@ -174,14 +174,20 @@ def update_patient_profile(
 ):
     patient = db.query(Patient).filter(Patient.user_id == current_user.id).first()
     if not patient:
-        raise HTTPException(status_code=404, detail="Patient profile not found")
+        raise HTTPException(status_code=404, detail="Patient profile not found for logged-in user account.")
 
     update_data = profile_in.model_dump(exclude_unset=True)
     for key, value in update_data.items():
+        if isinstance(value, str) and value.strip() == "":
+            value = None
         setattr(patient, key, value)
     
-    db.commit()
-    db.refresh(patient)
+    try:
+        db.commit()
+        db.refresh(patient)
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"Failed to save profile changes: {str(e)}")
     
     log = AuditLog(
         user_id=current_user.id,
