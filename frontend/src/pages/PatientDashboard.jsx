@@ -52,8 +52,23 @@ const HEALTH_TIPS = [
 ];
 
 function PatientDashboard({ initialTab = 'home' }) {
+  const normalizeTab = (tab) => {
+    if (!tab) return 'home';
+    const lower = tab.toLowerCase();
+    if (lower === 'health' || lower === 'history' || lower === 'medical-records' || lower === 'records') return 'history';
+    if (lower === 'prescriptions' || lower === 'prescription') return 'prescription';
+    if (lower === 'health-score' || lower === 'score') return 'diagnosis';
+    return lower;
+  };
+
   // Tabs: home, appointments, prescription, history, medicines, reports, notifications, diagnosis, ai_portal, profile
-  const [activeTab, setActiveTab] = useState(initialTab);
+  const [activeTab, setActiveTab] = useState(() => normalizeTab(initialTab));
+
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(normalizeTab(initialTab));
+    }
+  }, [initialTab]);
   const [patient, setPatient] = useState(null);
   const [stats, setStats] = useState(null);
 
@@ -92,6 +107,7 @@ function PatientDashboard({ initialTab = 'home' }) {
   const [historyDeptFilter, setHistoryDeptFilter] = useState('');
   const [historyDocFilter, setHistoryDocFilter] = useState('');
   const [historyDateFilter, setHistoryDateFilter] = useState('');
+  const [expandedVisits, setExpandedVisits] = useState({});
   const [medicineSearch, setMedicineSearch] = useState('');
   const [appointmentSearch, setAppointmentSearch] = useState('');
   const [appointmentStatusFilter, setAppointmentStatusFilter] = useState('All');
@@ -126,7 +142,7 @@ function PatientDashboard({ initialTab = 'home' }) {
   const loadAllData = async () => {
     try {
       setError('');
-      // 1. Get profile
+      // 1. Get profile (Critical)
       const profile = await patientService.getMe();
       setPatient(profile);
       setProfileForm({
@@ -144,61 +160,32 @@ function PatientDashboard({ initialTab = 'home' }) {
         age: profile.age ? profile.age.toString() : ''
       }));
 
-      // 2. Queue stats
-      const patientStats = await dashboardService.getPatientStats(profile.id);
-      setStats(patientStats);
-
-      // 3. Appointments list
-      const apps = await appointmentsService.list();
-      setAppointments(apps);
-
-      // 4. Visits list
-      const vis = await patientService.getVisits();
-      setVisits(vis);
-
-      // 5. Prescriptions list
-      const meds = await patientService.getPrescriptions();
-      setPrescriptions(meds);
-
-      // 6. Reports list
-      const reps = await patientService.getReports();
-      setReports(reps);
-
-      // 7. Notifications list
-      const notifs = await patientService.getNotifications();
-      setNotifications(notifs);
-
-      // 8. Departments & Doctors for booking / check-in
-      const depts = await queueService.getDepartments();
-      setDepartments(depts);
-      if (depts.length > 0 && !selectedDept) {
-        setSelectedDept(depts[0].id.toString());
-      }
-
-      const docs = await doctorService.list();
-      setDoctors(docs);
-      if (docs.length > 0 && !bookingForm.doctor_id) {
-        setBookingForm(prev => ({ ...prev, doctor_id: docs[0].id.toString() }));
-      }
-
-      // 9. Dynamic symptoms
-      try {
-        const symsList = await patientService.getSymptoms();
-        setAllSymptoms(symsList);
-      } catch (err) {
-        console.error("Failed to load symptoms", err);
-      }
-
-      // 10. Predictions history
-      try {
-        const historyList = await patientService.getPredictionHistory();
-        setPredictionHistory(historyList);
-      } catch (err) {
-        console.error("Failed to load prediction history", err);
-      }
+      // 2. Fetch sub-service data concurrently without letting one failure block the entire dashboard
+      await Promise.allSettled([
+        dashboardService.getPatientStats(profile.id).then(setStats).catch(console.error),
+        appointmentsService.list().then(setAppointments).catch(console.error),
+        patientService.getVisits().then(setVisits).catch(console.error),
+        patientService.getPrescriptions().then(setPrescriptions).catch(console.error),
+        patientService.getReports().then(setReports).catch(console.error),
+        patientService.getNotifications().then(setNotifications).catch(console.error),
+        queueService.getDepartments().then(depts => {
+          setDepartments(depts || []);
+          if (depts && depts.length > 0 && !selectedDept) {
+            setSelectedDept(depts[0].id.toString());
+          }
+        }).catch(console.error),
+        doctorService.list().then(docs => {
+          setDoctors(docs || []);
+          if (docs && docs.length > 0 && !bookingForm.doctor_id) {
+            setBookingForm(prev => ({ ...prev, doctor_id: docs[0].id.toString() }));
+          }
+        }).catch(console.error),
+        patientService.getSymptoms().then(syms => setAllSymptoms(syms || [])).catch(console.error),
+        patientService.getPredictionHistory().then(hist => setPredictionHistory(hist || [])).catch(console.error)
+      ]);
 
     } catch (err) {
-      console.error(err);
+      console.error("Failed to load patient profile:", err);
       setError('Failed to fetch patient data.');
     } finally {
       setLoading(false);
@@ -397,17 +384,17 @@ function PatientDashboard({ initialTab = 'home' }) {
   const activeQueueToken = stats?.active_tokens && stats.active_tokens.length > 0 ? stats.active_tokens[0] : null;
 
   // Filter visits
-  const filteredVisits = visits.filter(v => {
+  const filteredVisits = (visits || []).filter(v => {
     const matchesSearch = historySearch ? (v.diagnosis || '').toLowerCase().includes(historySearch.toLowerCase()) : true;
     const matchesDept = historyDeptFilter ? v.department === historyDeptFilter : true;
     const matchesDoc = historyDocFilter ? v.doctor?.name === historyDocFilter : true;
-    const matchesDate = historyDateFilter ? new Date(v.visit_date).toLocaleDateString() === new Date(historyDateFilter).toLocaleDateString() : true;
+    const matchesDate = historyDateFilter && v.visit_date ? new Date(v.visit_date).toLocaleDateString() === new Date(historyDateFilter).toLocaleDateString() : true;
     return matchesSearch && matchesDept && matchesDoc && matchesDate;
   });
 
   // Filter medicines
-  const filteredPrescriptions = prescriptions.filter(p =>
-    medicineSearch ? p.medicine_name.toLowerCase().includes(medicineSearch.toLowerCase()) : true
+  const filteredPrescriptions = (prescriptions || []).filter(p =>
+    medicineSearch ? (p.medicine_name || '').toLowerCase().includes(medicineSearch.toLowerCase()) : true
   );
 
   // Recent activity generator
@@ -1763,34 +1750,127 @@ function PatientDashboard({ initialTab = 'home' }) {
         )}
 
         {/* ========================================================= */}
-        {/* ---------------- VISIT / MEDICAL HISTORY TAB ---------------- */}
+        {/* ---------------- VISIT / MEDICAL HISTORY (EHR) TAB ---------------- */}
         {/* ========================================================= */}
         {activeTab === 'history' && (
           <div className="space-y-6">
-            {/* Filter controls */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm flex flex-col md:flex-row items-center gap-4 justify-between">
-              <div className="relative w-full md:w-72">
-                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
-                  <Search className="h-4 w-4" />
-                </span>
+
+            {/* EHR Hero Header */}
+            <div className="relative rounded-3xl bg-gradient-to-r from-hospital-600 via-hospital-500 to-indigo-600 dark:from-slate-900 dark:via-hospital-950 dark:to-slate-900 p-6 md:p-8 text-white shadow-xl overflow-hidden border border-hospital-400/20 dark:border-slate-800">
+              <div className="absolute -top-12 -right-12 h-64 w-64 bg-white/10 dark:bg-hospital-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+              <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                <div className="space-y-1.5">
+                  <div className="flex items-center space-x-2">
+                    <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-white/20 text-white border border-white/30 backdrop-blur-md">
+                      Electronic Health Records
+                    </span>
+                    <span className="text-[10px] text-hospital-100 dark:text-slate-400 font-semibold">
+                      {visits.length} Clinical Encounters
+                    </span>
+                  </div>
+
+                  <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
+                    Medical Records & Clinical History
+                  </h1>
+
+                  <p className="text-xs text-hospital-100 dark:text-slate-300 max-w-xl">
+                    Comprehensive EHR timeline of outpatient consultations, physician diagnoses, chief complaints, prescribed treatments, and clinical recommendations.
+                  </p>
+                </div>
+
+                <div className="bg-white/10 p-3 rounded-2xl backdrop-blur-md border border-white/20 shrink-0 hidden md:block">
+                  <Activity className="h-8 w-8 text-white" />
+                </div>
+              </div>
+            </div>
+
+            {/* EHR KPI Metrics Summary Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Total Consultations */}
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Consultations</span>
+                  <div className="p-2.5 rounded-2xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400">
+                    <Activity className="h-5 w-5" />
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-2xl font-black text-slate-800 dark:text-white">{visits.length}</h3>
+                  <p className="text-[10px] text-slate-400 font-medium">Recorded OPD visits</p>
+                </div>
+              </div>
+
+              {/* Diagnoses Logged */}
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Diagnoses</span>
+                  <div className="p-2.5 rounded-2xl bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400">
+                    <Stethoscope className="h-5 w-5" />
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-2xl font-black text-slate-800 dark:text-white">
+                    {visits.filter(v => v.diagnosis).length}
+                  </h3>
+                  <p className="text-[10px] text-slate-400 font-medium">Clinical diagnoses logged</p>
+                </div>
+              </div>
+
+              {/* Active Medications */}
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Prescriptions</span>
+                  <div className="p-2.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400">
+                    <Pill className="h-5 w-5" />
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-2xl font-black text-slate-800 dark:text-white">{prescriptions.length}</h3>
+                  <p className="text-[10px] text-slate-400 font-medium">Prescribed Rx items</p>
+                </div>
+              </div>
+
+              {/* Lab Reports */}
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Lab Reports</span>
+                  <div className="p-2.5 rounded-2xl bg-cyan-50 dark:bg-cyan-950/50 text-cyan-600 dark:text-cyan-400">
+                    <FileText className="h-5 w-5" />
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-2xl font-black text-slate-800 dark:text-white">{reports.length}</h3>
+                  <p className="text-[10px] text-slate-400 font-medium">Diagnostic lab results</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Filter controls Toolbar */}
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 shadow-sm flex flex-col md:flex-row items-center gap-4 justify-between">
+              
+              {/* Search input */}
+              <div className="relative w-full md:w-80">
+                <Search className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
                 <input
                   type="text"
                   value={historySearch}
                   onChange={(e) => setHistorySearch(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-slate-200 dark:border-slate-800 bg-transparent rounded-xl text-xs focus:ring-1 focus:ring-hospital-500 outline-none"
-                  placeholder="Search diagnosis..."
+                  className="w-full pl-10 pr-4 py-2.5 border border-slate-200 dark:border-slate-800 bg-transparent rounded-2xl text-xs outline-none focus:ring-2 focus:ring-hospital-500 text-slate-800 dark:text-white"
+                  placeholder="Search diagnosis or clinical notes..."
                 />
               </div>
 
+              {/* Multi-Filters */}
               <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
                 <div className="flex items-center space-x-1.5">
-                  <span className="text-xs text-slate-400 font-semibold shrink-0">Dept:</span>
+                  <span className="text-xs text-slate-400 font-bold shrink-0">Dept:</span>
                   <select
                     value={historyDeptFilter}
                     onChange={(e) => setHistoryDeptFilter(e.target.value)}
-                    className="px-2.5 py-1.5 border border-slate-200 dark:border-slate-800 bg-transparent rounded-xl text-xs w-24 md:w-28"
+                    className="px-3 py-2 border border-slate-200 dark:border-slate-800 bg-transparent rounded-xl text-xs font-semibold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-hospital-500"
                   >
-                    <option value="">All</option>
+                    <option value="">All Departments</option>
                     {Array.from(new Set(visits.map(v => v.department).filter(Boolean))).map(dept => (
                       <option key={dept} value={dept}>{dept}</option>
                     ))}
@@ -1798,26 +1878,27 @@ function PatientDashboard({ initialTab = 'home' }) {
                 </div>
 
                 <div className="flex items-center space-x-1.5">
-                  <span className="text-xs text-slate-400 font-semibold shrink-0">Doctor:</span>
+                  <span className="text-xs text-slate-400 font-bold shrink-0">Doctor:</span>
                   <select
                     value={historyDocFilter}
                     onChange={(e) => setHistoryDocFilter(e.target.value)}
-                    className="px-2.5 py-1.5 border border-slate-200 dark:border-slate-800 bg-transparent rounded-xl text-xs w-24 md:w-28"
+                    className="px-3 py-2 border border-slate-200 dark:border-slate-800 bg-transparent rounded-xl text-xs font-semibold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-hospital-500"
                   >
-                    <option value="">All</option>
-                    {Array.from(new Set(visits.map(v => v.doctor?.name).filter(Boolean))).map(docName => (
-                      <option key={docName} value={docName}>Dr. {docName}</option>
-                    ))}
+                    <option value="">All Doctors</option>
+                    {Array.from(new Set(visits.map(v => v.doctor?.name).filter(Boolean))).map(docName => {
+                      const formattedDoc = /^dr\.?/i.test(docName.trim()) ? docName.trim() : `Dr. ${docName.trim()}`;
+                      return <option key={docName} value={docName}>{formattedDoc}</option>;
+                    })}
                   </select>
                 </div>
 
                 <div className="flex items-center space-x-1.5">
-                  <span className="text-xs text-slate-400 font-semibold shrink-0">Date:</span>
+                  <span className="text-xs text-slate-400 font-bold shrink-0">Date:</span>
                   <input
                     type="date"
                     value={historyDateFilter}
                     onChange={(e) => setHistoryDateFilter(e.target.value)}
-                    className="px-2.5 py-1.5 border border-slate-200 dark:border-slate-800 bg-transparent rounded-xl text-xs w-28 md:w-32 focus:ring-1 focus:ring-hospital-500 outline-none"
+                    className="px-3 py-2 border border-slate-200 dark:border-slate-800 bg-transparent rounded-xl text-xs font-semibold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-hospital-500"
                   />
                 </div>
 
@@ -1829,108 +1910,162 @@ function PatientDashboard({ initialTab = 'home' }) {
                       setHistoryDocFilter('');
                       setHistoryDateFilter('');
                     }}
-                    className="text-xs font-bold text-rose-500 hover:text-rose-600 px-2 py-1"
+                    className="text-xs font-bold text-rose-500 hover:underline px-2 py-1"
                   >
-                    Reset
+                    Reset Filters
                   </button>
                 )}
               </div>
             </div>
 
-            {/* Visit timeline */}
-            {filteredVisits.length > 0 ? (
-              <div className="space-y-6">
+            {/* EHR Medical Record Cards List */}
+            {loading ? (
+              <div className="space-y-4">
+                {[1, 2, 3].map(n => (
+                  <div key={n} className="h-40 bg-slate-200 dark:bg-slate-800 rounded-3xl animate-pulse"></div>
+                ))}
+              </div>
+            ) : filteredVisits.length > 0 ? (
+              <div className="space-y-5">
                 {filteredVisits.map((record) => {
                   const isExpanded = !!expandedVisits[record.id];
+                  const docRaw = record.doctor?.name || '';
+                  const doctorDisplayName = docRaw ? (/^dr\.?/i.test(docRaw.trim()) ? docRaw.trim() : `Dr. ${docRaw.trim()}`) : 'Physician Specialist';
 
                   return (
                     <div
                       key={record.id}
-                      className="border border-slate-200 dark:border-slate-800 rounded-3xl p-5 hover:border-hospital-500 bg-white dark:bg-slate-900 shadow-sm relative transition-all"
+                      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 space-y-4 relative group"
                     >
-                      <div className="flex justify-between items-start pb-3 mb-2 gap-2">
-                        <div className="flex items-center space-x-3">
-                          <div className="bg-hospital-50 dark:bg-hospital-950 p-2 rounded-xl text-hospital-600 dark:text-hospital-400">
+                      {/* Record Header */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+                        <div className="flex items-center space-x-3.5">
+                          <div className="p-3 rounded-2xl bg-hospital-50 dark:bg-hospital-950 text-hospital-600 dark:text-hospital-400 shrink-0">
                             <Activity className="h-5 w-5" />
                           </div>
                           <div>
-                            <h4 className="font-extrabold text-sm">Dr. {record.doctor?.name || 'Physician'}</h4>
-                            <span className="text-xs text-slate-400 block">{record.department} Department</span>
+                            <div className="flex items-center space-x-2">
+                              <span className="text-[9px] font-black uppercase tracking-widest text-hospital-500 block">
+                                {record.department || 'General Medicine'} Department
+                              </span>
+                              <span className="px-2 py-0.2 rounded-full text-[8px] font-black uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-500">
+                                Encounter #{record.id}
+                              </span>
+                            </div>
+                            <h3 className="font-extrabold text-base text-slate-800 dark:text-white group-hover:text-hospital-600 dark:group-hover:text-hospital-400 transition-colors">
+                              {doctorDisplayName}
+                            </h3>
                           </div>
                         </div>
-                        <div className="text-right shrink-0">
-                          <span className="text-xs font-semibold text-slate-500 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-lg inline-block">
-                            {new Date(record.visit_date).toLocaleDateString()}
+
+                        <div className="shrink-0 flex items-center space-x-2">
+                          <span className="text-xs font-bold text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 px-3.5 py-1.5 rounded-xl flex items-center space-x-1.5">
+                            <Calendar className="h-3.5 w-3.5 text-hospital-500" />
+                            <span>{new Date(record.visit_date).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                           </span>
                         </div>
                       </div>
 
-                      <div className="flex justify-between items-center mt-3 pt-3 border-t border-slate-100/50 dark:border-slate-800/50">
-                        <div>
-                          <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Diagnosis</span>
-                          <span className="text-sm font-extrabold text-slate-700 dark:text-slate-200">{record.diagnosis || 'None diagnosed'}</span>
+                      {/* Primary Diagnosis & Overview Grid */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                        <div className="p-3.5 bg-slate-50/60 dark:bg-slate-800/30 rounded-2xl border border-slate-150 dark:border-slate-800 space-y-1">
+                          <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 block">Primary Diagnosis</span>
+                          <strong className="text-sm font-black text-slate-800 dark:text-white block">
+                            {record.diagnosis || 'No formal diagnosis logged'}
+                          </strong>
                         </div>
+
+                        <div className="p-3.5 bg-slate-50/60 dark:bg-slate-800/30 rounded-2xl border border-slate-150 dark:border-slate-800 space-y-1">
+                          <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 block">Chief Complaint</span>
+                          <p className="text-xs font-bold text-slate-700 dark:text-slate-300 line-clamp-2">
+                            {record.chief_complaint || 'Routine consultation check-up'}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Accordion Toggle */}
+                      <div className="flex justify-end pt-1">
                         <button
                           onClick={() => setExpandedVisits(prev => ({ ...prev, [record.id]: !prev[record.id] }))}
-                          className="text-xs font-semibold py-1.5 px-3 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-100/50 dark:hover:bg-slate-800/50 text-slate-600 dark:text-slate-400 transition-all flex items-center space-x-1"
+                          className="px-3.5 py-1.5 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition-all flex items-center space-x-1.5 hover:scale-[1.02] active:scale-[0.98]"
                         >
-                          <span>{isExpanded ? 'Hide Details' : 'Show Details'}</span>
+                          <span>{isExpanded ? 'Collapse Clinical Details' : 'View Clinical Details'}</span>
                           <span className={`inline-block transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}>▼</span>
                         </button>
                       </div>
 
+                      {/* Expanded Details Section */}
                       {isExpanded && (
-                        <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800/80 space-y-4 animate-fadeIn">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                            <div>
-                              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-1">Chief Complaint</span>
-                              <div className="bg-slate-50/50 dark:bg-slate-800/40 p-3 rounded-xl min-h-[50px] leading-relaxed">
-                                {record.chief_complaint || 'No complaint details recorded.'}
-                              </div>
-                            </div>
-                            <div>
-                              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-1">Clinical Notes</span>
-                              <div className="bg-slate-50/50 dark:bg-slate-800/40 p-3 rounded-xl min-h-[50px] leading-relaxed">
-                                {record.doctor_notes || 'No notes recorded.'}
-                              </div>
+                        <div className="mt-4 pt-4 border-t border-slate-150 dark:border-slate-800 space-y-4 animate-fadeIn">
+                          {/* Doctor Notes */}
+                          <div className="space-y-1.5">
+                            <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 block">Clinical Doctor Advice & Recommendations</span>
+                            <div className="bg-slate-50/50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 p-4 rounded-2xl text-xs leading-relaxed text-slate-700 dark:text-slate-300">
+                              {record.doctor_notes || 'Patient evaluated during outpatient visit. Follow recommended medication schedule.'}
                             </div>
                           </div>
 
+                          {/* Prescribed Medicines */}
                           {record.prescriptions && record.prescriptions.length > 0 && (
-                            <div className="space-y-1.5">
-                              <span className="text-[10px] text-hospital-500 dark:text-hospital-400 font-bold uppercase block">Prescribed Medication List</span>
-                              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                            <div className="space-y-2">
+                              <span className="text-[9px] font-black uppercase tracking-widest text-hospital-500 block">Prescribed Medication Items (Rx)</span>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
                                 {record.prescriptions.map(med => (
-                                  <div key={med.id} className="p-2 border border-slate-100 dark:border-slate-800 bg-slate-50/20 dark:bg-slate-800/20 rounded-xl text-xs flex justify-between items-center">
-                                    <div>
-                                      <span className="font-extrabold block text-slate-700 dark:text-slate-200">{med.medicine_name}</span>
-                                      <span className="text-[10px] text-slate-400">{med.dosage} • {med.frequency}</span>
+                                  <div key={med.id} className="p-3 border border-slate-150 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-800/20 rounded-2xl text-xs space-y-1">
+                                    <div className="flex justify-between items-start">
+                                      <strong className="font-extrabold text-slate-800 dark:text-slate-100 block">{med.medicine_name}</strong>
+                                      <span className="text-[9px] bg-hospital-50 dark:bg-hospital-950 text-hospital-600 dark:text-hospital-400 font-extrabold px-2 py-0.5 rounded-full border border-hospital-100 dark:border-hospital-900/30">
+                                        {med.duration}
+                                      </span>
                                     </div>
-                                    <span className="text-[10px] bg-hospital-50 dark:bg-hospital-950/40 text-hospital-600 dark:text-hospital-400 font-extrabold px-2 py-0.5 rounded">
-                                      {med.duration}
-                                    </span>
+                                    <p className="text-[10px] text-slate-400 font-medium">{med.dosage} • {med.frequency}</p>
                                   </div>
                                 ))}
                               </div>
                             </div>
                           )}
 
+                          {/* Follow up tag */}
                           {record.follow_up_date && (
-                            <div className="text-xs bg-hospital-50/30 dark:bg-hospital-950/10 p-2.5 rounded-xl border border-hospital-100/30 dark:border-hospital-900/10 font-semibold text-hospital-600 dark:text-hospital-400">
-                              Follow-up Visit Scheduled: {new Date(record.follow_up_date).toLocaleDateString()}
+                            <div className="text-xs bg-hospital-50/40 dark:bg-hospital-950/20 p-3 rounded-2xl border border-hospital-100 dark:border-hospital-900/40 font-bold text-hospital-600 dark:text-hospital-400 flex items-center space-x-2">
+                              <Calendar className="h-4 w-4 shrink-0" />
+                              <span>Scheduled Follow-up Date: {new Date(record.follow_up_date).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                             </div>
                           )}
                         </div>
                       )}
+
                     </div>
                   );
                 })}
               </div>
             ) : (
-              <div className="text-center py-10 text-slate-400 text-sm border border-dashed border-slate-200 dark:border-slate-800 rounded-3xl bg-white dark:bg-slate-900">
-                No past consultations found matching the filters.
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-10 text-center space-y-4 shadow-sm">
+                <div className="h-16 w-16 bg-hospital-50 dark:bg-hospital-950 rounded-2xl flex items-center justify-center mx-auto text-hospital-500">
+                  <Activity className="h-8 w-8" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="font-extrabold text-base text-slate-800 dark:text-white">No Clinical Records Found</h3>
+                  <p className="text-xs text-slate-400 max-w-sm mx-auto">
+                    No medical history records match your current search or filters.
+                  </p>
+                </div>
+                {(historySearch || historyDeptFilter || historyDocFilter || historyDateFilter) && (
+                  <button
+                    onClick={() => {
+                      setHistorySearch('');
+                      setHistoryDeptFilter('');
+                      setHistoryDocFilter('');
+                      setHistoryDateFilter('');
+                    }}
+                    className="text-xs font-bold text-hospital-600 dark:text-hospital-400 hover:underline"
+                  >
+                    Reset Search & Filters
+                  </button>
+                )}
               </div>
             )}
+
           </div>
         )}
 

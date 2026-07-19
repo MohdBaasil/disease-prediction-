@@ -119,6 +119,9 @@ def seed_db_from_csv(db: Session, base_csv_path: str):
         db.bulk_insert_mappings(User, doc_user_mappings)
         db.commit()
         
+        doc_users = db.query(User).filter(User.role == "Doctor").order_by(User.id.asc()).all()
+        doc_user_ids = [u.id for u in doc_users]
+
         doctor_profiles = []
         dept_name_to_id = {row["Department_Name"]: dept_csv_to_db_id[row["Department_ID"]] for _, row in depts_df.iterrows()}
         
@@ -128,7 +131,7 @@ def seed_db_from_csv(db: Session, base_csv_path: str):
             dept_id = dept_name_to_id.get(dept_name, 1)
             
             doctor_profiles.append({
-                "user_id": idx + 3,
+                "user_id": doc_user_ids[idx] if idx < len(doc_user_ids) else (idx + 3),
                 "department_id": dept_id,
                 "name": row["Doctor_Name"],
                 "specialization": row["Specialization"],
@@ -162,11 +165,14 @@ def seed_db_from_csv(db: Session, base_csv_path: str):
         db.bulk_insert_mappings(User, patient_user_mappings)
         db.commit()
         
+        patient_users = db.query(User).filter(User.role == "Patient").order_by(User.id.asc()).all()
+        patient_user_ids = [u.id for u in patient_users]
+
         patient_profiles = []
         patient_csv_to_db_id = {}
         for idx, row in patients_df.iterrows():
             patient_profiles.append({
-                "user_id": idx + 1003,
+                "user_id": patient_user_ids[idx] if idx < len(patient_user_ids) else (idx + 1003),
                 "name": f"{row['First_Name']} {row['Last_Name']}",
                 "email": row["Email"],
                 "age": int(row["Age"]),

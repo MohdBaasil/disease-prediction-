@@ -12,18 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 import uvicorn
 
-# Auto-delete database on start to ensure clean migration structure
-# Do this BEFORE importing database connection to avoid file locks
-for db_file in ["hospital.db", "hospital_v2.db"]:
-    db_path = os.path.join(os.getcwd(), db_file)
-    if os.path.exists(db_path):
-        try:
-            os.remove(db_path)
-            print(f"[SUCCESS] Deleted old database {db_file} for fresh migration")
-        except Exception as e:
-            print(f"[WARNING] Error removing old db {db_file}: {e}")
-
-# NOW import database after cleanup
+# NOW import database
 from backend.database.connection import engine, Base, get_db
 from backend.database.models import (
     Department, User, Doctor, Patient, Visit, PrescriptionItem, MedicalReport, Notification, Appointment, PredictionHistory,
@@ -68,11 +57,6 @@ app.include_router(analytics.router)
 app.include_router(clinical.router)
 app.include_router(ai.router)
 
-from fastapi.staticfiles import StaticFiles
-# Mount static files directory to serve the frontend client
-os.makedirs("backend/static", exist_ok=True)
-app.mount("/", StaticFiles(directory="backend/static", html=True), name="static")
-
 # WebSocket Endpoint for real-time dashboard events
 @app.websocket("/ws/queue")
 async def websocket_queue_endpoint(websocket: WebSocket):
@@ -84,6 +68,11 @@ async def websocket_queue_endpoint(websocket: WebSocket):
             # Echo or process if needed, currently we use broadcast from routes
     except WebSocketDisconnect:
         manager.disconnect(websocket)
+
+from fastapi.staticfiles import StaticFiles
+# Mount static files directory to serve the frontend client
+os.makedirs("backend/static", exist_ok=True)
+app.mount("/", StaticFiles(directory="backend/static", html=True), name="static")
 
 # Startup Seeding Logic
 from backend.database.seed_from_csv import seed_db_from_csv

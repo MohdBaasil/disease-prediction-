@@ -219,13 +219,15 @@ def get_my_prescribed_medicines(
         return []
     
     visits = db.query(Visit).filter(Visit.patient_id == patient.id).all()
-    visit_ids = [v.id for v in visits]
+    visit_map = {v.id: v for v in visits}
     
-    items = db.query(PrescriptionItem).filter(PrescriptionItem.visit_id.in_(visit_ids)).all() if visit_ids else []
+    items = db.query(PrescriptionItem).filter(PrescriptionItem.visit_id.in_(visit_map.keys())).all() if visit_map else []
     
     history = []
     for item in items:
-        visit = next(v for v in visits if v.id == item.visit_id)
+        visit = visit_map.get(item.visit_id)
+        if not visit:
+            continue
         history.append({
             "medicine_name": item.medicine_name,
             "dosage": item.dosage,
@@ -233,7 +235,7 @@ def get_my_prescribed_medicines(
             "duration": item.duration,
             "instructions": item.instructions,
             "prescribed_date": visit.visit_date,
-            "doctor_name": visit.doctor.name if visit.doctor else "Unknown Doctor"
+            "doctor_name": visit.doctor.name if visit and visit.doctor else "Unknown Doctor"
         })
     return history
 
