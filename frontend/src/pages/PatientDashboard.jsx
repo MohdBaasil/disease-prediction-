@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  User, Calendar, Clipboard, FileText, Bell, Search, Edit2,
+  User, Calendar, Clipboard, FileText, Bell, Search, Edit2, Phone,
   Trash2, RefreshCw, Printer, Download, Eye, Plus, ArrowRight,
   CheckCircle, AlertCircle, Clock, Heart, Activity, ShieldAlert,
   Stethoscope, Brain, AlertTriangle, FlaskConical, Pill, ChevronRight,
@@ -1832,193 +1832,400 @@ function PatientDashboard({ initialTab = 'home' }) {
         {/* ========================================================= */}
         {/* ---------------- MY PROFILE TAB ---------------- */}
         {/* ========================================================= */}
+        {/* ========================================================= */}
+        {/* ---------------- MY PROFILE TAB ---------------- */}
+        {/* ========================================================= */}
         {activeTab === 'profile' && (
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-md space-y-6">
-            <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
-              <h2 className="text-lg font-bold">Patient Profile Information</h2>
-              {!editingProfile && (
-                <button
-                  onClick={() => setEditingProfile(true)}
-                  className="bg-hospital-500 text-white px-3.5 py-2 rounded-xl text-xs font-semibold hover:bg-hospital-600 transition-all flex items-center space-x-1.5 shadow hover:scale-[1.02] active:scale-[0.98]"
-                >
-                  <Edit2 className="h-4 w-4" />
-                  <span>Edit Profile</span>
-                </button>
-              )}
+          <div className="space-y-6">
+
+            {/* Profile Hero Header Card */}
+            <div className="relative rounded-3xl bg-gradient-to-r from-hospital-600 via-hospital-500 to-indigo-600 dark:from-slate-900 dark:via-hospital-950 dark:to-slate-900 p-6 md:p-8 text-white shadow-xl overflow-hidden border border-hospital-400/20 dark:border-slate-800">
+              <div className="absolute -top-12 -right-12 h-64 w-64 bg-white/10 dark:bg-hospital-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+              <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                <div className="flex items-center space-x-5">
+                  <div className="relative">
+                    <div className="bg-white/20 p-1 rounded-3xl backdrop-blur-md shadow-lg">
+                      {patient?.profile_photo ? (
+                        <img
+                          src={patient.profile_photo}
+                          alt={patient?.name}
+                          className="h-20 w-20 rounded-2xl object-cover"
+                        />
+                      ) : (
+                        <div className="h-20 w-20 rounded-2xl bg-white/20 flex items-center justify-center text-white text-2xl font-black">
+                          {patient?.name ? patient.name.charAt(0).toUpperCase() : <User className="h-9 w-9" />}
+                        </div>
+                      )}
+                    </div>
+                    <span className="absolute -bottom-1 -right-1 h-5 w-5 bg-emerald-400 border-2 border-white dark:border-slate-900 rounded-full flex items-center justify-center">
+                      <Check className="h-3 w-3 text-slate-900 font-bold" />
+                    </span>
+                  </div>
+
+                  <div className="space-y-1">
+                    <div className="flex items-center space-x-2">
+                      <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-emerald-400/20 text-emerald-300 border border-emerald-400/30">
+                        Verified Patient
+                      </span>
+                      <span className="text-[10px] text-hospital-100 dark:text-slate-400 font-semibold">
+                        ID: #{patient?.id}
+                      </span>
+                    </div>
+
+                    <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
+                      {patient?.name || 'Patient Profile'}
+                    </h1>
+
+                    <p className="text-xs text-hospital-100 dark:text-slate-300 flex items-center space-x-2">
+                      <span>Registered Patient</span>
+                      <span>•</span>
+                      <span>{patient?.created_at ? `Member since ${new Date(patient.created_at).toLocaleDateString()}` : 'Active Account'}</span>
+                    </p>
+                  </div>
+                </div>
+
+                {/* Mode Toggle Switch Button */}
+                <div className="shrink-0 flex items-center bg-white/10 dark:bg-slate-800/60 p-1.5 rounded-2xl backdrop-blur-md border border-white/20 dark:border-slate-700/60">
+                  <button
+                    onClick={() => setEditingProfile(false)}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${!editingProfile ? 'bg-white text-hospital-600 shadow-md' : 'text-white/80 hover:text-white'}`}
+                  >
+                    View Mode
+                  </button>
+                  <button
+                    onClick={() => setEditingProfile(true)}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 ${editingProfile ? 'bg-white text-hospital-600 shadow-md' : 'text-white/80 hover:text-white'}`}
+                  >
+                    <Edit2 className="h-3.5 w-3.5" />
+                    <span>Edit Profile</span>
+                  </button>
+                </div>
+              </div>
             </div>
 
-            {editingProfile ? (
-              <form onSubmit={handleUpdateProfile} className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                <div className="space-y-1">
-                  <label className="text-slate-400 font-bold block">FULL NAME</label>
-                  <input
-                    type="text"
-                    value={profileForm.name}
-                    onChange={(e) => setProfileForm(prev => ({ ...prev, name: e.target.value }))}
-                    className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 bg-transparent rounded-xl outline-none focus:ring-1 focus:ring-hospital-500 text-sm text-slate-800 dark:text-white"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-slate-400 font-bold block">EMAIL ADDRESS</label>
-                  <input
-                    type="email"
-                    value={profileForm.email}
-                    onChange={(e) => setProfileForm(prev => ({ ...prev, email: e.target.value }))}
-                    className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 bg-transparent rounded-xl outline-none focus:ring-1 focus:ring-hospital-500 text-sm text-slate-800 dark:text-white"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-slate-400 font-bold block">PHONE NUMBER</label>
-                  <input
-                    type="text"
-                    value={profileForm.mobile_number}
-                    onChange={(e) => setProfileForm(prev => ({ ...prev, mobile_number: e.target.value }))}
-                    className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 bg-transparent rounded-xl outline-none focus:ring-1 focus:ring-hospital-500 text-sm text-slate-800 dark:text-white"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-slate-400 font-bold block">AGE</label>
-                  <input
-                    type="number"
-                    value={profileForm.age}
-                    onChange={(e) => setProfileForm(prev => ({ ...prev, age: parseInt(e.target.value) || 0 }))}
-                    className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 bg-transparent rounded-xl outline-none focus:ring-1 focus:ring-hospital-500 text-sm text-slate-800 dark:text-white"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-slate-400 font-bold block">GENDER</label>
-                  <select
-                    value={profileForm.gender}
-                    onChange={(e) => setProfileForm(prev => ({ ...prev, gender: e.target.value }))}
-                    className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 bg-transparent rounded-xl outline-none focus:ring-1 focus:ring-hospital-500 text-sm text-slate-800 dark:text-white"
-                  >
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-slate-400 font-bold block">EMERGENCY CONTACT</label>
-                  <input
-                    type="text"
-                    value={profileForm.emergency_contact}
-                    onChange={(e) => setProfileForm(prev => ({ ...prev, emergency_contact: e.target.value }))}
-                    className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 bg-transparent rounded-xl outline-none focus:ring-1 focus:ring-hospital-500 text-sm text-slate-800 dark:text-white"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-slate-400 font-bold block">BLOOD GROUP</label>
-                  <select
-                    value={profileForm.blood_group}
-                    onChange={(e) => setProfileForm(prev => ({ ...prev, blood_group: e.target.value }))}
-                    className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 bg-transparent rounded-xl outline-none focus:ring-1 focus:ring-hospital-500 text-sm text-slate-800 dark:text-white"
-                  >
-                    <option value="">Select Blood Group</option>
-                    <option value="A+">A+</option>
-                    <option value="A-">A-</option>
-                    <option value="B+">B+</option>
-                    <option value="B-">B-</option>
-                    <option value="O+">O+</option>
-                    <option value="O-">O-</option>
-                    <option value="AB+">AB+</option>
-                    <option value="AB-">AB-</option>
-                  </select>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-slate-400 font-bold block">KNOWN ALLERGIES</label>
-                  <input
-                    type="text"
-                    value={profileForm.allergies}
-                    onChange={(e) => setProfileForm(prev => ({ ...prev, allergies: e.target.value }))}
-                    className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 bg-transparent rounded-xl outline-none focus:ring-1 focus:ring-hospital-500 text-sm text-slate-800 dark:text-white"
-                  />
+            {/* VIEW MODE */}
+            {!editingProfile ? (
+              <div className="space-y-6">
+
+                {/* Personal Information Cards */}
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4">
+                  <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
+                    <h3 className="font-extrabold text-base text-slate-800 dark:text-white">Personal Information</h3>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Patient Details</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="p-4 rounded-2xl border border-slate-150 dark:border-slate-800/80 bg-slate-50/40 dark:bg-slate-800/20 hover:border-hospital-300 dark:hover:border-hospital-700 transition-all space-y-1">
+                      <span className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400 block">Full Name</span>
+                      <strong className="text-sm font-black text-slate-800 dark:text-slate-100 block">{patient?.name || 'N/A'}</strong>
+                    </div>
+
+                    <div className="p-4 rounded-2xl border border-slate-150 dark:border-slate-800/80 bg-slate-50/40 dark:bg-slate-800/20 hover:border-hospital-300 dark:hover:border-hospital-700 transition-all space-y-1">
+                      <span className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400 block">Age & Gender</span>
+                      <strong className="text-sm font-black text-slate-800 dark:text-slate-100 block">{patient?.age ? `${patient.age} yrs` : 'N/A'} • {patient?.gender || 'N/A'}</strong>
+                    </div>
+
+                    <div className="p-4 rounded-2xl border border-slate-150 dark:border-slate-800/80 bg-slate-50/40 dark:bg-slate-800/20 hover:border-hospital-300 dark:hover:border-hospital-700 transition-all space-y-1">
+                      <span className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400 block">Mobile Phone</span>
+                      <strong className="text-sm font-black text-slate-800 dark:text-slate-100 block">{patient?.mobile_number || 'N/A'}</strong>
+                    </div>
+
+                    <div className="p-4 rounded-2xl border border-slate-150 dark:border-slate-800/80 bg-slate-50/40 dark:bg-slate-800/20 hover:border-hospital-300 dark:hover:border-hospital-700 transition-all space-y-1">
+                      <span className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400 block">Email Address</span>
+                      <strong className="text-sm font-black text-slate-800 dark:text-slate-100 block truncate">{patient?.email || 'N/A'}</strong>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="md:col-span-2 flex space-x-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-                  <button
-                    type="submit"
-                    disabled={actionLoading}
-                    className="bg-hospital-500 text-white font-semibold py-2 px-5 rounded-xl hover:bg-hospital-600 shadow transition-colors"
-                  >
-                    Save Changes
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setProfileForm({
-                        name: patient.name || '',
-                        email: patient.email || '',
-                        mobile_number: patient.mobile_number || '',
-                        blood_group: patient.blood_group || '',
-                        allergies: patient.allergies || '',
-                        emergency_contact: patient.emergency_contact || '',
-                        age: patient.age || '',
-                        gender: patient.gender || ''
-                      });
-                      setEditingProfile(false);
-                    }}
-                    className="border border-slate-200 dark:border-slate-800 font-semibold py-2 px-5 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 transition-colors"
-                  >
-                    Cancel
-                  </button>
+                {/* Emergency Contact & Medical Summary Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                  {/* Emergency Contact Card */}
+                  <div className="bg-rose-50/30 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/40 rounded-3xl p-6 shadow-sm space-y-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="p-3 rounded-2xl bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400">
+                        <Phone className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <span className="text-[9px] font-black uppercase tracking-widest text-rose-500 block">Emergency Contact</span>
+                        <h4 className="font-extrabold text-sm text-slate-800 dark:text-white">Primary Designation</h4>
+                      </div>
+                    </div>
+
+                    <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-rose-150 dark:border-rose-900/30 space-y-1">
+                      <span className="text-[10px] text-slate-400 font-bold uppercase block">Contact Detail</span>
+                      <strong className="text-base font-black text-rose-600 dark:text-rose-400 block">
+                        {patient?.emergency_contact || 'No emergency contact registered'}
+                      </strong>
+                    </div>
+                  </div>
+
+                  {/* Blood Group Card */}
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="p-3 rounded-2xl bg-hospital-50 dark:bg-hospital-950 text-hospital-600 dark:text-hospital-400">
+                        <Heart className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <span className="text-[9px] font-black uppercase tracking-widest text-hospital-500 block">Medical Profile</span>
+                        <h4 className="font-extrabold text-sm text-slate-800 dark:text-white">Blood Group</h4>
+                      </div>
+                    </div>
+
+                    <div className="p-4 bg-slate-50/50 dark:bg-slate-800/30 rounded-2xl border border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                      <div>
+                        <span className="text-[10px] text-slate-400 font-bold uppercase block">Registered Type</span>
+                        <span className="text-xs text-slate-500">Emergency compatible</span>
+                      </div>
+                      <span className="text-2xl font-black text-hospital-600 dark:text-hospital-400 bg-hospital-50 dark:bg-hospital-950 px-4 py-1 rounded-xl border border-hospital-200 dark:border-hospital-800">
+                        {patient?.blood_group || 'O+'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Allergies Card */}
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950 text-amber-600 dark:text-amber-400">
+                        <ShieldAlert className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <span className="text-[9px] font-black uppercase tracking-widest text-amber-500 block">Clinical Alerts</span>
+                        <h4 className="font-extrabold text-sm text-slate-800 dark:text-white">Known Allergies</h4>
+                      </div>
+                    </div>
+
+                    <div className="p-4 bg-slate-50/50 dark:bg-slate-800/30 rounded-2xl border border-slate-100 dark:border-slate-800 min-h-[60px] flex items-center">
+                      {patient?.allergies ? (
+                        <p className="text-xs font-bold text-rose-600 dark:text-rose-400 leading-relaxed">
+                          {patient.allergies}
+                        </p>
+                      ) : (
+                        <p className="text-xs text-slate-400 font-medium">
+                          No known drug or food allergies on record.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
                 </div>
-              </form>
+
+                {/* Health Records Summary */}
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4">
+                  <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
+                    <h3 className="font-extrabold text-base text-slate-800 dark:text-white">Health Summary Metrics</h3>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Clinical Log</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="p-4 rounded-2xl bg-slate-50/50 dark:bg-slate-800/20 border border-slate-150 dark:border-slate-800 flex items-center space-x-3">
+                      <div className="bg-blue-50 dark:bg-blue-950 p-2.5 rounded-xl text-blue-600 dark:text-blue-400">
+                        <Activity className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <span className="text-xl font-black text-slate-800 dark:text-white block">{visits?.length || 0}</span>
+                        <span className="text-[10px] text-slate-400 font-bold uppercase">Medical Consultations</span>
+                      </div>
+                    </div>
+
+                    <div className="p-4 rounded-2xl bg-slate-50/50 dark:bg-slate-800/20 border border-slate-150 dark:border-slate-800 flex items-center space-x-3">
+                      <div className="bg-emerald-50 dark:bg-emerald-950 p-2.5 rounded-xl text-emerald-600 dark:text-emerald-400">
+                        <Pill className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <span className="text-xl font-black text-slate-800 dark:text-white block">{prescriptions?.length || 0}</span>
+                        <span className="text-[10px] text-slate-400 font-bold uppercase">Active Medications</span>
+                      </div>
+                    </div>
+
+                    <div className="p-4 rounded-2xl bg-slate-50/50 dark:bg-slate-800/20 border border-slate-150 dark:border-slate-800 flex items-center space-x-3">
+                      <div className="bg-purple-50 dark:bg-purple-950 p-2.5 rounded-xl text-purple-600 dark:text-purple-400">
+                        <FileText className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <span className="text-xl font-black text-slate-800 dark:text-white block">{reports?.length || 0}</span>
+                        <span className="text-[10px] text-slate-400 font-bold uppercase">Laboratory Reports</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-xs leading-relaxed">
-                {patient?.profile_photo && (
-                  <div className="md:col-span-2 lg:col-span-3 flex items-center space-x-4 mb-2 bg-slate-50/50 dark:bg-slate-800/10 p-4 border border-slate-100 dark:border-slate-800 rounded-3xl">
-                    <img
-                      src={patient.profile_photo}
-                      alt="Patient Profile"
-                      className="h-16 w-16 rounded-full border-2 border-hospital-500 object-cover shadow-sm"
-                    />
-                    <div>
-                      <h4 className="font-extrabold text-sm text-slate-800 dark:text-slate-100">{patient.name}</h4>
-                      <span className="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Registration Date: {new Date(patient.created_at).toLocaleDateString()}</span>
+              /* EDIT MODE */
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-md space-y-6">
+                <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
+                  <div>
+                    <h3 className="font-extrabold text-base text-slate-800 dark:text-white">Edit Patient Information</h3>
+                    <p className="text-xs text-slate-400">Update personal, contact, and medical details</p>
+                  </div>
+                  <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-hospital-50 dark:bg-hospital-950 text-hospital-600 dark:text-hospital-400">
+                    Editing Mode
+                  </span>
+                </div>
+
+                <form onSubmit={handleUpdateProfile} className="space-y-6 text-xs">
+                  
+                  {/* Section 1: Personal Details */}
+                  <div className="space-y-4">
+                    <span className="text-[10px] font-black text-hospital-500 uppercase tracking-widest block">Personal Information</span>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-slate-400 font-bold block">FULL NAME</label>
+                        <input
+                          type="text"
+                          value={profileForm.name}
+                          onChange={(e) => setProfileForm(prev => ({ ...prev, name: e.target.value }))}
+                          className="w-full px-3.5 py-2.5 border border-slate-200 dark:border-slate-800 bg-transparent rounded-xl outline-none focus:ring-2 focus:ring-hospital-500 text-sm text-slate-800 dark:text-white transition-all"
+                          placeholder="e.g. Jane Doe"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-slate-400 font-bold block">AGE (YEARS)</label>
+                        <input
+                          type="number"
+                          value={profileForm.age}
+                          onChange={(e) => setProfileForm(prev => ({ ...prev, age: parseInt(e.target.value) || 0 }))}
+                          className="w-full px-3.5 py-2.5 border border-slate-200 dark:border-slate-800 bg-transparent rounded-xl outline-none focus:ring-2 focus:ring-hospital-500 text-sm text-slate-800 dark:text-white transition-all"
+                          placeholder="e.g. 32"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-slate-400 font-bold block">GENDER</label>
+                        <select
+                          value={profileForm.gender}
+                          onChange={(e) => setProfileForm(prev => ({ ...prev, gender: e.target.value }))}
+                          className="w-full px-3.5 py-2.5 border border-slate-200 dark:border-slate-800 bg-transparent rounded-xl outline-none focus:ring-2 focus:ring-hospital-500 text-sm text-slate-800 dark:text-white transition-all"
+                        >
+                          <option value="Male">Male</option>
+                          <option value="Female">Female</option>
+                          <option value="Other">Other</option>
+                        </select>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-slate-400 font-bold block">BLOOD GROUP</label>
+                        <select
+                          value={profileForm.blood_group}
+                          onChange={(e) => setProfileForm(prev => ({ ...prev, blood_group: e.target.value }))}
+                          className="w-full px-3.5 py-2.5 border border-slate-200 dark:border-slate-800 bg-transparent rounded-xl outline-none focus:ring-2 focus:ring-hospital-500 text-sm text-slate-800 dark:text-white transition-all"
+                        >
+                          <option value="">Select Blood Group</option>
+                          <option value="A+">A+</option>
+                          <option value="A-">A-</option>
+                          <option value="B+">B+</option>
+                          <option value="B-">B-</option>
+                          <option value="O+">O+</option>
+                          <option value="O-">O-</option>
+                          <option value="AB+">AB+</option>
+                          <option value="AB-">AB-</option>
+                        </select>
+                      </div>
                     </div>
                   </div>
-                )}
 
-                <div className="space-y-0.5">
-                  <span className="text-slate-400 font-bold tracking-wider uppercase block text-[9px]">Patient ID</span>
-                  <strong className="text-sm text-slate-800 dark:text-slate-100">#{patient?.id}</strong>
-                </div>
+                  {/* Section 2: Contact Details */}
+                  <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                    <span className="text-[10px] font-black text-hospital-500 uppercase tracking-widest block">Contact & Emergency Details</span>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-slate-400 font-bold block">MOBILE PHONE NUMBER</label>
+                        <input
+                          type="text"
+                          value={profileForm.mobile_number}
+                          onChange={(e) => setProfileForm(prev => ({ ...prev, mobile_number: e.target.value }))}
+                          className="w-full px-3.5 py-2.5 border border-slate-200 dark:border-slate-800 bg-transparent rounded-xl outline-none focus:ring-2 focus:ring-hospital-500 text-sm text-slate-800 dark:text-white transition-all"
+                          placeholder="e.g. +1 555-0199"
+                        />
+                      </div>
 
-                <div className="space-y-0.5">
-                  <span className="text-slate-400 font-bold tracking-wider uppercase block text-[9px]">Age / Gender</span>
-                  <strong className="text-sm text-slate-800 dark:text-slate-100">{patient?.age} yrs • {patient?.gender}</strong>
-                </div>
+                      <div className="space-y-1">
+                        <label className="text-slate-400 font-bold block">EMAIL ADDRESS</label>
+                        <input
+                          type="email"
+                          value={profileForm.email}
+                          onChange={(e) => setProfileForm(prev => ({ ...prev, email: e.target.value }))}
+                          className="w-full px-3.5 py-2.5 border border-slate-200 dark:border-slate-800 bg-transparent rounded-xl outline-none focus:ring-2 focus:ring-hospital-500 text-sm text-slate-800 dark:text-white transition-all"
+                          placeholder="e.g. patient@example.com"
+                        />
+                      </div>
 
-                <div className="space-y-0.5">
-                  <span className="text-slate-400 font-bold tracking-wider uppercase block text-[9px]">Blood Group</span>
-                  <strong className="text-sm text-slate-800 dark:text-slate-100">{patient?.blood_group || 'O+'}</strong>
-                </div>
-
-                <div className="space-y-0.5">
-                  <span className="text-slate-400 font-bold tracking-wider uppercase block text-[9px]">Mobile Phone</span>
-                  <strong className="text-sm text-slate-800 dark:text-slate-100">{patient?.mobile_number || 'N/A'}</strong>
-                </div>
-
-                <div className="space-y-0.5">
-                  <span className="text-slate-400 font-bold tracking-wider uppercase block text-[9px]">Email Address</span>
-                  <strong className="text-sm text-slate-800 dark:text-slate-100">{patient?.email || 'N/A'}</strong>
-                </div>
-
-                <div className="space-y-0.5">
-                  <span className="text-slate-400 font-bold tracking-wider uppercase block text-[9px]">Emergency Contact</span>
-                  <strong className="text-sm text-slate-800 dark:text-slate-100">{patient?.emergency_contact || 'N/A'}</strong>
-                </div>
-
-                {patient?.allergies && (
-                  <div className="md:col-span-2 lg:col-span-3 border-t border-slate-100 dark:border-slate-800/80 pt-4 mt-2">
-                    <span className="text-rose-500 font-bold tracking-wider uppercase block text-[9px] mb-1">Known Drug or Food Allergies</span>
-                    <div className="p-3 bg-rose-50/20 dark:bg-rose-950/15 border border-rose-100/50 dark:border-rose-900/30 rounded-2xl text-rose-600 dark:text-rose-400 font-semibold text-xs leading-relaxed">
-                      {patient.allergies}
+                      <div className="md:col-span-2 space-y-1">
+                        <label className="text-slate-400 font-bold block">PRIMARY EMERGENCY CONTACT</label>
+                        <input
+                          type="text"
+                          value={profileForm.emergency_contact}
+                          onChange={(e) => setProfileForm(prev => ({ ...prev, emergency_contact: e.target.value }))}
+                          className="w-full px-3.5 py-2.5 border border-slate-200 dark:border-slate-800 bg-transparent rounded-xl outline-none focus:ring-2 focus:ring-hospital-500 text-sm text-slate-800 dark:text-white transition-all"
+                          placeholder="e.g. John Doe (Spouse) - +1 555-0122"
+                        />
+                      </div>
                     </div>
                   </div>
-                )}
+
+                  {/* Section 3: Clinical Alerts */}
+                  <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                    <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest block">Medical Allergies</span>
+                    <div className="space-y-1">
+                      <label className="text-slate-400 font-bold block">KNOWN DRUG OR FOOD ALLERGIES</label>
+                      <input
+                        type="text"
+                        value={profileForm.allergies}
+                        onChange={(e) => setProfileForm(prev => ({ ...prev, allergies: e.target.value }))}
+                        className="w-full px-3.5 py-2.5 border border-slate-200 dark:border-slate-800 bg-transparent rounded-xl outline-none focus:ring-2 focus:ring-hospital-500 text-sm text-slate-800 dark:text-white transition-all"
+                        placeholder="e.g. Penicillin, Peanuts, Aspirin"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex items-center space-x-3 pt-6 border-t border-slate-100 dark:border-slate-800">
+                    <button
+                      type="submit"
+                      disabled={actionLoading}
+                      className="bg-hospital-500 text-white font-bold py-2.5 px-6 rounded-xl hover:bg-hospital-600 shadow-md transition-all flex items-center space-x-2 text-xs hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+                    >
+                      {actionLoading ? (
+                        <>
+                          <RefreshCw className="h-4 w-4 animate-spin" />
+                          <span>Saving Profile...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Check className="h-4 w-4" />
+                          <span>Save Changes</span>
+                        </>
+                      )}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setProfileForm({
+                          name: patient.name || '',
+                          email: patient.email || '',
+                          mobile_number: patient.mobile_number || '',
+                          blood_group: patient.blood_group || '',
+                          allergies: patient.allergies || '',
+                          emergency_contact: patient.emergency_contact || '',
+                          age: patient.age || '',
+                          gender: patient.gender || ''
+                        });
+                        setEditingProfile(false);
+                      }}
+                      className="border border-slate-200 dark:border-slate-800 font-bold py-2.5 px-6 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all text-xs hover:scale-[1.02] active:scale-[0.98]"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+
+                </form>
               </div>
             )}
+
           </div>
         )}
 
