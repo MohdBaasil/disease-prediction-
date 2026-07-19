@@ -431,7 +431,7 @@ export const aiService = {
 // WebSocket Service Creator
 export const createQueueWebSocket = (onMessageCallback) => {
   const wsProto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  const wsUrl = `${wsProto}//${window.location.host}/ws/queue`;
+  const wsUrl = `${wsProto}//${window.location.hostname}:8000/ws/queue`;
   
   const ws = new WebSocket(wsUrl);
   

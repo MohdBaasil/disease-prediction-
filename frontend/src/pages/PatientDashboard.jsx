@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  User, Calendar, Clipboard, FileText, Bell, Search, Edit2, 
+import {
+  User, Calendar, Clipboard, FileText, Bell, Search, Edit2,
   Trash2, RefreshCw, Printer, Download, Eye, Plus, ArrowRight,
   CheckCircle, AlertCircle, Clock, Heart, Activity, FileSpreadsheet, ShieldAlert,
-  Stethoscope, Brain, AlertTriangle, FlaskConical, Pill, ChevronRight, BarChart3, Info
+  Stethoscope, Brain, AlertTriangle, FlaskConical, Pill, ChevronRight, BarChart3, Info, Sparkles
 } from 'lucide-react';
-import { 
-  patientService, dashboardService, queueService, 
-  appointmentsService, doctorService, createQueueWebSocket 
+import {
+  patientService, dashboardService, queueService,
+  appointmentsService, doctorService, createQueueWebSocket
 } from '../services/api';
 import PatientAIPortal from './PatientAIPortal';
 
@@ -16,7 +16,7 @@ function PatientDashboard({ initialTab = 'appointments' }) {
   const [activeTab, setActiveTab] = useState(initialTab);
   const [patient, setPatient] = useState(null);
   const [stats, setStats] = useState(null);
-  
+
   // Data lists
   const [appointments, setAppointments] = useState([]);
   const [visits, setVisits] = useState([]);
@@ -31,7 +31,7 @@ function PatientDashboard({ initialTab = 'appointments' }) {
   const [profileForm, setProfileForm] = useState({
     name: '', email: '', mobile_number: '', blood_group: '', allergies: '', emergency_contact: '', age: '', gender: ''
   });
-  
+
   const [bookingModal, setBookingModal] = useState(false);
   const [bookingForm, setBookingForm] = useState({
     doctor_id: '', appointment_time: '', appointment_type: 'Scheduled'
@@ -43,7 +43,7 @@ function PatientDashboard({ initialTab = 'appointments' }) {
   // Queue self check-in state
   const [selectedDept, setSelectedDept] = useState('');
   const [viewingAppointment, setViewingAppointment] = useState(null);
-  
+
   // Filters & searches
   const [historySearch, setHistorySearch] = useState('');
   const [historyDeptFilter, setHistoryDeptFilter] = useState('');
@@ -72,7 +72,7 @@ function PatientDashboard({ initialTab = 'appointments' }) {
   const [selectedSymptoms, setSelectedSymptoms] = useState([]);
   const [predictionHistory, setPredictionHistory] = useState([]);
   const [diagnosisSubTab, setDiagnosisSubTab] = useState('new'); // 'new' or 'history'
-  
+
   // History Filters
   const [predHistorySearch, setPredHistorySearch] = useState('');
   const [predHistoryRiskFilter, setPredHistoryRiskFilter] = useState('');
@@ -130,7 +130,7 @@ function PatientDashboard({ initialTab = 'appointments' }) {
       if (depts.length > 0 && !selectedDept) {
         setSelectedDept(depts[0].id.toString());
       }
-      
+
       const docs = await doctorService.list();
       setDoctors(docs);
       if (docs.length > 0 && !bookingForm.doctor_id) {
@@ -179,19 +179,33 @@ function PatientDashboard({ initialTab = 'appointments' }) {
   }, [patient?.id]);
 
   const handleUpdateProfile = async (e) => {
+    console.log("🔥 handleUpdateProfile called", profileForm);
+
     e.preventDefault();
     setActionLoading(true);
     setError('');
     setSuccess('');
     try {
-      const updated = await patientService.updateProfile(profileForm);
+      const payload = {
+        ...profileForm,
+        name: profileForm.name ? profileForm.name.trim() : '',
+        email: profileForm.email && profileForm.email.trim() !== '' ? profileForm.email.trim() : null,
+        mobile_number: profileForm.mobile_number ? profileForm.mobile_number.trim() : '',
+        blood_group: profileForm.blood_group && profileForm.blood_group !== '' ? profileForm.blood_group : null,
+        allergies: profileForm.allergies && profileForm.allergies.trim() !== '' ? profileForm.allergies.trim() : null,
+        emergency_contact: profileForm.emergency_contact && profileForm.emergency_contact.trim() !== '' ? profileForm.emergency_contact.trim() : null,
+        age: parseInt(profileForm.age) || 0
+      };
+
+      const updated = await patientService.updateProfile(payload);
       setPatient(updated);
       setEditingProfile(false);
       setSuccess('Profile updated successfully.');
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
-      console.error(err);
-      setError('Failed to update profile.');
+      console.error("Profile update failed:", err);
+      const backendDetail = err.response?.data?.detail;
+      setError(typeof backendDetail === 'string' ? backendDetail : 'Failed to update profile.');
     } finally {
       setActionLoading(false);
     }
@@ -301,7 +315,7 @@ function PatientDashboard({ initialTab = 'appointments' }) {
       };
       const result = await patientService.predictPatientDisease(vitals, selectedSymptoms);
       setDiagnosisResult(result);
-      
+
       // Reload history list
       const historyList = await patientService.getPredictionHistory();
       setPredictionHistory(historyList);
@@ -345,7 +359,7 @@ function PatientDashboard({ initialTab = 'appointments' }) {
 
   // Determine latest prescription
   const latestVisit = visits.find(v => v.prescriptions && v.prescriptions.length > 0);
-  
+
   // Filter visits
   const filteredVisits = visits.filter(v => {
     const matchesSearch = historySearch ? (v.diagnosis || '').toLowerCase().includes(historySearch.toLowerCase()) : true;
@@ -356,13 +370,13 @@ function PatientDashboard({ initialTab = 'appointments' }) {
   });
 
   // Filter medicines
-  const filteredPrescriptions = prescriptions.filter(p => 
+  const filteredPrescriptions = prescriptions.filter(p =>
     medicineSearch ? p.medicine_name.toLowerCase().includes(medicineSearch.toLowerCase()) : true
   );
 
   return (
     <div className="flex flex-col lg:flex-row gap-6 relative">
-      
+
       {/* Sidebar Navigation */}
       <div className="w-full lg:w-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm space-y-2 shrink-0 self-start">
         <div className="flex items-center space-x-3 pb-4 mb-4 border-b border-slate-100 dark:border-slate-800">
@@ -375,7 +389,7 @@ function PatientDashboard({ initialTab = 'appointments' }) {
           </div>
         </div>
 
-        <button 
+        <button
           onClick={() => setActiveTab('appointments')}
           className={`w-full flex items-center space-x-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all ${activeTab === 'appointments' ? 'bg-hospital-500 text-white shadow-md' : 'text-slate-650 hover:bg-slate-100/50 dark:hover:bg-slate-800/50'}`}
         >
@@ -383,7 +397,7 @@ function PatientDashboard({ initialTab = 'appointments' }) {
           <span>Appointments & Queue</span>
         </button>
 
-        <button 
+        <button
           onClick={() => setActiveTab('prescription')}
           className={`w-full flex items-center space-x-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all ${activeTab === 'prescription' ? 'bg-hospital-500 text-white shadow-md' : 'text-slate-650 hover:bg-slate-100/50 dark:hover:bg-slate-800/50'}`}
         >
@@ -391,7 +405,7 @@ function PatientDashboard({ initialTab = 'appointments' }) {
           <span>Latest Prescription</span>
         </button>
 
-        <button 
+        <button
           onClick={() => setActiveTab('history')}
           className={`w-full flex items-center space-x-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all ${activeTab === 'history' ? 'bg-hospital-500 text-white shadow-md' : 'text-slate-650 hover:bg-slate-100/50 dark:hover:bg-slate-800/50'}`}
         >
@@ -399,7 +413,7 @@ function PatientDashboard({ initialTab = 'appointments' }) {
           <span>Medical History</span>
         </button>
 
-        <button 
+        <button
           onClick={() => setActiveTab('medicines')}
           className={`w-full flex items-center space-x-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all ${activeTab === 'medicines' ? 'bg-hospital-500 text-white shadow-md' : 'text-slate-650 hover:bg-slate-100/50 dark:hover:bg-slate-800/50'}`}
         >
@@ -407,7 +421,7 @@ function PatientDashboard({ initialTab = 'appointments' }) {
           <span>Medicine Log</span>
         </button>
 
-        <button 
+        <button
           onClick={() => setActiveTab('reports')}
           className={`w-full flex items-center space-x-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all ${activeTab === 'reports' ? 'bg-hospital-500 text-white shadow-md' : 'text-slate-650 hover:bg-slate-100/50 dark:hover:bg-slate-800/50'}`}
         >
@@ -415,7 +429,7 @@ function PatientDashboard({ initialTab = 'appointments' }) {
           <span>Laboratory Reports</span>
         </button>
 
-        <button 
+        <button
           onClick={() => setActiveTab('notifications')}
           className={`w-full flex items-center space-x-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all relative ${activeTab === 'notifications' ? 'bg-hospital-500 text-white shadow-md' : 'text-slate-650 hover:bg-slate-100/50 dark:hover:bg-slate-800/50'}`}
         >
@@ -428,7 +442,7 @@ function PatientDashboard({ initialTab = 'appointments' }) {
           )}
         </button>
 
-        <button 
+        <button
           onClick={() => setActiveTab('diagnosis')}
           className={`w-full flex items-center space-x-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all ${activeTab === 'diagnosis' ? 'bg-gradient-to-r from-violet-600 to-purple-500 text-white shadow-md shadow-violet-200 dark:shadow-violet-900/30' : 'text-slate-650 hover:bg-slate-100/50 dark:hover:bg-slate-800/50'}`}
         >
@@ -437,7 +451,7 @@ function PatientDashboard({ initialTab = 'appointments' }) {
           <span className="ml-auto text-[8px] font-black bg-white/20 text-white px-1.5 py-0.5 rounded-full">Reserved</span>
         </button>
 
-        <button 
+        <button
           onClick={() => setActiveTab('ai_portal')}
           className={`w-full flex items-center space-x-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all ${activeTab === 'ai_portal' ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-md' : 'text-slate-650 hover:bg-slate-100/50 dark:hover:bg-slate-800/50'}`}
         >
@@ -446,7 +460,7 @@ function PatientDashboard({ initialTab = 'appointments' }) {
           <span className="ml-auto text-[8px] font-black bg-white/25 text-white px-1.5 py-0.5 rounded-full">New</span>
         </button>
 
-        <button 
+        <button
           onClick={() => setActiveTab('profile')}
           className={`w-full flex items-center space-x-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all ${activeTab === 'profile' ? 'bg-hospital-500 text-white shadow-md' : 'text-slate-650 hover:bg-slate-100/50 dark:hover:bg-slate-800/50'}`}
         >
@@ -457,7 +471,7 @@ function PatientDashboard({ initialTab = 'appointments' }) {
 
       {/* Main Content Area */}
       <div className="flex-grow space-y-6">
-        
+
         {/* Banner Alert messages */}
         {error && (
           <div className="p-4 bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/50 rounded-2xl text-rose-600 dark:text-rose-400 text-sm flex items-center space-x-2 shadow-sm animate-fadeIn">
@@ -475,7 +489,7 @@ function PatientDashboard({ initialTab = 'appointments' }) {
         {/* ---------------- APPOINTMENTS & QUEUE TAB ---------------- */}
         {activeTab === 'appointments' && (
           <div className="space-y-6">
-            
+
             {/* Active Queue Ticket (if checked in) */}
             {stats && stats.active_tokens && stats.active_tokens.length > 0 ? (
               stats.active_tokens.map((token) => {
@@ -514,7 +528,7 @@ function PatientDashboard({ initialTab = 'appointments' }) {
                           </span>
                         </div>
                         <div className="w-full bg-slate-200 dark:bg-slate-700 h-3 rounded-full overflow-hidden">
-                          <div 
+                          <div
                             className="bg-gradient-to-r from-hospital-500 to-hospital-400 h-full rounded-full transition-all duration-1000 ease-out"
                             style={{ width: `${token.status === "Calling" ? 100 : percent}%` }}
                           ></div>
@@ -549,7 +563,7 @@ function PatientDashboard({ initialTab = 'appointments' }) {
                   <p className="text-xs text-slate-500">Already at the hospital? Check-in directly to register a queue token.</p>
                 </div>
                 <form onSubmit={handleSelfCheckIn} className="flex items-center space-x-3 w-full md:w-auto">
-                  <select 
+                  <select
                     value={selectedDept}
                     onChange={(e) => setSelectedDept(e.target.value)}
                     className="px-3 py-2 border border-slate-200 dark:border-slate-800 bg-transparent rounded-xl text-sm"
@@ -558,8 +572,8 @@ function PatientDashboard({ initialTab = 'appointments' }) {
                       <option key={d.id} value={d.id}>{d.name}</option>
                     ))}
                   </select>
-                  <button 
-                    type="submit" 
+                  <button
+                    type="submit"
                     disabled={actionLoading}
                     className="bg-hospital-500 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-hospital-600 transition-colors shadow-sm whitespace-nowrap"
                   >
@@ -573,7 +587,7 @@ function PatientDashboard({ initialTab = 'appointments' }) {
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-md space-y-4">
               <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
                 <h2 className="text-lg font-bold">Upcoming Appointments</h2>
-                <button 
+                <button
                   onClick={() => setBookingModal(true)}
                   className="bg-hospital-500 text-white px-4 py-2 rounded-xl text-xs font-semibold hover:bg-hospital-600 transition-all flex items-center space-x-1.5 shadow"
                 >
@@ -586,8 +600,8 @@ function PatientDashboard({ initialTab = 'appointments' }) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {appointments.filter(a => a.status === 'Scheduled').map(app => {
                     const activeQueue = stats?.active_tokens?.find(
-                      token => token.doctor_id === app.doctor_id || 
-                      (token.doctor_id === null && token.department_name === app.doctor?.department?.name)
+                      token => token.doctor_id === app.doctor_id ||
+                        (token.doctor_id === null && token.department_name === app.doctor?.department?.name)
                     );
 
                     return (
@@ -619,9 +633,8 @@ function PatientDashboard({ initialTab = 'appointments' }) {
                         <div className="text-xs bg-slate-50/50 dark:bg-slate-800/25 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800/40 grid grid-cols-2 gap-1.5">
                           <div className="col-span-2 flex justify-between items-center text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                             <span>Live Queue Status</span>
-                            <span className={`px-1.5 py-0.5 rounded font-black ${
-                              activeQueue ? 'bg-teal-55 text-teal-600 dark:bg-teal-950/30' : 'bg-slate-100 text-slate-500 dark:bg-slate-800'
-                            }`}>
+                            <span className={`px-1.5 py-0.5 rounded font-black ${activeQueue ? 'bg-teal-55 text-teal-600 dark:bg-teal-950/30' : 'bg-slate-100 text-slate-500 dark:bg-slate-800'
+                              }`}>
                               {activeQueue ? activeQueue.status : 'Scheduled'}
                             </span>
                           </div>
@@ -646,13 +659,13 @@ function PatientDashboard({ initialTab = 'appointments' }) {
                         </div>
 
                         <div className="flex flex-wrap md:flex-nowrap justify-between items-center pt-1 gap-2">
-                          <button 
+                          <button
                             onClick={() => setViewingAppointment(app)}
                             className="flex-grow text-center text-xs font-semibold py-2 px-2 bg-hospital-50 hover:bg-hospital-100 dark:bg-hospital-950/20 dark:hover:bg-hospital-950/30 text-hospital-600 dark:text-hospital-450 rounded-xl transition-all"
                           >
                             View Appointment
                           </button>
-                          <button 
+                          <button
                             onClick={() => {
                               setRescheduleId(app.id);
                               setRescheduleTime(app.appointment_time.slice(0, 16));
@@ -661,7 +674,7 @@ function PatientDashboard({ initialTab = 'appointments' }) {
                           >
                             Reschedule
                           </button>
-                          <button 
+                          <button
                             onClick={() => handleCancelAppointment(app.id)}
                             className="text-center text-xs font-semibold py-2 px-2 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/20 dark:hover:bg-rose-950/30 text-rose-600 dark:text-rose-450 rounded-xl transition-all"
                           >
@@ -724,10 +737,10 @@ function PatientDashboard({ initialTab = 'appointments' }) {
         {/* ---------------- CURRENT PRESCRIPTION TAB ---------------- */}
         {activeTab === 'prescription' && (
           <div className="space-y-6">
-            
+
             {latestVisit ? (
               <div id="prescription-print-area" className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 md:p-8 shadow-md space-y-6">
-                
+
                 {/* Hospital Header Banner */}
                 <div className="flex justify-between items-start border-b-2 border-slate-100 dark:border-slate-800 pb-6 gap-4">
                   <div>
@@ -812,14 +825,14 @@ function PatientDashboard({ initialTab = 'appointments' }) {
 
                 {/* Action buttons (Print, Download) */}
                 <div className="flex space-x-3 pt-6 border-t border-slate-100 dark:border-slate-800 no-print">
-                  <button 
+                  <button
                     onClick={printPrescription}
                     className="flex-grow md:flex-grow-0 bg-hospital-500 hover:bg-hospital-600 text-white font-semibold py-2.5 px-5 rounded-xl shadow transition-all flex items-center justify-center space-x-2 text-xs"
                   >
                     <Printer className="h-4 w-4" />
                     <span>Print Prescription</span>
                   </button>
-                  <button 
+                  <button
                     onClick={downloadPrescriptionFile}
                     className="flex-grow md:flex-grow-0 border border-slate-250 dark:border-slate-800 hover:bg-slate-55 dark:hover:bg-slate-850 font-semibold py-2.5 px-5 rounded-xl transition-all flex items-center justify-center space-x-2 text-xs"
                   >
@@ -847,14 +860,14 @@ function PatientDashboard({ initialTab = 'appointments' }) {
         {/* ---------------- VISIT/MEDICAL HISTORY TAB ---------------- */}
         {activeTab === 'history' && (
           <div className="space-y-6">
-                   {/* Filter controls */}
+            {/* Filter controls */}
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm flex flex-col md:flex-row items-center gap-4 justify-between">
               <div className="relative w-full md:w-72">
                 <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
                   <Search className="h-4 w-4" />
                 </span>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={historySearch}
                   onChange={(e) => setHistorySearch(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-slate-200 dark:border-slate-800 bg-transparent rounded-xl text-xs focus:ring-1 focus:ring-hospital-500 outline-none"
@@ -865,7 +878,7 @@ function PatientDashboard({ initialTab = 'appointments' }) {
               <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
                 <div className="flex items-center space-x-1.5">
                   <span className="text-xs text-slate-450 font-semibold shrink-0">Dept:</span>
-                  <select 
+                  <select
                     value={historyDeptFilter}
                     onChange={(e) => setHistoryDeptFilter(e.target.value)}
                     className="px-2.5 py-1.5 border border-slate-200 dark:border-slate-800 bg-transparent rounded-xl text-xs w-24 md:w-28"
@@ -879,7 +892,7 @@ function PatientDashboard({ initialTab = 'appointments' }) {
 
                 <div className="flex items-center space-x-1.5">
                   <span className="text-xs text-slate-450 font-semibold shrink-0">Doctor:</span>
-                  <select 
+                  <select
                     value={historyDocFilter}
                     onChange={(e) => setHistoryDocFilter(e.target.value)}
                     className="px-2.5 py-1.5 border border-slate-200 dark:border-slate-800 bg-transparent rounded-xl text-xs w-24 md:w-28"
@@ -893,8 +906,8 @@ function PatientDashboard({ initialTab = 'appointments' }) {
 
                 <div className="flex items-center space-x-1.5">
                   <span className="text-xs text-slate-450 font-semibold shrink-0">Date:</span>
-                  <input 
-                    type="date" 
+                  <input
+                    type="date"
                     value={historyDateFilter}
                     onChange={(e) => setHistoryDateFilter(e.target.value)}
                     className="px-2.5 py-1.5 border border-slate-200 dark:border-slate-800 bg-transparent rounded-xl text-xs w-28 md:w-32 focus:ring-1 focus:ring-hospital-500 outline-none"
@@ -902,7 +915,7 @@ function PatientDashboard({ initialTab = 'appointments' }) {
                 </div>
 
                 {(historySearch || historyDeptFilter || historyDocFilter || historyDateFilter) && (
-                  <button 
+                  <button
                     onClick={() => {
                       setHistorySearch('');
                       setHistoryDeptFilter('');
@@ -922,10 +935,10 @@ function PatientDashboard({ initialTab = 'appointments' }) {
               <div className="space-y-6">
                 {filteredVisits.map((record) => {
                   const isExpanded = !!expandedVisits[record.id];
-                  
+
                   return (
-                    <div 
-                      key={record.id} 
+                    <div
+                      key={record.id}
                       className="border border-slate-200 dark:border-slate-800 rounded-3xl p-5 hover:border-hospital-500 bg-white dark:bg-slate-900 shadow-sm relative transition-all"
                     >
                       <div className="flex justify-between items-start pb-3 mb-2 gap-2">
@@ -951,7 +964,7 @@ function PatientDashboard({ initialTab = 'appointments' }) {
                           <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Diagnosis</span>
                           <span className="text-sm font-extrabold text-slate-700 dark:text-slate-200">{record.diagnosis || 'None diagnosed'}</span>
                         </div>
-                        <button 
+                        <button
                           onClick={() => setExpandedVisits(prev => ({ ...prev, [record.id]: !prev[record.id] }))}
                           className="text-xs font-semibold py-1.5 px-3 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-100/50 dark:hover:bg-slate-800/50 text-slate-650 dark:text-slate-400 transition-all flex items-center space-x-1"
                         >
@@ -1019,15 +1032,15 @@ function PatientDashboard({ initialTab = 'appointments' }) {
         {/* ---------------- MEDICINES LOG TAB ---------------- */}
         {activeTab === 'medicines' && (
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-md space-y-4">
-            
+
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center border-b border-slate-105 dark:border-slate-800 pb-3 gap-4">
               <h2 className="text-lg font-bold">Historical Medication Tracker</h2>
               <div className="relative w-full sm:w-60">
                 <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
                   <Search className="h-4 w-4" />
                 </span>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={medicineSearch}
                   onChange={(e) => setMedicineSearch(e.target.value)}
                   className="w-full pl-9 pr-4 py-1.5 border border-slate-200 dark:border-slate-805 bg-transparent rounded-xl text-xs outline-none focus:ring-1 focus:ring-hospital-500"
@@ -1074,7 +1087,7 @@ function PatientDashboard({ initialTab = 'appointments' }) {
         {activeTab === 'reports' && (
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-md space-y-4">
             <h2 className="text-lg font-bold border-b border-slate-100 dark:border-slate-800 pb-3">Diagnostic Laboratory Reports</h2>
-            
+
             {reports.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {reports.map((rep) => (
@@ -1088,14 +1101,14 @@ function PatientDashboard({ initialTab = 'appointments' }) {
                     </div>
 
                     <div className="flex items-center space-x-2 shrink-0">
-                      <button 
+                      <button
                         onClick={() => window.open(patientService.getReportPdfUrl(rep.id), '_blank')}
                         className="p-2 border border-slate-250 dark:border-slate-800 hover:bg-slate-55 text-slate-650 dark:text-slate-350 rounded-xl"
                         title="Preview Report"
                       >
                         <Eye className="h-4 w-4" />
                       </button>
-                      <button 
+                      <button
                         onClick={() => window.open(patientService.getReportPdfUrl(rep.id), '_blank')}
                         className="p-2 bg-hospital-500 hover:bg-hospital-600 text-white rounded-xl shadow-sm"
                         title="Download Report"
@@ -1150,7 +1163,7 @@ function PatientDashboard({ initialTab = 'appointments' }) {
             <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
               <h2 className="text-lg font-bold">Patient Profile Information</h2>
               {!editingProfile && (
-                <button 
+                <button
                   onClick={() => setEditingProfile(true)}
                   className="bg-hospital-500 text-white px-3 py-2 rounded-xl text-xs font-semibold hover:bg-hospital-600 transition-all flex items-center space-x-1.5 shadow"
                 >
@@ -1164,8 +1177,8 @@ function PatientDashboard({ initialTab = 'appointments' }) {
               <form onSubmit={handleUpdateProfile} className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                 <div className="space-y-1">
                   <label className="text-slate-450 font-bold block">FULL NAME</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     value={profileForm.name}
                     onChange={(e) => setProfileForm(prev => ({ ...prev, name: e.target.value }))}
                     className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 bg-transparent rounded-xl outline-none focus:ring-1 focus:ring-hospital-500 text-sm text-slate-800 dark:text-white"
@@ -1173,8 +1186,8 @@ function PatientDashboard({ initialTab = 'appointments' }) {
                 </div>
                 <div className="space-y-1">
                   <label className="text-slate-450 font-bold block">EMAIL ADDRESS</label>
-                  <input 
-                    type="email" 
+                  <input
+                    type="email"
                     value={profileForm.email}
                     onChange={(e) => setProfileForm(prev => ({ ...prev, email: e.target.value }))}
                     className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 bg-transparent rounded-xl outline-none focus:ring-1 focus:ring-hospital-500 text-sm text-slate-800 dark:text-white"
@@ -1182,8 +1195,8 @@ function PatientDashboard({ initialTab = 'appointments' }) {
                 </div>
                 <div className="space-y-1">
                   <label className="text-slate-450 font-bold block">PHONE NUMBER</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     value={profileForm.mobile_number}
                     onChange={(e) => setProfileForm(prev => ({ ...prev, mobile_number: e.target.value }))}
                     className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 bg-transparent rounded-xl outline-none focus:ring-1 focus:ring-hospital-500 text-sm text-slate-800 dark:text-white"
@@ -1191,8 +1204,8 @@ function PatientDashboard({ initialTab = 'appointments' }) {
                 </div>
                 <div className="space-y-1">
                   <label className="text-slate-450 font-bold block">AGE</label>
-                  <input 
-                    type="number" 
+                  <input
+                    type="number"
                     value={profileForm.age}
                     onChange={(e) => setProfileForm(prev => ({ ...prev, age: parseInt(e.target.value) || 0 }))}
                     className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 bg-transparent rounded-xl outline-none focus:ring-1 focus:ring-hospital-500 text-sm text-slate-800 dark:text-white"
@@ -1200,7 +1213,7 @@ function PatientDashboard({ initialTab = 'appointments' }) {
                 </div>
                 <div className="space-y-1">
                   <label className="text-slate-450 font-bold block">GENDER</label>
-                  <select 
+                  <select
                     value={profileForm.gender}
                     onChange={(e) => setProfileForm(prev => ({ ...prev, gender: e.target.value }))}
                     className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 bg-transparent rounded-xl outline-none focus:ring-1 focus:ring-hospital-500 text-sm text-slate-800 dark:text-white"
@@ -1212,8 +1225,8 @@ function PatientDashboard({ initialTab = 'appointments' }) {
                 </div>
                 <div className="space-y-1">
                   <label className="text-slate-450 font-bold block">EMERGENCY CONTACT</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     value={profileForm.emergency_contact}
                     onChange={(e) => setProfileForm(prev => ({ ...prev, emergency_contact: e.target.value }))}
                     className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 bg-transparent rounded-xl outline-none focus:ring-1 focus:ring-hospital-500 text-sm text-slate-800 dark:text-white"
@@ -1221,7 +1234,7 @@ function PatientDashboard({ initialTab = 'appointments' }) {
                 </div>
                 <div className="space-y-1">
                   <label className="text-slate-450 font-bold block">BLOOD GROUP</label>
-                  <select 
+                  <select
                     value={profileForm.blood_group}
                     onChange={(e) => setProfileForm(prev => ({ ...prev, blood_group: e.target.value }))}
                     className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 bg-transparent rounded-xl outline-none focus:ring-1 focus:ring-hospital-500 text-sm text-slate-800 dark:text-white"
@@ -1239,8 +1252,8 @@ function PatientDashboard({ initialTab = 'appointments' }) {
                 </div>
                 <div className="space-y-1">
                   <label className="text-slate-450 font-bold block">KNOWN ALLERGIES</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     value={profileForm.allergies}
                     onChange={(e) => setProfileForm(prev => ({ ...prev, allergies: e.target.value }))}
                     className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 bg-transparent rounded-xl outline-none focus:ring-1 focus:ring-hospital-500 text-sm text-slate-800 dark:text-white"
@@ -1248,15 +1261,15 @@ function PatientDashboard({ initialTab = 'appointments' }) {
                 </div>
 
                 <div className="md:col-span-2 flex space-x-3 pt-4 border-t border-slate-100 dark:border-slate-850">
-                  <button 
+                  <button
                     type="submit"
                     disabled={actionLoading}
                     className="bg-hospital-500 text-white font-semibold py-2 px-5 rounded-xl hover:bg-hospital-600 shadow transition-colors"
                   >
                     Save Changes
                   </button>
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     onClick={() => {
                       setProfileForm({
                         name: patient.name || '',
@@ -1280,9 +1293,9 @@ function PatientDashboard({ initialTab = 'appointments' }) {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-xs leading-relaxed">
                 {patient?.profile_photo && (
                   <div className="md:col-span-2 lg:col-span-3 flex items-center space-x-4 mb-2 bg-slate-50/50 dark:bg-slate-800/10 p-4 border border-slate-100 dark:border-slate-800 rounded-3xl">
-                    <img 
-                      src={patient.profile_photo} 
-                      alt="Patient Profile" 
+                    <img
+                      src={patient.profile_photo}
+                      alt="Patient Profile"
                       className="h-16 w-16 rounded-full border-2 border-hospital-500 object-cover shadow-sm"
                     />
                     <div>
@@ -1339,16 +1352,16 @@ function PatientDashboard({ initialTab = 'appointments' }) {
         {/* ---------------- DISEASE DIAGNOSIS TAB ---------------- */}
         {activeTab === 'diagnosis' && (
           <div className="space-y-6">
-            
+
             {/* Tab navigation headers */}
             <div className="flex border-b border-slate-200 dark:border-slate-800 pb-px mb-4">
-              <button 
+              <button
                 onClick={() => setDiagnosisSubTab('new')}
                 className={`pb-3 px-4 text-sm font-bold border-b-2 transition-all ${diagnosisSubTab === 'new' ? 'border-hospital-500 text-hospital-600 dark:text-hospital-450' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
               >
                 New AI Analysis
               </button>
-              <button 
+              <button
                 onClick={() => {
                   setDiagnosisSubTab('history');
                   patientService.getPredictionHistory().then(setPredictionHistory).catch(console.error);
@@ -1362,7 +1375,7 @@ function PatientDashboard({ initialTab = 'appointments' }) {
             {/* Sub-tab: New Prediction */}
             {diagnosisSubTab === 'new' && (
               <div className="space-y-6">
-                
+
                 {/* Intro Card */}
                 {!diagnosisResult && !diagnosisLoading && (
                   <div className="bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-600 rounded-3xl p-6 shadow-lg text-white relative overflow-hidden">
@@ -1389,7 +1402,7 @@ function PatientDashboard({ initialTab = 'appointments' }) {
                 {/* Main Selector and Vitals view */}
                 {!diagnosisResult && !diagnosisLoading && (
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    
+
                     {/* Symptoms Selector (Left 2 cols) */}
                     <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4">
                       <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
@@ -1398,7 +1411,7 @@ function PatientDashboard({ initialTab = 'appointments' }) {
                           <p className="text-[10px] text-slate-400">Search and select all that apply</p>
                         </div>
                         {selectedSymptoms.length > 0 && (
-                          <button 
+                          <button
                             type="button"
                             onClick={() => setSelectedSymptoms([])}
                             className="text-xs font-bold text-rose-500 hover:underline"
@@ -1411,7 +1424,7 @@ function PatientDashboard({ initialTab = 'appointments' }) {
                       {/* Search Bar */}
                       <div className="relative">
                         <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                        <input 
+                        <input
                           type="text"
                           placeholder="Search symptoms (e.g. fever, chest pain, coughing)..."
                           value={symptomSearch}
@@ -1424,12 +1437,12 @@ function PatientDashboard({ initialTab = 'appointments' }) {
                       {selectedSymptoms.length > 0 && (
                         <div className="flex flex-wrap gap-2 p-3 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-150 dark:border-slate-800">
                           {selectedSymptoms.map((sym) => (
-                            <span 
-                              key={sym} 
+                            <span
+                              key={sym}
                               className="bg-hospital-50 dark:bg-hospital-950/40 text-hospital-600 dark:text-hospital-450 border border-hospital-100 dark:border-hospital-900/30 text-xs font-semibold pl-3 pr-1.5 py-1 rounded-full flex items-center space-x-1"
                             >
                               <span>{sym}</span>
-                              <button 
+                              <button
                                 type="button"
                                 onClick={() => setSelectedSymptoms(prev => prev.filter(s => s !== sym))}
                                 className="hover:bg-hospital-100 dark:hover:bg-hospital-900 rounded-full p-0.5 text-hospital-500"
@@ -1448,11 +1461,11 @@ function PatientDashboard({ initialTab = 'appointments' }) {
                           .map((sym) => {
                             const isSelected = selectedSymptoms.includes(sym);
                             return (
-                              <label 
-                                key={sym} 
+                              <label
+                                key={sym}
                                 className={`flex items-center space-x-3 p-3 rounded-xl border cursor-pointer transition-all hover:border-hospital-300 dark:hover:border-hospital-700 ${isSelected ? 'bg-hospital-50/20 dark:bg-hospital-950/20 border-hospital-300 dark:border-hospital-700' : 'border-slate-200 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-800/10'}`}
                               >
-                                <input 
+                                <input
                                   type="checkbox"
                                   checked={isSelected}
                                   onChange={() => {
@@ -1486,7 +1499,7 @@ function PatientDashboard({ initialTab = 'appointments' }) {
 
                     {/* Vitals Editor Panel (Right 1 col) */}
                     <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4 self-start">
-                      <button 
+                      <button
                         type="button"
                         onClick={() => setVitalsCollapsed(prev => !prev)}
                         className="w-full flex justify-between items-center text-left"
@@ -1512,7 +1525,7 @@ function PatientDashboard({ initialTab = 'appointments' }) {
                           ].map(({ key, label, type, placeholder, step }) => (
                             <div key={key} className="space-y-1">
                               <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">{label}</label>
-                              <input 
+                              <input
                                 type={type}
                                 step={step || '1'}
                                 placeholder={placeholder}
@@ -1573,17 +1586,17 @@ function PatientDashboard({ initialTab = 'appointments' }) {
                 {/* Diagnosis Results Card */}
                 {diagnosisResult && (
                   <div id="prediction-report-print" className="space-y-6 animate-fadeIn">
-                    
+
                     {/* Header Controls (hide on print) */}
                     <div className="flex justify-between items-center print:hidden">
-                      <button 
+                      <button
                         onClick={() => setDiagnosisResult(null)}
                         className="text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 flex items-center space-x-1"
                       >
                         <span>← Back to Diagnosis</span>
                       </button>
                       <div className="flex items-center space-x-2">
-                        <button 
+                        <button
                           onClick={printPredictionReport}
                           className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition-all shadow-sm"
                         >
@@ -1596,7 +1609,7 @@ function PatientDashboard({ initialTab = 'appointments' }) {
                     {/* Main Prediction Details */}
                     <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-md relative overflow-hidden">
                       <div className="absolute top-0 right-0 h-32 w-32 bg-hospital-500/5 rounded-full blur-3xl"></div>
-                      
+
                       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-slate-100 dark:border-slate-800 pb-6 mb-6">
                         <div>
                           <span className="text-[9px] font-black text-hospital-500 uppercase tracking-widest block mb-1">AI Ensemble Prediction Report</span>
@@ -1628,7 +1641,7 @@ function PatientDashboard({ initialTab = 'appointments' }) {
 
                         return (
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                            
+
                             {/* Confidence Gauge */}
                             <div className="bg-slate-50 dark:bg-slate-800/40 border border-slate-150 dark:border-slate-800 p-4 rounded-2xl flex flex-col justify-between">
                               <div className="flex justify-between items-center mb-2">
@@ -1648,11 +1661,10 @@ function PatientDashboard({ initialTab = 'appointments' }) {
                             <div className="bg-slate-50 dark:bg-slate-800/40 border border-slate-150 dark:border-slate-800 p-4 rounded-2xl flex items-center justify-between">
                               <div>
                                 <span className="text-[9px] font-black text-slate-450 uppercase tracking-wider block mb-1">Risk Evaluation</span>
-                                <span className={`px-3 py-1 rounded-xl text-xs font-black uppercase tracking-wider inline-block ${
-                                  diagnosisResult.risk_level === 'High' || diagnosisResult.risk_level === 'Critical' ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-450' :
+                                <span className={`px-3 py-1 rounded-xl text-xs font-black uppercase tracking-wider inline-block ${diagnosisResult.risk_level === 'High' || diagnosisResult.risk_level === 'Critical' ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-450' :
                                   diagnosisResult.risk_level === 'Medium' ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-450' :
-                                  'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-450'
-                                }`}>
+                                    'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-450'
+                                  }`}>
                                   {diagnosisResult.risk_level} Risk
                                 </span>
                               </div>
@@ -1680,7 +1692,7 @@ function PatientDashboard({ initialTab = 'appointments' }) {
                       {/* Details lookup sections */}
                       {diagnosisResult.details && (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-slate-100 dark:border-slate-800 text-xs leading-relaxed">
-                          
+
                           {/* Disease Profile */}
                           <div className="space-y-4">
                             <div className="bg-slate-50 dark:bg-slate-800/20 p-4 rounded-2xl border border-slate-150 dark:border-slate-850 space-y-2">
@@ -1737,7 +1749,7 @@ function PatientDashboard({ initialTab = 'appointments' }) {
 
                           {/* Clinical Interventions */}
                           <div className="space-y-4">
-                            
+
                             {/* Tests & Screenings */}
                             {diagnosisResult.details.tests && diagnosisResult.details.tests.length > 0 && (
                               <div className="bg-slate-50 dark:bg-slate-800/20 p-4 rounded-2xl border border-slate-150 dark:border-slate-850 space-y-2">
@@ -1813,14 +1825,14 @@ function PatientDashboard({ initialTab = 'appointments' }) {
 
                   {/* History Filters */}
                   <div className="flex flex-wrap items-center gap-2 text-xs">
-                    <input 
+                    <input
                       type="text"
                       placeholder="Search disease..."
                       value={predHistorySearch}
                       onChange={(e) => setPredHistorySearch(e.target.value)}
                       className="px-3 py-1.5 border border-slate-250 dark:border-slate-800 bg-transparent rounded-xl outline-none focus:ring-1 focus:ring-hospital-500 bg-white dark:bg-slate-900"
                     />
-                    <select 
+                    <select
                       value={predHistoryRiskFilter}
                       onChange={(e) => setPredHistoryRiskFilter(e.target.value)}
                       className="px-3 py-1.5 border border-slate-250 dark:border-slate-800 bg-transparent rounded-xl outline-none focus:ring-1 focus:ring-hospital-500 bg-white dark:bg-slate-900"
@@ -1830,7 +1842,7 @@ function PatientDashboard({ initialTab = 'appointments' }) {
                       <option value="Medium">Medium Risk</option>
                       <option value="High">High Risk</option>
                     </select>
-                    <select 
+                    <select
                       value={predHistorySortBy}
                       onChange={(e) => setPredHistorySortBy(e.target.value)}
                       className="px-3 py-1.5 border border-slate-250 dark:border-slate-800 bg-transparent rounded-xl outline-none focus:ring-1 focus:ring-hospital-500 bg-white dark:bg-slate-900"
@@ -1838,7 +1850,7 @@ function PatientDashboard({ initialTab = 'appointments' }) {
                       <option value="prediction_time">Sort by Date</option>
                       <option value="confidence">Sort by Confidence</option>
                     </select>
-                    <button 
+                    <button
                       onClick={() => setPredHistorySortOrder(prev => prev === 'desc' ? 'asc' : 'desc')}
                       className="px-2 py-1.5 border border-slate-250 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-850 font-bold"
                     >
@@ -1892,11 +1904,10 @@ function PatientDashboard({ initialTab = 'appointments' }) {
                               <td className="py-3 px-4 font-black">{item.predicted_disease}</td>
                               <td className="py-3 px-4 font-bold">{Math.round(item.confidence * 100)}%</td>
                               <td className="py-3 px-4">
-                                <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase inline-block ${
-                                  item.risk_level === 'High' || item.risk_level === 'Critical' ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-455' :
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase inline-block ${item.risk_level === 'High' || item.risk_level === 'Critical' ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-455' :
                                   item.risk_level === 'Medium' ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-455' :
-                                  'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-455'
-                                }`}>
+                                    'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-455'
+                                  }`}>
                                   {item.risk_level}
                                 </span>
                               </td>
@@ -1904,14 +1915,13 @@ function PatientDashboard({ initialTab = 'appointments' }) {
                                 {item.symptoms.join(', ')}
                               </td>
                               <td className="py-3 px-4 font-bold">
-                                <span className={`px-2 py-0.5 rounded text-[10px] inline-block ${
-                                  item.consultation_status === 'Scheduled' ? 'bg-teal-50 text-teal-600 dark:bg-teal-950/30' : 'bg-slate-100 text-slate-500 dark:bg-slate-850'
-                                }`}>
+                                <span className={`px-2 py-0.5 rounded text-[10px] inline-block ${item.consultation_status === 'Scheduled' ? 'bg-teal-50 text-teal-600 dark:bg-teal-950/30' : 'bg-slate-100 text-slate-500 dark:bg-slate-850'
+                                  }`}>
                                   {item.consultation_status}
                                 </span>
                               </td>
                               <td className="py-3 px-4 text-right">
-                                <button 
+                                <button
                                   onClick={async () => {
                                     setDiagnosisLoading(true);
                                     try {
@@ -1944,7 +1954,7 @@ function PatientDashboard({ initialTab = 'appointments' }) {
 
               </div>
             )}
-            
+
             {/* Inline print style rule */}
             <style>{`
               @media print {
@@ -1983,11 +1993,11 @@ function PatientDashboard({ initialTab = 'appointments' }) {
         <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex justify-center items-center p-4">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl w-full max-w-md space-y-4 animate-scaleUp">
             <h3 className="font-extrabold text-base border-b border-slate-100 dark:border-slate-800 pb-3">Book New Consultation</h3>
-            
+
             <form onSubmit={handleBookAppointment} className="space-y-4 text-xs">
               <div className="space-y-1">
                 <label className="text-slate-450 font-bold block">SELECT DOCTOR / PHYSICIAN</label>
-                <select 
+                <select
                   value={bookingForm.doctor_id}
                   onChange={(e) => setBookingForm(prev => ({ ...prev, doctor_id: e.target.value }))}
                   className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 bg-transparent rounded-xl outline-none focus:ring-1 focus:ring-hospital-500 text-sm text-slate-800 dark:text-white"
@@ -2000,7 +2010,7 @@ function PatientDashboard({ initialTab = 'appointments' }) {
 
               <div className="space-y-1">
                 <label className="text-slate-450 font-bold block">APPOINTMENT TYPE</label>
-                <select 
+                <select
                   value={bookingForm.appointment_type}
                   onChange={(e) => setBookingForm(prev => ({ ...prev, appointment_type: e.target.value }))}
                   className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 bg-transparent rounded-xl outline-none focus:ring-1 focus:ring-hospital-500 text-sm text-slate-800 dark:text-white"
@@ -2012,8 +2022,8 @@ function PatientDashboard({ initialTab = 'appointments' }) {
 
               <div className="space-y-1">
                 <label className="text-slate-450 font-bold block">DATE & TIME</label>
-                <input 
-                  type="datetime-local" 
+                <input
+                  type="datetime-local"
                   value={bookingForm.appointment_time}
                   onChange={(e) => setBookingForm(prev => ({ ...prev, appointment_time: e.target.value }))}
                   className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 bg-transparent rounded-xl outline-none focus:ring-1 focus:ring-hospital-500 text-sm text-slate-800 dark:text-white"
@@ -2021,15 +2031,15 @@ function PatientDashboard({ initialTab = 'appointments' }) {
               </div>
 
               <div className="flex space-x-3 pt-3">
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   disabled={actionLoading}
                   className="flex-grow bg-hospital-500 text-white font-semibold py-2 rounded-xl hover:bg-hospital-600 transition-colors shadow-sm"
                 >
                   Confirm Booking
                 </button>
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => setBookingModal(false)}
                   className="border border-slate-200 dark:border-slate-800 font-semibold py-2 px-5 rounded-xl text-slate-650 hover:bg-slate-55 transition-colors"
                 >
@@ -2046,12 +2056,12 @@ function PatientDashboard({ initialTab = 'appointments' }) {
         <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex justify-center items-center p-4">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl w-full max-w-md space-y-4 animate-scaleUp">
             <h3 className="font-extrabold text-base border-b border-slate-100 dark:border-slate-800 pb-3">Reschedule Appointment</h3>
-            
+
             <form onSubmit={handleReschedule} className="space-y-4 text-xs">
               <div className="space-y-1">
                 <label className="text-slate-450 font-bold block">NEW DATE & TIME</label>
-                <input 
-                  type="datetime-local" 
+                <input
+                  type="datetime-local"
                   value={rescheduleTime}
                   onChange={(e) => setRescheduleTime(e.target.value)}
                   className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 bg-transparent rounded-xl outline-none focus:ring-1 focus:ring-hospital-500 text-sm text-slate-850 dark:text-white"
@@ -2059,15 +2069,15 @@ function PatientDashboard({ initialTab = 'appointments' }) {
               </div>
 
               <div className="flex space-x-3 pt-3">
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   disabled={actionLoading}
                   className="flex-grow bg-hospital-500 text-white font-semibold py-2 rounded-xl hover:bg-hospital-600 transition-colors shadow-sm"
                 >
                   Save Schedule
                 </button>
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => setRescheduleId(null)}
                   className="border border-slate-200 dark:border-slate-800 font-semibold py-2 px-5 rounded-xl text-slate-650 hover:bg-slate-55 transition-colors"
                 >
@@ -2083,21 +2093,20 @@ function PatientDashboard({ initialTab = 'appointments' }) {
       {viewingAppointment && (() => {
         const activeQueue = stats?.active_tokens?.find(
           token => token.doctor_id === viewingAppointment.doctor_id ||
-          (token.doctor_id === null && token.department_name === viewingAppointment.doctor?.department?.name)
+            (token.doctor_id === null && token.department_name === viewingAppointment.doctor?.department?.name)
         );
 
         return (
           <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex justify-center items-center p-4">
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl w-full max-w-lg space-y-5 animate-scaleUp">
-              
+
               <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
                 <div>
                   <h3 className="font-extrabold text-base">Appointment Details</h3>
                   <span className="text-[10px] text-slate-450">ID: APP-{viewingAppointment.id}</span>
                 </div>
-                <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
-                  viewingAppointment.status === 'Scheduled' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400' : 'bg-slate-100 dark:bg-slate-800 text-slate-450'
-                }`}>
+                <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${viewingAppointment.status === 'Scheduled' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400' : 'bg-slate-100 dark:bg-slate-800 text-slate-450'
+                  }`}>
                   {viewingAppointment.status}
                 </span>
               </div>
@@ -2133,7 +2142,7 @@ function PatientDashboard({ initialTab = 'appointments' }) {
               {/* Queue status */}
               <div className="border-t border-slate-100 dark:border-slate-800/60 pt-4 space-y-3">
                 <span className="text-[10px] text-hospital-500 font-bold uppercase tracking-wider block">Live Queue Status</span>
-                
+
                 {activeQueue ? (
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3 bg-hospital-50/20 dark:bg-hospital-950/10 border border-hospital-100/50 dark:border-hospital-900/30 p-4 rounded-2xl text-xs">
                     <div>
@@ -2152,11 +2161,10 @@ function PatientDashboard({ initialTab = 'appointments' }) {
                     </div>
                     <div>
                       <span className="text-slate-400 block font-semibold text-[9px]">STATUS</span>
-                      <span className={`px-2 py-0.5 rounded-lg text-[9px] font-bold inline-block mt-1.5 uppercase ${
-                        activeQueue.status === 'Calling' ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400' :
+                      <span className={`px-2 py-0.5 rounded-lg text-[9px] font-bold inline-block mt-1.5 uppercase ${activeQueue.status === 'Calling' ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400' :
                         activeQueue.status === 'Skipped' ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/30 dark:text-rose-400' :
-                        'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400'
-                      }`}>
+                          'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400'
+                        }`}>
                         {activeQueue.status}
                       </span>
                     </div>
@@ -2172,7 +2180,7 @@ function PatientDashboard({ initialTab = 'appointments' }) {
               </div>
 
               <div className="flex justify-end pt-3 border-t border-slate-100 dark:border-slate-800">
-                <button 
+                <button
                   onClick={() => setViewingAppointment(null)}
                   className="bg-hospital-500 hover:bg-hospital-600 text-white font-semibold py-2 px-6 rounded-xl transition-all text-xs"
                 >
