@@ -92,8 +92,9 @@ function PatientDashboard({ initialTab = 'home' }) {
   const [historyDeptFilter, setHistoryDeptFilter] = useState('');
   const [historyDocFilter, setHistoryDocFilter] = useState('');
   const [historyDateFilter, setHistoryDateFilter] = useState('');
-  const [expandedVisits, setExpandedVisits] = useState({});
   const [medicineSearch, setMedicineSearch] = useState('');
+  const [appointmentSearch, setAppointmentSearch] = useState('');
+  const [appointmentStatusFilter, setAppointmentStatusFilter] = useState('All');
 
   // General loading & message states
   const [loading, setLoading] = useState(true);
@@ -546,21 +547,28 @@ function PatientDashboard({ initialTab = 'home' }) {
 
         {/* Patient Profile Header */}
         <div className="flex items-center space-x-3 pb-4 mb-4 border-b border-slate-100 dark:border-slate-800/80">
-          <div className="relative">
+          <div className="relative shrink-0">
             <div className="bg-gradient-to-br from-hospital-500 to-indigo-600 p-0.5 rounded-2xl shadow-md">
               {patient?.profile_photo ? (
                 <img src={patient.profile_photo} alt={patient.name} className="h-11 w-11 rounded-[14px] object-cover" />
               ) : (
-                <div className="h-11 w-11 rounded-[14px] bg-hospital-100 dark:bg-hospital-950 flex items-center justify-center text-hospital-600 dark:text-hospital-400">
-                  <User className="h-6 w-6" />
+                <div className="h-11 w-11 rounded-[14px] bg-hospital-100 dark:bg-hospital-950 flex items-center justify-center text-hospital-600 dark:text-hospital-400 font-black text-sm">
+                  {patient?.name ? patient.name.charAt(0).toUpperCase() : <User className="h-5 w-5" />}
                 </div>
               )}
             </div>
-            <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full"></span>
+            <span className="absolute -bottom-1 -right-1 h-4 w-4 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full flex items-center justify-center text-white shadow-xs">
+              <Check className="h-2.5 w-2.5 font-black" />
+            </span>
           </div>
-          <div className="overflow-hidden">
+          <div className="overflow-hidden space-y-0.5">
             <span className="font-extrabold text-sm block truncate text-slate-800 dark:text-slate-100">{patient?.name || 'Patient'}</span>
-            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">ID: #{patient?.id}</span>
+            <div className="flex items-center space-x-1.5">
+              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">ID: #{patient?.id}</span>
+              <span className="px-1.5 py-0.2 rounded-full text-[8px] font-black uppercase tracking-widest bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/40">
+                Verified
+              </span>
+            </div>
           </div>
         </div>
 
@@ -1252,152 +1260,381 @@ function PatientDashboard({ initialTab = 'home' }) {
               </div>
             )}
 
-            {/* Upcoming Appointments List */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-md space-y-4">
-              <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
-                <h2 className="text-lg font-bold">Upcoming Appointments</h2>
+        {/* ========================================================= */}
+        {/* ---------------- APPOINTMENTS TAB ---------------- */}
+        {/* ========================================================= */}
+        {activeTab === 'appointments' && (
+          <div className="space-y-6">
+
+            {/* Page Hero Header */}
+            <div className="relative rounded-3xl bg-gradient-to-r from-hospital-600 via-hospital-500 to-indigo-600 dark:from-slate-900 dark:via-hospital-950 dark:to-slate-900 p-6 md:p-8 text-white shadow-xl overflow-hidden border border-hospital-400/20 dark:border-slate-800">
+              <div className="absolute -top-12 -right-12 h-64 w-64 bg-white/10 dark:bg-hospital-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+              <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                <div className="space-y-1.5">
+                  <div className="flex items-center space-x-2">
+                    <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-white/20 text-white border border-white/30 backdrop-blur-md">
+                      Specialist Consultations
+                    </span>
+                    <span className="text-[10px] text-hospital-100 dark:text-slate-400 font-semibold">
+                      {appointments.length} Total Registered
+                    </span>
+                  </div>
+
+                  <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
+                    My Appointments & Schedule
+                  </h1>
+
+                  <p className="text-xs text-hospital-100 dark:text-slate-300 max-w-xl">
+                    Manage upcoming hospital visits, review historical consultation logs, and schedule new specialist appointments with live queue tracking.
+                  </p>
+                </div>
+
                 <button
                   onClick={() => setBookingModal(true)}
-                  className="bg-hospital-500 text-white px-4 py-2 rounded-xl text-xs font-semibold hover:bg-hospital-600 transition-all flex items-center space-x-1.5 shadow"
+                  className="bg-white text-hospital-600 font-extrabold px-5 py-3 rounded-2xl text-xs shadow-lg hover:bg-hospital-50 transition-all flex items-center space-x-2 shrink-0 hover:scale-[1.02] active:scale-[0.98]"
                 >
                   <Plus className="h-4 w-4" />
                   <span>Book Appointment</span>
                 </button>
               </div>
+            </div>
 
-              {appointments.filter(a => a.status === 'Scheduled').length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {appointments.filter(a => a.status === 'Scheduled').map(app => {
+            {/* Statistics KPI Cards Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Upcoming */}
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Upcoming</span>
+                  <div className="p-2.5 rounded-2xl bg-cyan-50 dark:bg-cyan-950/50 text-cyan-600 dark:text-cyan-400">
+                    <Calendar className="h-5 w-5" />
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-2xl font-black text-slate-800 dark:text-white">
+                    {appointments.filter(a => a.status === 'Scheduled').length}
+                  </h3>
+                  <p className="text-[10px] text-slate-400 font-medium">Active scheduled OPD visits</p>
+                </div>
+              </div>
+
+              {/* Completed */}
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Completed</span>
+                  <div className="p-2.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400">
+                    <CheckCircle className="h-5 w-5" />
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-2xl font-black text-slate-800 dark:text-white">
+                    {appointments.filter(a => a.status === 'Completed').length}
+                  </h3>
+                  <p className="text-[10px] text-slate-400 font-medium">Finished consultations</p>
+                </div>
+              </div>
+
+              {/* Cancelled */}
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Cancelled</span>
+                  <div className="p-2.5 rounded-2xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400">
+                    <AlertCircle className="h-5 w-5" />
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-2xl font-black text-slate-800 dark:text-white">
+                    {appointments.filter(a => a.status === 'Cancelled').length}
+                  </h3>
+                  <p className="text-[10px] text-slate-400 font-medium">Cancelled appointment logs</p>
+                </div>
+              </div>
+
+              {/* Next Appointment */}
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Next Visit</span>
+                  <div className="p-2.5 rounded-2xl bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400">
+                    <Sparkles className="h-5 w-5" />
+                  </div>
+                </div>
+                <div>
+                  {(() => {
+                    const scheduled = appointments
+                      .filter(a => a.status === 'Scheduled')
+                      .sort((a, b) => new Date(a.appointment_time) - new Date(b.appointment_time));
+                    const nextApp = scheduled[0];
+                    const docRaw = nextApp?.doctor?.name || '';
+                    const formattedDoc = docRaw ? (/^dr\.?/i.test(docRaw.trim()) ? docRaw.trim() : `Dr. ${docRaw.trim()}`) : '';
+
+                    return (
+                      <>
+                        <h3 className="text-sm font-black text-slate-800 dark:text-white truncate">
+                          {nextApp ? new Date(nextApp.appointment_time).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }) : 'None Scheduled'}
+                        </h3>
+                        <p className="text-[10px] text-slate-400 font-medium truncate">
+                          {nextApp ? formattedDoc : 'No upcoming visit'}
+                        </p>
+                      </>
+                    );
+                  })()}
+                </div>
+              </div>
+            </div>
+
+            {/* Self Check-In Portal Fallback / Banner */}
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm flex flex-col md:flex-row justify-between items-center gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center space-x-2">
+                  <Stethoscope className="h-4 w-4 text-hospital-500" />
+                  <h3 className="font-extrabold text-sm text-slate-800 dark:text-white">Hospital Clinic Self Check-In</h3>
+                </div>
+                <p className="text-xs text-slate-400">Already physically at the OPD desk? Check in directly to retrieve your live queue token.</p>
+              </div>
+
+              <form onSubmit={handleSelfCheckIn} className="flex items-center space-x-3 w-full md:w-auto">
+                <select
+                  value={selectedDept}
+                  onChange={(e) => setSelectedDept(e.target.value)}
+                  className="px-3.5 py-2.5 border border-slate-200 dark:border-slate-800 bg-transparent rounded-xl text-xs font-semibold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-hospital-500"
+                >
+                  {departments.map(d => (
+                    <option key={d.id} value={d.id}>{d.name}</option>
+                  ))}
+                </select>
+
+                <button
+                  type="submit"
+                  disabled={actionLoading}
+                  className="bg-hospital-500 text-white px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-hospital-600 transition-all shadow-sm whitespace-nowrap hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+                >
+                  {actionLoading ? 'Checking In...' : 'Check In Now'}
+                </button>
+              </form>
+            </div>
+
+            {/* Search & Filter Toolbar */}
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+              
+              {/* Search Bar */}
+              <div className="relative w-full sm:w-80">
+                <Search className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Search doctor name or department..."
+                  value={appointmentSearch}
+                  onChange={(e) => setAppointmentSearch(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 border border-slate-200 dark:border-slate-800 bg-transparent rounded-2xl text-xs outline-none focus:ring-2 focus:ring-hospital-500 text-slate-800 dark:text-white"
+                />
+              </div>
+
+              {/* Status Filter Tabs */}
+              <div className="flex items-center space-x-1 overflow-x-auto w-full sm:w-auto scrollbar-none">
+                {['All', 'Scheduled', 'Completed', 'Cancelled'].map(status => {
+                  const isActive = appointmentStatusFilter === status;
+                  return (
+                    <button
+                      key={status}
+                      onClick={() => setAppointmentStatusFilter(status)}
+                      className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${isActive ? 'bg-hospital-500 text-white shadow-sm' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white bg-slate-50 dark:bg-slate-800/40'}`}
+                    >
+                      {status}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Appointments Grid */}
+            {(() => {
+              const filteredList = appointments.filter(app => {
+                const matchesSearch = !appointmentSearch || 
+                  (app.doctor?.name && app.doctor.name.toLowerCase().includes(appointmentSearch.toLowerCase())) ||
+                  (app.doctor?.department?.name && app.doctor.department.name.toLowerCase().includes(appointmentSearch.toLowerCase()));
+                
+                const matchesStatus = appointmentStatusFilter === 'All' || app.status === appointmentStatusFilter;
+
+                return matchesSearch && matchesStatus;
+              });
+
+              if (loading) {
+                return (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {[1, 2, 3, 4].map(n => (
+                      <div key={n} className="h-48 bg-slate-200 dark:bg-slate-800 rounded-3xl animate-pulse"></div>
+                    ))}
+                  </div>
+                );
+              }
+
+              if (filteredList.length === 0) {
+                return (
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-10 text-center space-y-4 shadow-sm">
+                    <div className="h-16 w-16 bg-hospital-50 dark:bg-hospital-950 rounded-2xl flex items-center justify-center mx-auto text-hospital-500">
+                      <Calendar className="h-8 w-8" />
+                    </div>
+                    <div className="space-y-1">
+                      <h3 className="font-extrabold text-base text-slate-800 dark:text-white">No Appointments Found</h3>
+                      <p className="text-xs text-slate-400 max-w-sm mx-auto">
+                        No appointments match your current search or status filter. Try clearing your filters or schedule a new consultation.
+                      </p>
+                    </div>
+                    {(appointmentSearch || appointmentStatusFilter !== 'All') ? (
+                      <button
+                        onClick={() => { setAppointmentSearch(''); setAppointmentStatusFilter('All'); }}
+                        className="text-xs font-bold text-hospital-600 dark:text-hospital-400 hover:underline"
+                      >
+                        Reset All Filters
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => setBookingModal(true)}
+                        className="bg-hospital-500 text-white font-bold px-4 py-2 rounded-xl text-xs hover:bg-hospital-600 transition-all inline-flex items-center space-x-1.5 shadow-sm"
+                      >
+                        <Plus className="h-4 w-4" />
+                        <span>Schedule Appointment</span>
+                      </button>
+                    )}
+                  </div>
+                );
+              }
+
+              return (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  {filteredList.map(app => {
                     const activeQueue = stats?.active_tokens?.find(
                       token => token.doctor_id === app.doctor_id ||
                         (token.doctor_id === null && token.department_name === app.doctor?.department?.name)
                     );
 
+                    const isScheduled = app.status === 'Scheduled';
+                    const isCompleted = app.status === 'Completed';
+
+                    const rawName = app.doctor?.name || '';
+                    const doctorDisplayName = rawName ? (/^dr\.?/i.test(rawName.trim()) ? rawName.trim() : `Dr. ${rawName.trim()}`) : 'Physician Specialist';
+
                     return (
-                      <div key={app.id} className="border border-slate-200 dark:border-slate-800 rounded-2xl p-4 bg-slate-50/10 dark:bg-slate-800/10 space-y-3 relative">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <span className="text-[10px] text-hospital-500 dark:text-hospital-400 font-bold uppercase tracking-wider">{app.doctor?.department?.name || 'Department'}</span>
-                            <h4 className="font-extrabold text-sm mt-0.5">Dr. {app.doctor?.name}</h4>
-                          </div>
-                          <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
-                            {app.status}
-                          </span>
-                        </div>
+                      <div
+                        key={app.id}
+                        className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between h-full space-y-4 group"
+                      >
+                        <div className="space-y-4">
+                          {/* Header: Dept & Status Pill */}
+                          <div className="flex justify-between items-start">
+                            <div className="space-y-1">
+                              <span className="text-[9px] font-black uppercase tracking-widest text-hospital-500 dark:text-hospital-400 block">
+                                {app.doctor?.department?.name || 'Medical Department'}
+                              </span>
+                              <h3 className="font-extrabold text-base text-slate-800 dark:text-white group-hover:text-hospital-600 dark:group-hover:text-hospital-400 transition-colors">
+                                {doctorDisplayName}
+                              </h3>
+                            </div>
 
-                        <div className="grid grid-cols-2 gap-2 text-xs border-t border-b border-slate-100 dark:border-slate-800/60 py-2">
-                          <div>
-                            <span className="text-slate-400 block font-medium">Date</span>
-                            <strong className="text-slate-700 dark:text-slate-200">{new Date(app.appointment_time).toLocaleDateString()}</strong>
-                          </div>
-                          <div>
-                            <span className="text-slate-400 block font-medium">Time</span>
-                            <strong className="text-slate-700 dark:text-slate-200">
-                              {new Date(app.appointment_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </strong>
-                          </div>
-                        </div>
-
-                        {/* Live Queue Status */}
-                        <div className="text-xs bg-slate-50/50 dark:bg-slate-800/25 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800/40 grid grid-cols-2 gap-1.5">
-                          <div className="col-span-2 flex justify-between items-center text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                            <span>Live Queue Status</span>
-                            <span className={`px-1.5 py-0.5 rounded font-black ${activeQueue ? 'bg-teal-50 text-teal-600 dark:bg-teal-950/30' : 'bg-slate-100 text-slate-500 dark:bg-slate-800'}`}>
-                              {activeQueue ? activeQueue.status : 'Scheduled'}
+                            <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${isScheduled ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/40' : isCompleted ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-900/40' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border border-slate-200 dark:border-slate-700'}`}>
+                              {app.status}
                             </span>
                           </div>
-                          {activeQueue ? (
-                            <>
+
+                          {/* Date, Time & Location Grid */}
+                          <div className="grid grid-cols-2 gap-3 p-3.5 bg-slate-50/60 dark:bg-slate-800/30 rounded-2xl border border-slate-150 dark:border-slate-800 text-xs">
+                            <div className="flex items-center space-x-2.5">
+                              <Calendar className="h-4 w-4 text-hospital-500 shrink-0" />
                               <div>
-                                <span className="text-[10px] text-slate-400 block">Token Number</span>
-                                <strong className="text-hospital-600 dark:text-hospital-400 text-sm font-black">{activeQueue.token_number}</strong>
-                              </div>
-                              <div>
-                                <span className="text-[10px] text-slate-400 block">Position / Est. Wait</span>
-                                <strong className="text-slate-700 dark:text-slate-200 text-xs block">
-                                  {activeQueue.status === 'Calling' ? 'Calling Next!' : `#${activeQueue.position} (${activeQueue.estimated_wait_time.toFixed(0)}m)`}
+                                <span className="text-[9px] text-slate-400 font-bold uppercase block">Date</span>
+                                <strong className="text-slate-800 dark:text-slate-200 font-bold">
+                                  {new Date(app.appointment_time).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}
                                 </strong>
                               </div>
-                            </>
-                          ) : (
-                            <div className="col-span-2 text-center text-slate-400 text-[10px] py-1">
-                              Not Checked In (Check-in available at clinic)
                             </div>
+
+                            <div className="flex items-center space-x-2.5">
+                              <Clock className="h-4 w-4 text-hospital-500 shrink-0" />
+                              <div>
+                                <span className="text-[9px] text-slate-400 font-bold uppercase block">Time</span>
+                                <strong className="text-slate-800 dark:text-slate-200 font-bold">
+                                  {new Date(app.appointment_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </strong>
+                              </div>
+                            </div>
+
+                            <div className="col-span-2 pt-2 border-t border-slate-150 dark:border-slate-800/60 flex justify-between items-center text-[10px]">
+                              <span className="text-slate-400 font-bold uppercase">Consultation Suite</span>
+                              <span className="font-extrabold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 px-2.5 py-0.5 rounded-lg border border-slate-200 dark:border-slate-700">
+                                Room #{activeQueue?.room_number || app.doctor?.room_number || '102'} (OPD Main)
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Live Queue Status Badge */}
+                          <div className="text-xs bg-slate-50/40 dark:bg-slate-800/20 p-3 rounded-2xl border border-slate-100 dark:border-slate-800/50 space-y-1.5">
+                            <div className="flex justify-between items-center text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                              <span>Live Queue Token</span>
+                              <span className={`px-2 py-0.5 rounded font-extrabold ${activeQueue ? 'bg-teal-50 text-teal-600 dark:bg-teal-950/40' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
+                                {activeQueue ? activeQueue.status : 'Scheduled'}
+                              </span>
+                            </div>
+
+                            {activeQueue ? (
+                              <div className="flex justify-between items-center text-xs">
+                                <div>
+                                  <span className="text-[10px] text-slate-400">Token ID:</span>
+                                  <strong className="text-hospital-600 dark:text-hospital-400 font-black ml-1">#{activeQueue.token_number}</strong>
+                                </div>
+                                <div>
+                                  <span className="text-[10px] text-slate-400">Status:</span>
+                                  <strong className="text-slate-800 dark:text-slate-200 font-bold ml-1">
+                                    {activeQueue.status === 'Calling' ? 'Calling Next!' : `Pos #${activeQueue.position}`}
+                                  </strong>
+                                </div>
+                              </div>
+                            ) : (
+                              <p className="text-[10px] text-slate-400 text-center">
+                                No active live queue token issued yet.
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Natural Fitted Action Buttons */}
+                        <div className="flex items-center space-x-2 pt-3 border-t border-slate-100 dark:border-slate-800/60">
+                          <button
+                            onClick={() => setViewingAppointment(app)}
+                            className="px-3.5 py-2 rounded-xl text-xs font-bold bg-hospital-50 hover:bg-hospital-100 dark:bg-hospital-950/30 dark:hover:bg-hospital-950/50 text-hospital-600 dark:text-hospital-400 transition-all hover:scale-[1.02] active:scale-[0.98] shrink-0"
+                          >
+                            View Details
+                          </button>
+
+                          {isScheduled && (
+                            <>
+                              <button
+                                onClick={() => {
+                                  setRescheduleId(app.id);
+                                  setRescheduleTime(app.appointment_time.slice(0, 16));
+                                }}
+                                className="px-3.5 py-2 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-all hover:scale-[1.02] active:scale-[0.98] shrink-0"
+                              >
+                                Reschedule
+                              </button>
+
+                              <button
+                                onClick={() => handleCancelAppointment(app.id)}
+                                className="px-3.5 py-2 rounded-xl text-xs font-bold bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/30 dark:hover:bg-rose-950/50 text-rose-600 dark:text-rose-400 transition-all hover:scale-[1.02] active:scale-[0.98] shrink-0"
+                              >
+                                Cancel
+                              </button>
+                            </>
                           )}
                         </div>
 
-                        <div className="flex flex-wrap md:flex-nowrap justify-between items-center pt-1 gap-2">
-                          <button
-                            onClick={() => setViewingAppointment(app)}
-                            className="flex-grow text-center text-xs font-semibold py-2 px-2 bg-hospital-50 hover:bg-hospital-100 dark:bg-hospital-950/20 dark:hover:bg-hospital-950/30 text-hospital-600 dark:text-hospital-400 rounded-xl transition-all"
-                          >
-                            View Appointment
-                          </button>
-                          <button
-                            onClick={() => {
-                              setRescheduleId(app.id);
-                              setRescheduleTime(app.appointment_time.slice(0, 16));
-                            }}
-                            className="text-center text-xs font-semibold py-2 px-2 border border-slate-200 dark:border-slate-800 hover:bg-slate-100/50 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-300 rounded-xl transition-all"
-                          >
-                            Reschedule
-                          </button>
-                          <button
-                            onClick={() => handleCancelAppointment(app.id)}
-                            className="text-center text-xs font-semibold py-2 px-2 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/20 dark:hover:bg-rose-950/30 text-rose-600 dark:text-rose-400 rounded-xl transition-all"
-                          >
-                            Cancel
-                          </button>
-                        </div>
                       </div>
                     );
                   })}
                 </div>
-              ) : (
-                <div className="text-center py-8 text-slate-400 text-sm">
-                  No upcoming appointments scheduled.
-                </div>
-              )}
-            </div>
+              );
+            })()}
 
-            {/* Past Appointments List */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-md space-y-4">
-              <h2 className="text-lg font-bold border-b border-slate-100 dark:border-slate-800 pb-3">Past / Cancelled Appointments</h2>
-              {appointments.filter(a => a.status !== 'Scheduled').length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs text-left">
-                    <thead>
-                      <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 font-semibold">
-                        <th className="py-2.5 px-3">Date</th>
-                        <th className="py-2.5 px-3">Doctor</th>
-                        <th className="py-2.5 px-3">Type</th>
-                        <th className="py-2.5 px-3">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {appointments.filter(a => a.status !== 'Scheduled').map(app => (
-                        <tr key={app.id} className="border-b border-slate-100 dark:border-slate-800/30">
-                          <td className="py-2.5 px-3 whitespace-nowrap">
-                            {new Date(app.appointment_time).toLocaleDateString()} {new Date(app.appointment_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </td>
-                          <td className="py-2.5 px-3 font-semibold">Dr. {app.doctor?.name}</td>
-                          <td className="py-2.5 px-3">{app.appointment_type}</td>
-                          <td className="py-2.5 px-3">
-                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${app.status === 'Completed' ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
-                              {app.status}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <div className="text-center py-6 text-slate-400 text-sm">
-                  No historical appointment logs.
-                </div>
-              )}
-            </div>
+          </div>
+        )}
 
           </div>
         )}
