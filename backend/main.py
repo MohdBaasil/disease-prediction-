@@ -57,6 +57,26 @@ app.include_router(analytics.router)
 app.include_router(clinical.router)
 app.include_router(ai.router)
 
+# Direct endpoint alias for /api/consultations/{consultation_id}/report
+from fastapi.responses import FileResponse
+from backend.services.pdf_report_service import generate_consultation_pdf
+from backend.database.models import Consultation
+
+@app.get("/api/consultations/{consultation_id}/report")
+def direct_get_consultation_report(consultation_id: int, download: bool = False, db: Session = Depends(get_db)):
+    consultation = db.query(Consultation).filter(Consultation.id == consultation_id).first()
+    if not consultation:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Consultation record not found.")
+    try:
+        pdf_path = generate_consultation_pdf(consultation_id, db)
+        filename = f"CONSULTATION_{consultation_id}.pdf"
+        disposition = f'attachment; filename="{filename}"' if download else f'inline; filename="{filename}"'
+        return FileResponse(path=pdf_path, media_type="application/pdf", headers={"Content-Disposition": disposition})
+    except Exception as e:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=500, detail=f"Report generation failed: {str(e)}")
+
 # WebSocket Endpoint for real-time dashboard events
 @app.websocket("/ws/queue")
 async def websocket_queue_endpoint(websocket: WebSocket):

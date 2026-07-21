@@ -5,7 +5,20 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./hospital_v2.db")
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+raw_db_url = os.getenv("DATABASE_URL", "sqlite:///./hospital_v2.db")
+
+# Resolve relative SQLite database paths relative to project root
+if raw_db_url.startswith("sqlite:///./"):
+    db_filename = raw_db_url[12:]
+    abs_db_path = os.path.normpath(os.path.join(BASE_DIR, db_filename))
+    DATABASE_URL = f"sqlite:///{abs_db_path}"
+elif raw_db_url.startswith("sqlite:///") and not os.path.isabs(raw_db_url[10:]):
+    abs_db_path = os.path.normpath(os.path.join(BASE_DIR, raw_db_url[10:]))
+    DATABASE_URL = f"sqlite:///{abs_db_path}"
+else:
+    DATABASE_URL = raw_db_url
 
 # For SQLite, check_same_thread must be False to allow multi-threaded access
 is_sqlite = DATABASE_URL.startswith("sqlite")

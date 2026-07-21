@@ -130,6 +130,26 @@ class Consultation(Base):
     duration_minutes = Column(Integer, default=15)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
+    # Consultation Outcome & Disposition Fields
+    consultation_outcome = Column(String, nullable=True, default="Discharge")
+    discharge_summary = Column(Text, nullable=True)
+    patient_instructions = Column(Text, nullable=True)
+    medical_certificate = Column(Boolean, default=False)
+    followup_date = Column(String, nullable=True)
+    followup_time = Column(String, nullable=True)
+    followup_reason = Column(Text, nullable=True)
+    followup_priority = Column(String, nullable=True)
+    admission_reason = Column(Text, nullable=True)
+    ward = Column(String, nullable=True)
+    expected_stay = Column(String, nullable=True)
+    bed_number = Column(String, nullable=True)
+    referral_department = Column(String, nullable=True)
+    referral_doctor = Column(String, nullable=True)
+    referral_reason = Column(Text, nullable=True)
+    # Report Generation Fields
+    report_path = Column(String, nullable=True)
+    generated_at = Column(DateTime, nullable=True)
+
     # Relationships
     doctor = relationship("Doctor", back_populates="consultations")
     patient = relationship("Patient", back_populates="consultations")

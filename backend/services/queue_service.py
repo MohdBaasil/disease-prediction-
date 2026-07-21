@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from typing import List, Optional
 
-from backend.database.models import Queue, Department, Doctor, Patient, Consultation, Prediction, Visit, PrescriptionItem
+from backend.database.models import Queue, Department, Doctor, Patient, Consultation, Prediction, Visit, PrescriptionItem, MedicalReport
 from backend.machine_learning.prediction import predict_waiting_time
 
 def generate_token_number(db: Session, department_id: int) -> str:
@@ -232,10 +232,27 @@ def complete_consultation(
     symptoms: str,
     diagnosis: str,
     prescription: str,
-    duration_minutes: int = 15
+    duration_minutes: int = 15,
+    lab_requests: Optional[List[dict]] = None,
+    consultation_outcome: Optional[str] = "Discharge",
+    discharge_summary: Optional[str] = None,
+    patient_instructions: Optional[str] = None,
+    medical_certificate: Optional[bool] = False,
+    followup_date: Optional[str] = None,
+    followup_time: Optional[str] = None,
+    followup_reason: Optional[str] = None,
+    followup_priority: Optional[str] = None,
+    admission_reason: Optional[str] = None,
+    ward: Optional[str] = None,
+    expected_stay: Optional[str] = None,
+    bed_number: Optional[str] = None,
+    referral_department: Optional[str] = None,
+    referral_doctor: Optional[str] = None,
+    referral_reason: Optional[str] = None,
+    referral_notes: Optional[str] = None
 ) -> Queue:
     """
-    Marks a consultation completed, records details, logs actual wait time, and updates queue positions.
+    Marks a consultation completed, records details, logs actual wait time, saves lab requests, disposition outcome, and updates queue positions.
     """
     queue_entry = db.query(Queue).filter(Queue.id == queue_id).first()
     if not queue_entry:
@@ -258,10 +275,37 @@ def complete_consultation(
         symptoms=symptoms,
         diagnosis=diagnosis,
         prescription=prescription,
-        duration_minutes=duration_minutes
+        duration_minutes=duration_minutes,
+        consultation_outcome=consultation_outcome or "Discharge",
+        discharge_summary=discharge_summary,
+        patient_instructions=patient_instructions,
+        medical_certificate=medical_certificate or False,
+        followup_date=followup_date,
+        followup_time=followup_time,
+        followup_reason=followup_reason,
+        followup_priority=followup_priority,
+        admission_reason=admission_reason,
+        ward=ward,
+        expected_stay=expected_stay,
+        bed_number=bed_number,
+        referral_department=referral_department,
+        referral_doctor=referral_doctor,
+        referral_reason=referral_reason,
+        referral_notes=referral_notes
     )
     db.add(consultation)
     db.commit()
+
+    # Format clinical visit notes based on disposition outcome
+    outcome_key = (consultation_outcome or "Discharge").strip()
+    if outcome_key == "Follow-up":
+        doc_note = f"Outcome: Follow-up Scheduled on {followup_date or 'Upcoming'} at {followup_time or '10:00 AM'} ({followup_priority or 'Routine'}) | Reason: {followup_reason or 'Progress review'}"
+    elif outcome_key == "Admit":
+        doc_note = f"Outcome: Admitted to {ward or 'General Ward'} (Expected Stay: {expected_stay or 'N/A'}, Bed: {bed_number or 'Unassigned'}) | Reason: {admission_reason or 'Inpatient care'}"
+    elif outcome_key == "Refer":
+        doc_note = f"Outcome: Referred to {referral_department or 'Specialist Clinic'} (Dr. {referral_doctor or 'Attending Specialist'}) | Reason: {referral_reason or 'Specialist consultation'}"
+    else:
+        doc_note = f"Outcome: Discharged | {discharge_summary or 'Patient treated and cleared to leave.'}"
 
     # Create Visit record for Patient Medical History log
     visit = Visit(
@@ -271,7 +315,7 @@ def complete_consultation(
         visit_date=now,
         diagnosis=diagnosis,
         chief_complaint=symptoms,
-        doctor_notes="Completed consultation session.",
+        doctor_notes=doc_note,
         follow_up_date=now + datetime.timedelta(days=7)
     )
     db.add(visit)
@@ -302,6 +346,28 @@ def complete_consultation(
                 instructions=med_inst
             )
             db.add(item)
+        db.commit()
+
+    # Save Laboratory Orders into MedicalReport (reports table)
+    if lab_requests:
+        for req in lab_requests:
+            if not isinstance(req, dict):
+                continue
+            test_name = req.get("test_name", "Laboratory Investigation")
+            reason = req.get("reason", "")
+            priority = req.get("priority", "Routine")
+
+            file_info = f"ORDERED: {reason}" if reason else "ORDERED: Requested during doctor consultation"
+
+            report = MedicalReport(
+                visit_id=visit.id,
+                patient_id=queue_entry.patient_id,
+                report_name=test_name,
+                report_type=f"Lab Order ({priority})",
+                file_path=file_info,
+                upload_date=now
+            )
+            db.add(report)
         db.commit()
     
     # Update actual wait time in prediction logs for future training

@@ -75,12 +75,13 @@ const getChartOptions = (isDarkMode, extraOptions = {}) => {
 
 // 1. Monthly Patient Registration (Line Chart)
 export const MonthlyRegistrationChart = ({ data = [], isDarkMode }) => {
+  const safeData = Array.isArray(data) ? data : [];
   const chartData = {
-    labels: data.map(item => item.month),
+    labels: safeData.map(item => item?.month ?? ''),
     datasets: [
       {
         label: 'Registrations',
-        data: data.map(item => item.count),
+        data: safeData.map(item => item?.count ?? 0),
         borderColor: '#0066f5',
         backgroundColor: 'rgba(0, 102, 245, 0.05)',
         borderWidth: 3,
@@ -100,12 +101,13 @@ export const MonthlyRegistrationChart = ({ data = [], isDarkMode }) => {
 
 // 2. Monthly Appointment Trend (Area Chart)
 export const AppointmentTrendChart = ({ data = [], isDarkMode }) => {
+  const safeData = Array.isArray(data) ? data : [];
   const chartData = {
-    labels: data.map(item => item.month),
+    labels: safeData.map(item => item?.month ?? ''),
     datasets: [
       {
         label: 'Appointments',
-        data: data.map(item => item.count),
+        data: safeData.map(item => item?.count ?? 0),
         borderColor: '#8b5cf6',
         backgroundColor: 'rgba(139, 92, 246, 0.15)',
         borderWidth: 3,
@@ -125,12 +127,13 @@ export const AppointmentTrendChart = ({ data = [], isDarkMode }) => {
 
 // 3. Most Common Predicted Diseases (Bar Chart)
 export const CommonPredictedDiseasesChart = ({ data = [], isDarkMode }) => {
+  const safeData = Array.isArray(data) ? data : [];
   const chartData = {
-    labels: data.map(item => item.disease),
+    labels: safeData.map(item => item?.disease ?? ''),
     datasets: [
       {
         label: 'Cases Predicted',
-        data: data.map(item => item.count),
+        data: safeData.map(item => item?.count ?? 0),
         backgroundColor: 'rgba(59, 130, 246, 0.85)',
         hoverBackgroundColor: '#2563eb',
         borderRadius: 8,
@@ -156,13 +159,14 @@ export const CommonPredictedDiseasesChart = ({ data = [], isDarkMode }) => {
 
 // 4. Department-wise Patient Distribution (Pie Chart)
 export const DepartmentDistributionChart = ({ data = [], isDarkMode }) => {
+  const safeData = Array.isArray(data) ? data : [];
   const colorsList = ['#0066f5', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4', '#64748b'];
   const chartData = {
-    labels: data.map(item => item.department),
+    labels: safeData.map(item => item?.department ?? ''),
     datasets: [
       {
-        data: data.map(item => item.count),
-        backgroundColor: colorsList.slice(0, Math.max(data.length, 1)),
+        data: safeData.map(item => item?.count ?? 0),
+        backgroundColor: colorsList.slice(0, Math.max(safeData.length, 1)),
         borderWidth: isDarkMode ? 2 : 1,
         borderColor: isDarkMode ? '#1e293b' : '#ffffff'
       }
@@ -178,19 +182,20 @@ export const DepartmentDistributionChart = ({ data = [], isDarkMode }) => {
 
 // 5. Doctor Workload (Horizontal Bar Chart)
 export const DoctorWorkloadChart = ({ data = [], isDarkMode }) => {
+  const safeData = Array.isArray(data) ? data : [];
   const chartData = {
-    labels: data.map(item => item.doctor_name),
+    labels: safeData.map(item => item?.doctor_name ?? ''),
     datasets: [
       {
         label: 'Total Handled',
-        data: data.map(item => item.patients_handled),
+        data: safeData.map(item => item?.patients_handled ?? 0),
         backgroundColor: '#3b82f6',
         borderRadius: 6,
         barThickness: 10
       },
       {
         label: "Today's Consultations",
-        data: data.map(item => item.todays_consultations),
+        data: safeData.map(item => item?.todays_consultations ?? 0),
         backgroundColor: '#10b981',
         borderRadius: 6,
         barThickness: 10
@@ -217,6 +222,7 @@ export const DoctorWorkloadChart = ({ data = [], isDarkMode }) => {
 
 // 6. Prediction Risk Distribution (Donut Chart)
 export const RiskDistributionChart = ({ data = [], isDarkMode }) => {
+  const safeData = Array.isArray(data) ? data : [];
   const riskColors = {
     'Low': '#10b981',
     'Medium': '#f59e0b',
@@ -224,14 +230,14 @@ export const RiskDistributionChart = ({ data = [], isDarkMode }) => {
     'Critical': '#991b1b'
   };
 
-  const labels = data.map(item => item.risk_level);
-  const bgColors = data.map(item => riskColors[item.risk_level] || '#64748b');
+  const labels = safeData.map(item => item?.risk_level ?? 'Unknown');
+  const bgColors = safeData.map(item => riskColors[item?.risk_level] || '#64748b');
 
   const chartData = {
     labels: labels,
     datasets: [
       {
-        data: data.map(item => item.count),
+        data: safeData.map(item => item?.count ?? 0),
         backgroundColor: bgColors,
         borderWidth: isDarkMode ? 2 : 1,
         borderColor: isDarkMode ? '#1e293b' : '#ffffff',
@@ -249,12 +255,13 @@ export const RiskDistributionChart = ({ data = [], isDarkMode }) => {
 
 // 7. Daily Consultation Trend (Line Chart)
 export const DailyConsultationTrendChart = ({ data = [], isDarkMode }) => {
+  const safeData = Array.isArray(data) ? data : [];
   const chartData = {
-    labels: data.map(item => item.date),
+    labels: safeData.map(item => item?.date ?? ''),
     datasets: [
       {
         label: 'Consultations',
-        data: data.map(item => item.count),
+        data: safeData.map(item => item?.count ?? 0),
         borderColor: '#10b981',
         backgroundColor: 'rgba(16, 185, 129, 0.05)',
         borderWidth: 3,
@@ -271,12 +278,13 @@ export const DailyConsultationTrendChart = ({ data = [], isDarkMode }) => {
 
 // 8. Weekly Consultation Trend (Bar Chart)
 export const WeeklyConsultationTrendChart = ({ data = [], isDarkMode }) => {
+  const safeData = Array.isArray(data) ? data : [];
   const chartData = {
-    labels: data.map(item => item.day),
+    labels: safeData.map(item => item?.day ?? ''),
     datasets: [
       {
         label: 'Consultations Completed',
-        data: data.map(item => item.count),
+        data: safeData.map(item => item?.count ?? 0),
         backgroundColor: 'rgba(139, 92, 246, 0.8)',
         hoverBackgroundColor: '#8b5cf6',
         borderRadius: 6,
@@ -291,12 +299,13 @@ export const WeeklyConsultationTrendChart = ({ data = [], isDarkMode }) => {
 
 // 9. Patient Age Distribution (Bar Chart)
 export const AgeDistributionChart = ({ data = [], isDarkMode }) => {
+  const safeData = Array.isArray(data) ? data : [];
   const chartData = {
-    labels: data.map(item => item.age_group),
+    labels: safeData.map(item => item?.age_group ?? ''),
     datasets: [
       {
         label: 'Patients Count',
-        data: data.map(item => item.count),
+        data: safeData.map(item => item?.count ?? 0),
         backgroundColor: '#ec4899',
         borderRadius: 6,
         barThickness: 24

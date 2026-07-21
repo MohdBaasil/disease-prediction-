@@ -169,9 +169,26 @@ class ConsultationBase(BaseModel):
     diagnosis: str
     prescription: str
     duration_minutes: int = 15
+    consultation_outcome: Optional[str] = "Discharge"
+    discharge_summary: Optional[str] = None
+    patient_instructions: Optional[str] = None
+    medical_certificate: Optional[bool] = False
+    next_review_required: Optional[bool] = False
+    followup_date: Optional[str] = None
+    followup_time: Optional[str] = None
+    followup_reason: Optional[str] = None
+    followup_priority: Optional[str] = None
+    admission_reason: Optional[str] = None
+    ward: Optional[str] = None
+    expected_stay: Optional[str] = None
+    bed_number: Optional[str] = None
+    referral_department: Optional[str] = None
+    referral_doctor: Optional[str] = None
+    referral_reason: Optional[str] = None
+    referral_notes: Optional[str] = None
 
 class ConsultationCreate(ConsultationBase):
-    pass
+    lab_requests: Optional[List[dict]] = []
 
 class ConsultationResponse(ConsultationBase):
     id: int

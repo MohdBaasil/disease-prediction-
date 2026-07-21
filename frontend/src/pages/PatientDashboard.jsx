@@ -1997,13 +1997,26 @@ function PatientDashboard({ initialTab = 'home' }) {
 
                       {/* Accordion Toggle */}
                       <div className="flex justify-end pt-1">
-                        <button
-                          onClick={() => setExpandedVisits(prev => ({ ...prev, [record.id]: !prev[record.id] }))}
-                          className="px-3.5 py-1.5 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition-all flex items-center space-x-1.5 hover:scale-[1.02] active:scale-[0.98]"
-                        >
-                          <span>{isExpanded ? 'Collapse Clinical Details' : 'View Clinical Details'}</span>
-                          <span className={`inline-block transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}>▼</span>
-                        </button>
+                        <div className="flex items-center space-x-2">
+                          <a
+                            href={`/api/consultations/${record.id}/report?download=true`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-3.5 py-1.5 rounded-xl text-xs font-extrabold bg-hospital-600 hover:bg-hospital-700 text-white transition-all flex items-center space-x-1.5 shadow-xs"
+                            title="Download Clinical Consultation PDF Report"
+                          >
+                            <FileText className="h-3.5 w-3.5" />
+                            <span>Download Report (PDF)</span>
+                          </a>
+
+                          <button
+                            onClick={() => setExpandedVisits(prev => ({ ...prev, [record.id]: !prev[record.id] }))}
+                            className="px-3.5 py-1.5 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition-all flex items-center space-x-1.5 hover:scale-[1.02] active:scale-[0.98]"
+                          >
+                            <span>{isExpanded ? 'Collapse Clinical Details' : 'View Clinical Details'}</span>
+                            <span className={`inline-block transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}>▼</span>
+                          </button>
+                        </div>
                       </div>
 
                       {/* Expanded Details Section */}

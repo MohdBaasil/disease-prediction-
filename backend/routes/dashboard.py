@@ -115,7 +115,32 @@ def get_doctor_dashboard(
         Consultation.created_at >= start_of_today
     ).scalar() or 0
 
-    # 4. Average consultation duration for this doctor today
+    # 4. Disposition counts today
+    discharged_count = db.query(func.count(Consultation.id)).filter(
+        Consultation.doctor_id == doctor_id,
+        Consultation.created_at >= start_of_today,
+        Consultation.consultation_outcome == "Discharge"
+    ).scalar() or 0
+
+    followups_count = db.query(func.count(Consultation.id)).filter(
+        Consultation.doctor_id == doctor_id,
+        Consultation.created_at >= start_of_today,
+        Consultation.consultation_outcome == "Follow-up"
+    ).scalar() or 0
+
+    admissions_count = db.query(func.count(Consultation.id)).filter(
+        Consultation.doctor_id == doctor_id,
+        Consultation.created_at >= start_of_today,
+        Consultation.consultation_outcome == "Admit"
+    ).scalar() or 0
+
+    referrals_count = db.query(func.count(Consultation.id)).filter(
+        Consultation.doctor_id == doctor_id,
+        Consultation.created_at >= start_of_today,
+        Consultation.consultation_outcome == "Refer"
+    ).scalar() or 0
+
+    # 5. Average consultation duration for this doctor today
     avg_duration = db.query(func.avg(Consultation.duration_minutes)).filter(
         Consultation.doctor_id == doctor_id,
         Consultation.created_at >= start_of_today
@@ -128,6 +153,10 @@ def get_doctor_dashboard(
         "current_patient": current_patient,
         "upcoming_patients": upcoming,
         "completed_today": completed_count,
+        "discharged_today": discharged_count,
+        "followups_today": followups_count,
+        "admissions_today": admissions_count,
+        "referrals_today": referrals_count,
         "average_consultation_time_minutes": round(float(avg_duration), 1)
     }
 

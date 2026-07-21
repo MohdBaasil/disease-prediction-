@@ -83,14 +83,33 @@ export const queueService = {
     return response.data;
   },
   
-  complete: async (queueId, symptoms, diagnosis, prescription, durationMinutes = 15) => {
-    const response = await api.post(`/api/queue/complete/${queueId}`, {
+  complete: async (queueId, symptoms, diagnosis, prescription, durationMinutes = 15, labRequests = [], disposition = {}) => {
+    const payload = {
       patient_id: 0, // placeholder
       symptoms,
       diagnosis,
       prescription,
-      duration_minutes: durationMinutes
-    });
+      duration_minutes: durationMinutes,
+      lab_requests: labRequests,
+      consultation_outcome: disposition.consultation_outcome || "Discharge",
+      discharge_summary: disposition.discharge_summary || null,
+      patient_instructions: disposition.patient_instructions || null,
+      medical_certificate: disposition.medical_certificate || false,
+      next_review_required: disposition.next_review_required || false,
+      followup_date: disposition.followup_date || null,
+      followup_time: disposition.followup_time || null,
+      followup_reason: disposition.followup_reason || null,
+      followup_priority: disposition.followup_priority || null,
+      admission_reason: disposition.admission_reason || null,
+      ward: disposition.ward || null,
+      expected_stay: disposition.expected_stay || null,
+      bed_number: disposition.bed_number || null,
+      referral_department: disposition.referral_department || null,
+      referral_doctor: disposition.referral_doctor || null,
+      referral_reason: disposition.referral_reason || null,
+      referral_notes: disposition.referral_notes || null
+    };
+    const response = await api.post(`/api/queue/complete/${queueId}`, payload);
     return response.data;
   },
   
@@ -376,6 +395,12 @@ export const clinicalService = {
   },
   getClinicalDecisionSupport: async (data) => {
     const response = await api.post('/api/clinical/recommendations', data);
+    return response.data;
+  },
+  getDiseaseRecommendations: async (diseaseName) => {
+    const response = await api.get('/api/clinical/disease-recommendations', {
+      params: { disease: diseaseName }
+    });
     return response.data;
   }
 };

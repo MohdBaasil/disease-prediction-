@@ -132,7 +132,24 @@ async def complete_patient(
         symptoms=consultation.symptoms,
         diagnosis=consultation.diagnosis,
         prescription=consultation.prescription,
-        duration_minutes=consultation.duration_minutes
+        duration_minutes=consultation.duration_minutes,
+        lab_requests=consultation.lab_requests,
+        consultation_outcome=consultation.consultation_outcome,
+        discharge_summary=consultation.discharge_summary,
+        patient_instructions=consultation.patient_instructions,
+        medical_certificate=consultation.medical_certificate,
+        followup_date=consultation.followup_date,
+        followup_time=consultation.followup_time,
+        followup_reason=consultation.followup_reason,
+        followup_priority=consultation.followup_priority,
+        admission_reason=consultation.admission_reason,
+        ward=consultation.ward,
+        expected_stay=consultation.expected_stay,
+        bed_number=consultation.bed_number,
+        referral_department=consultation.referral_department,
+        referral_doctor=consultation.referral_doctor,
+        referral_reason=consultation.referral_reason,
+        referral_notes=consultation.referral_notes
     )
     
     # Broadcast update

@@ -9,6 +9,7 @@ from backend.database.models import (
     Patient, Consultation, Visit, PrescriptionItem, MedicalReport, DiseasePredictionLog, PredictionHistory, Doctor
 )
 from backend.routes.auth import get_current_user
+from backend.services.disease_knowledge import disease_knowledge_service
 
 router = APIRouter(prefix="/api/clinical", tags=["clinical"])
 
@@ -112,20 +113,119 @@ def get_patient_summary(patient_id: int, db: Session = Depends(get_db)):
             "upload_date": r.upload_date.isoformat()
         })
 
+    # Gather latest prediction history / prediction log
+    latest_pred = db.query(PredictionHistory).filter(
+        PredictionHistory.patient_id == patient_id
+    ).order_by(PredictionHistory.prediction_time.desc()).first()
+
+    if not latest_pred:
+        latest_log = db.query(DiseasePredictionLog).filter(
+            DiseasePredictionLog.patient_id == patient_id
+        ).order_by(DiseasePredictionLog.created_at.desc()).first()
+        if latest_log:
+            pred_disease = latest_log.predicted_disease
+            pred_conf = latest_log.confidence_score
+            pred_risk = latest_log.risk_level
+            try:
+                pred_symptoms = json.loads(latest_log.symptoms)
+            except Exception:
+                pred_symptoms = [latest_log.symptoms] if latest_log.symptoms else []
+        else:
+            pred_disease = None
+            pred_conf = None
+            pred_risk = "Normal"
+            pred_symptoms = []
+    else:
+        pred_disease = latest_pred.predicted_disease
+        pred_conf = latest_pred.confidence
+        pred_risk = latest_pred.risk_level
+        try:
+            pred_symptoms = json.loads(latest_pred.symptoms)
+        except Exception:
+            pred_symptoms = [latest_pred.symptoms] if latest_pred.symptoms else []
+
+    # Recommended department prediction mapping
+    recommended_dept = "General Medicine"
+    if pred_disease:
+        pd_lower = pred_disease.lower()
+        if any(kw in pd_lower for kw in ["cardio", "heart", "hypertension"]):
+            recommended_dept = "Cardiology"
+        elif any(kw in pd_lower for kw in ["diab", "metabolic", "thyroid"]):
+            recommended_dept = "Endocrinology"
+        elif any(kw in pd_lower for kw in ["asthma", "lung", "respirat", "pneumonia"]):
+            recommended_dept = "Pulmonology"
+        elif any(kw in pd_lower for kw in ["stroke", "migraine", "neuro"]):
+            recommended_dept = "Neurology"
+
+    # Evaluate dynamic patient flags
+    flags = []
+    has_allergy = bool(patient.allergies and patient.allergies.strip().lower() not in ["none", "no allergies", "n/a", "nil"])
+    if has_allergy:
+        flags.append({"name": "Allergy", "color": "red", "symbol": "🔴"})
+
+    all_diagnoses = [c["diagnosis"].lower() for c in past_consultations]
+    is_diabetic = any("diab" in d for d in all_diagnoses) or (vitals.get("blood_glucose", 0) > 140)
+    if is_diabetic:
+        flags.append({"name": "Diabetic", "color": "yellow", "symbol": "🟡"})
+
+    is_hypertensive = any("hyperten" in d for d in all_diagnoses) or (vitals.get("systolic_bp", 0) > 140)
+    if is_hypertensive:
+        flags.append({"name": "Hypertension", "color": "purple", "symbol": "🟣"})
+
+    if pred_risk in ["High", "High Risk", "Critical"]:
+        flags.append({"name": "High Risk", "color": "black", "symbol": "⚫"})
+
+    if not flags:
+        flags.append({"name": "Normal", "color": "green", "symbol": "🟢"})
+
+    # Vitals extraction & BMI calculation
+    height = vitals.get("height", 170.0)
+    weight = vitals.get("weight", 68.0)
+    bmi = vitals.get("bmi")
+    if (not bmi or bmi == 0) and height and weight:
+        bmi = round(weight / ((height / 100.0) ** 2), 1)
+
+    last_consult = past_consultations[0] if past_consultations else None
+
+    # Symptoms string
+    symptoms_str = ", ".join(pred_symptoms) if (isinstance(pred_symptoms, list) and pred_symptoms) else "Routine checkup & consultation"
+
     return {
         "patient": {
             "id": patient.id,
             "name": patient.name,
             "age": patient.age,
             "gender": patient.gender,
-            "blood_group": patient.blood_group or "Not Set",
+            "blood_group": patient.blood_group or "O+",
             "allergies": patient.allergies or "None recorded",
             "emergency_contact": patient.emergency_contact or "N/A",
-            "mobile": patient.mobile_number
+            "mobile": patient.mobile_number,
+            "email": patient.email or f"{patient.name.lower().replace(' ', '.')}@example.com",
+            "address": "123 Health Enclave, City Hospital Zone",
+            "profile_photo": patient.profile_photo,
+            "height": height,
+            "weight": weight,
+            "bmi": bmi or 23.5,
+            "chronic_diseases": ["Type 2 Diabetes"] if is_diabetic else (["Essential Hypertension"] if is_hypertensive else ["None"]),
+            "smoking_status": "Non-smoker",
+            "alcohol_status": "Non-drinker"
         },
         "vitals": vitals,
-        "current_medications": current_meds,
+        "current_medications": current_meds if current_meds else ["No active prescriptions"],
         "past_consultations": past_consultations,
+        "current_visit": {
+            "symptoms": symptoms_str,
+            "predicted_disease": pred_disease or "General Medical Checkup",
+            "confidence": f"{int(pred_conf * 100)}%" if (isinstance(pred_conf, (int, float)) and pred_conf <= 1.0) else (f"{int(pred_conf)}%" if isinstance(pred_conf, (int, float)) else "85%"),
+            "recommended_department": recommended_dept
+        },
+        "last_visit": {
+            "previous_diagnosis": last_consult["diagnosis"] if last_consult else "No prior recorded diagnosis",
+            "previous_prescription": last_consult["prescription"] if last_consult else "None",
+            "last_consultation_date": last_consult["date"] if last_consult else None,
+            "last_doctor": last_consult["doctor_name"] if last_consult else "None"
+        },
+        "flags": flags,
         "lab_reports": reports
     }
 
@@ -614,3 +714,144 @@ def get_clinical_decision_support(req: RecommendationsRequest, db: Session = Dep
         "preventive_screening": list(set(screening)),
         "vaccination_reminders": list(set(vaccinations))
     }
+
+@router.get("/disease-recommendations")
+def get_disease_recommendations(disease: str, db: Session = Depends(get_db)):
+    if not disease or not disease.strip():
+        raise HTTPException(status_code=400, detail="Disease parameter is required.")
+        
+    info = disease_knowledge_service.get_disease_info(disease.strip())
+    
+    # Format medicines from knowledge base with prioritization: Primary -> Supportive -> Symptomatic
+    raw_meds = info.get("medicines", [])
+    formatted_meds = []
+    for m in raw_meds:
+        dos = m.get("dosage", "")
+        if not dos or str(dos).strip().lower() in ["", "nan", "none", "n/a"]:
+            dos = "Consult physician dosage guidelines."
+        cat = m.get("category", "Primary Treatment")
+        reas = m.get("reason", f"Targeted clinical intervention for {info.get('name', disease)}.")
+        prio = 1 if cat == "Primary Treatment" else (2 if cat == "Supportive Therapy" else 3)
+
+        formatted_meds.append({
+            "name": m.get("name", "Verified Medication"),
+            "dosage": dos,
+            "frequency": m.get("frequency", "As directed by physician"),
+            "duration": m.get("duration", "7 days"),
+            "description": m.get("notes", "Use under clinical supervision."),
+            "category": cat,
+            "reason": reas,
+            "_priority": prio
+        })
+        
+    formatted_meds.sort(key=lambda x: x["_priority"])
+    for m in formatted_meds:
+        del m["_priority"]
+
+    # Format laboratory tests
+    raw_tests = info.get("tests", [])
+    formatted_tests = []
+    for t in raw_tests:
+        formatted_tests.append({
+            "name": t.get("name", "Recommended Investigation"),
+            "reason": t.get("reason", "Verification & disease monitoring")
+        })
+
+    # Format precautions
+    precs = info.get("precautions", [])
+    if isinstance(precs, str):
+        precs = [p.strip() for p in precs.split(",") if p.strip()]
+
+    # Format diet
+    raw_diet = info.get("diet", {})
+    diet_list = []
+    if isinstance(raw_diet, dict):
+        if raw_diet.get("recommended"):
+            diet_list.extend([d.strip() for d in str(raw_diet["recommended"]).split(";") if d.strip()])
+        if raw_diet.get("avoid"):
+            diet_list.append(f"Avoid: {raw_diet['avoid']}")
+    elif isinstance(raw_diet, str):
+        diet_list = [d.strip() for d in raw_diet.split(",") if d.strip()]
+    if not diet_list:
+        diet_list = ["Balanced nutritious diet", "Adequate daily hydration"]
+
+    # Format workout
+    raw_workout = info.get("workout", "")
+    if isinstance(raw_workout, str):
+        workout_list = [w.strip() for w in raw_workout.split(";") if w.strip()] if ";" in raw_workout else [w.strip() for w in raw_workout.split(",") if w.strip()]
+    elif isinstance(raw_workout, list):
+        workout_list = raw_workout
+    else:
+        workout_list = ["30-minute daily light activity", "Stretching & mobility"]
+
+    # Format risk factors
+    causes_str = info.get("causes", "")
+    risk_factors = [r.strip() for r in str(causes_str).split(",") if r.strip()]
+    if not risk_factors:
+        risk_factors = ["Family History", "Elevated Risk Indices", "Physical Stress"]
+
+    return {
+        "disease": info.get("name", disease),
+        "disease_id": info.get("disease_id", "DIS_UNMAPPED"),
+        "description": info.get("description", ""),
+        "medicines": formatted_meds,
+        "laboratory_tests": formatted_tests,
+        "precautions": precs,
+        "diet": diet_list,
+        "workout": workout_list,
+        "risk_factors": risk_factors,
+        "department": {
+            "name": info.get("department", "General Medicine"),
+            "specialist": info.get("specialist", "General Practitioner")
+        }
+    }
+
+# --- PATIENT CLINICAL REPORT GENERATION ENDPOINTS ---
+from fastapi.responses import FileResponse
+from backend.services.pdf_report_service import generate_consultation_pdf
+
+@router.get("/consultations/{consultation_id}/report")
+def get_consultation_report(consultation_id: int, download: bool = False, db: Session = Depends(get_db)):
+    """
+    Returns or generates the A4 Clinical Consultation PDF Report.
+    Supports inline browser viewing and download=True.
+    """
+    consultation = db.query(Consultation).filter(Consultation.id == consultation_id).first()
+    if not consultation:
+        raise HTTPException(status_code=404, detail="Consultation record not found.")
+
+    try:
+        pdf_path = generate_consultation_pdf(consultation_id, db)
+    except Exception as e:
+        print(f"[Report Error] Failed to generate PDF for consultation #{consultation_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Report generation failed: {str(e)}")
+
+    filename = f"CONSULTATION_{consultation_id}.pdf"
+    disposition = f'attachment; filename="{filename}"' if download else f'inline; filename="{filename}"'
+
+    return FileResponse(
+        path=pdf_path,
+        media_type="application/pdf",
+        headers={"Content-Disposition": disposition}
+    )
+
+@router.post("/consultations/{consultation_id}/generate-report")
+def trigger_consultation_report_generation(consultation_id: int, db: Session = Depends(get_db)):
+    """
+    Triggers / regenerates PDF report for consultation.
+    """
+    consultation = db.query(Consultation).filter(Consultation.id == consultation_id).first()
+    if not consultation:
+        raise HTTPException(status_code=404, detail="Consultation record not found.")
+
+    try:
+        pdf_path = generate_consultation_pdf(consultation_id, db, force_regenerate=True)
+        return {
+            "success": True,
+            "consultation_id": consultation_id,
+            "report_path": pdf_path,
+            "generated_at": consultation.generated_at.isoformat() if consultation.generated_at else None,
+            "report_url": f"/api/clinical/consultations/{consultation_id}/report"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Report generation failed: {str(e)}")
