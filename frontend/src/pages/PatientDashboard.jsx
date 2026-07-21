@@ -4,7 +4,7 @@ import {
   Trash2, RefreshCw, Printer, Download, Eye, Plus, ArrowRight,
   CheckCircle, AlertCircle, Clock, Heart, Activity, ShieldAlert,
   Stethoscope, Brain, AlertTriangle, FlaskConical, Pill, ChevronRight,
-  BarChart3, Info, Sparkles, Check, ArrowUpRight, Shield, RefreshCcw
+  BarChart3, Info, Sparkles, Check, ArrowUpRight, Shield, RefreshCcw, UserCheck
 } from 'lucide-react';
 import {
   patientService, dashboardService, queueService,
@@ -109,6 +109,9 @@ function PatientDashboard({ initialTab = 'home' }) {
   const [historyDateFilter, setHistoryDateFilter] = useState('');
   const [expandedVisits, setExpandedVisits] = useState({});
   const [medicineSearch, setMedicineSearch] = useState('');
+  const [prescriptionSearch, setPrescriptionSearch] = useState('');
+  const [prescriptionDocFilter, setPrescriptionDocFilter] = useState('');
+  const [expandedPrescriptions, setExpandedPrescriptions] = useState({});
   const [appointmentSearch, setAppointmentSearch] = useState('');
   const [appointmentStatusFilter, setAppointmentStatusFilter] = useState('All');
 
@@ -392,10 +395,19 @@ function PatientDashboard({ initialTab = 'home' }) {
     return matchesSearch && matchesDept && matchesDoc && matchesDate;
   });
 
-  // Filter medicines
-  const filteredPrescriptions = (prescriptions || []).filter(p =>
-    medicineSearch ? (p.medicine_name || '').toLowerCase().includes(medicineSearch.toLowerCase()) : true
-  );
+  // Filter medicines / prescriptions
+  const filteredPrescriptions = (prescriptions || []).filter(p => {
+    const q = (medicineSearch || prescriptionSearch || '').toLowerCase();
+    const matchesSearch = q ? (
+      (p.medicine_name || '').toLowerCase().includes(q) ||
+      (p.dosage || '').toLowerCase().includes(q) ||
+      (p.instructions || '').toLowerCase().includes(q)
+    ) : true;
+
+    const matchesDoc = prescriptionDocFilter ? (p.doctor_name === prescriptionDocFilter) : true;
+
+    return matchesSearch && matchesDoc;
+  });
 
   // Recent activity generator
   const getRecentActivities = () => {
@@ -2059,6 +2071,296 @@ function PatientDashboard({ initialTab = 'home' }) {
                       setHistoryDateFilter('');
                     }}
                     className="text-xs font-bold text-hospital-600 dark:text-hospital-400 hover:underline"
+                  >
+                    Reset Search & Filters
+                  </button>
+                )}
+              </div>
+            )}
+
+          </div>
+        )}
+
+        {/* ========================================================= */}
+        {/* ---------------- ELECTRONIC PRESCRIPTIONS (eRx) TAB ---------------- */}
+        {/* ========================================================= */}
+        {activeTab === 'prescription' && (
+          <div className="space-y-6">
+
+            {/* eRx Hero Header */}
+            <div className="relative rounded-3xl bg-gradient-to-r from-hospital-600 via-hospital-500 to-teal-600 dark:from-slate-900 dark:via-hospital-950 dark:to-slate-900 p-6 md:p-8 text-white shadow-xl overflow-hidden border border-hospital-400/20 dark:border-slate-800">
+              <div className="absolute -top-12 -right-12 h-64 w-64 bg-white/10 dark:bg-hospital-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+              <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                <div className="space-y-1.5">
+                  <div className="flex items-center space-x-2">
+                    <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-white/20 text-white border border-white/30 backdrop-blur-md flex items-center space-x-1">
+                      <Clipboard className="h-3 w-3 inline mr-1" />
+                      Electronic Prescriptions (eRx)
+                    </span>
+                    <span className="text-[10px] text-hospital-100 dark:text-slate-400 font-semibold">
+                      {prescriptions.length} Active Rx Orders
+                    </span>
+                  </div>
+
+                  <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
+                    Patient Prescriptions & Medication Portal
+                  </h1>
+
+                  <p className="text-xs text-hospital-100 dark:text-slate-300 max-w-xl">
+                    Digital eRx pharmacy records, dosage schedules, administration instructions, prescribing physicians, and refill status tracking.
+                  </p>
+                </div>
+
+                <div className="bg-white/10 p-3.5 rounded-2xl backdrop-blur-md border border-white/20 shrink-0 hidden md:flex items-center justify-center">
+                  <Pill className="h-8 w-8 text-white" />
+                </div>
+              </div>
+            </div>
+
+            {/* eRx KPI Summary Cards Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Total Prescriptions */}
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Total eRx Items</span>
+                  <div className="p-2.5 rounded-2xl bg-teal-50 dark:bg-teal-950/50 text-teal-600 dark:text-teal-400">
+                    <Pill className="h-5 w-5" />
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-2xl font-black text-slate-800 dark:text-white">{prescriptions.length}</h3>
+                  <p className="text-[10px] text-slate-400 font-medium">Prescribed medications</p>
+                </div>
+              </div>
+
+              {/* Active Regimens */}
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Active Regimens</span>
+                  <div className="p-2.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400">
+                    <CheckCircle className="h-5 w-5" />
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-2xl font-black text-slate-800 dark:text-white">
+                    {prescriptions.filter(p => p.duration && !p.duration.toLowerCase().includes('completed')).length || prescriptions.length}
+                  </h3>
+                  <p className="text-[10px] text-slate-400 font-medium">Ongoing daily treatments</p>
+                </div>
+              </div>
+
+              {/* Prescribing Doctors */}
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Prescribers</span>
+                  <div className="p-2.5 rounded-2xl bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400">
+                    <UserCheck className="h-5 w-5" />
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-2xl font-black text-slate-800 dark:text-white">
+                    {new Set(prescriptions.map(p => p.doctor_name)).size}
+                  </h3>
+                  <p className="text-[10px] text-slate-400 font-medium">Attending physicians</p>
+                </div>
+              </div>
+
+              {/* Refill Status */}
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Refill Status</span>
+                  <div className="p-2.5 rounded-2xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400">
+                    <Clock className="h-5 w-5" />
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-2xl font-black text-slate-800 dark:text-white">Verified</h3>
+                  <p className="text-[10px] text-slate-400 font-medium">Synced with pharmacy</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Search & Filter Toolbar */}
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 shadow-sm flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
+              {/* Search Bar */}
+              <div className="relative flex-1">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <input
+                  type="text"
+                  value={medicineSearch}
+                  onChange={(e) => setMedicineSearch(e.target.value)}
+                  placeholder="Search medication name, dosage (e.g. 500mg), or instructions..."
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 rounded-2xl text-xs outline-none focus:ring-2 focus:ring-hospital-500 transition-all placeholder:text-slate-400"
+                />
+                {medicineSearch && (
+                  <button
+                    onClick={() => setMedicineSearch('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+
+              {/* Filter Dropdowns */}
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Doctor Filter */}
+                <select
+                  value={prescriptionDocFilter}
+                  onChange={(e) => setPrescriptionDocFilter(e.target.value)}
+                  className="px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 rounded-2xl text-xs outline-none focus:ring-2 focus:ring-hospital-500 transition-all font-medium text-slate-700 dark:text-slate-300"
+                >
+                  <option value="">All Prescribing Doctors</option>
+                  {Array.from(new Set(prescriptions.map(p => p.doctor_name).filter(Boolean))).map((docName, idx) => (
+                    <option key={idx} value={docName}>Dr. {docName}</option>
+                  ))}
+                </select>
+
+                {(medicineSearch || prescriptionDocFilter) && (
+                  <button
+                    onClick={() => {
+                      setMedicineSearch('');
+                      setPrescriptionDocFilter('');
+                    }}
+                    className="px-3 py-2 rounded-2xl text-xs font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/40 hover:bg-rose-100 transition-all"
+                  >
+                    Reset Filters
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Prescriptions List / eRx Timeline Cards */}
+            {loading ? (
+              <div className="space-y-4">
+                {[1, 2, 3].map(n => (
+                  <div key={n} className="h-36 bg-slate-200 dark:bg-slate-800 rounded-3xl animate-pulse"></div>
+                ))}
+              </div>
+            ) : filteredPrescriptions.length > 0 ? (
+              <div className="space-y-4">
+                {filteredPrescriptions.map((rx, idx) => {
+                  const isExpanded = !!expandedPrescriptions[idx];
+                  const docName = rx.doctor_name ? (rx.doctor_name.toLowerCase().startsWith('dr') ? rx.doctor_name : `Dr. ${rx.doctor_name}`) : 'Physician Specialist';
+
+                  return (
+                    <div
+                      key={idx}
+                      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 space-y-4 relative group"
+                    >
+                      {/* Card Header */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+                        <div className="flex items-center space-x-3.5">
+                          <div className="p-3 rounded-2xl bg-teal-50 dark:bg-teal-950 text-teal-600 dark:text-teal-400 shrink-0">
+                            <Pill className="h-6 w-6" />
+                          </div>
+                          <div>
+                            <div className="flex items-center space-x-2">
+                              <span className="text-[9px] font-black uppercase tracking-widest text-teal-600 dark:text-teal-400 block">
+                                Electronic Prescription (eRx)
+                              </span>
+                              <span className="px-2 py-0.2 rounded-full text-[8px] font-black uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/40">
+                                Active Rx
+                              </span>
+                            </div>
+                            <h3 className="font-black text-lg text-slate-800 dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+                              {rx.medicine_name}
+                            </h3>
+                          </div>
+                        </div>
+
+                        <div className="shrink-0 flex items-center space-x-2">
+                          <span className="text-xs font-bold text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 px-3.5 py-1.5 rounded-xl flex items-center space-x-1.5">
+                            <Calendar className="h-3.5 w-3.5 text-teal-500" />
+                            <span>Prescribed: {new Date(rx.prescribed_date).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Dosage, Frequency & Regimen Grid */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                        <div className="p-3.5 bg-slate-50/60 dark:bg-slate-800/30 rounded-2xl border border-slate-150 dark:border-slate-800 space-y-1">
+                          <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 block">Dosage Quantity</span>
+                          <strong className="text-sm font-black text-slate-800 dark:text-slate-100 block">
+                            {rx.dosage}
+                          </strong>
+                        </div>
+
+                        <div className="p-3.5 bg-slate-50/60 dark:bg-slate-800/30 rounded-2xl border border-slate-150 dark:border-slate-800 space-y-1">
+                          <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 block">Frequency & Schedule</span>
+                          <strong className="text-sm font-black text-teal-600 dark:text-teal-400 block">
+                            {rx.frequency}
+                          </strong>
+                        </div>
+
+                        <div className="p-3.5 bg-slate-50/60 dark:bg-slate-800/30 rounded-2xl border border-slate-150 dark:border-slate-800 space-y-1">
+                          <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 block">Course Duration</span>
+                          <strong className="text-sm font-black text-slate-800 dark:text-slate-100 block">
+                            {rx.duration}
+                          </strong>
+                        </div>
+                      </div>
+
+                      {/* Prescribing Doctor Badge */}
+                      <div className="flex items-center justify-between pt-1">
+                        <div className="flex items-center space-x-2 text-xs text-slate-600 dark:text-slate-400">
+                          <UserCheck className="h-4 w-4 text-teal-500" />
+                          <span>Prescribing Physician: <strong className="text-slate-800 dark:text-slate-200">{docName}</strong></span>
+                        </div>
+
+                        <button
+                          onClick={() => setExpandedPrescriptions(prev => ({ ...prev, [idx]: !prev[idx] }))}
+                          className="px-3.5 py-1.5 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition-all flex items-center space-x-1.5 hover:scale-[1.02] active:scale-[0.98]"
+                        >
+                          <span>{isExpanded ? 'Hide Details' : 'View Details & Instructions'}</span>
+                          <span className={`inline-block transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}>▼</span>
+                        </button>
+                      </div>
+
+                      {/* Expanded Prescription Instructions */}
+                      {isExpanded && (
+                        <div className="mt-4 pt-4 border-t border-slate-150 dark:border-slate-800 space-y-3 animate-fadeIn text-xs">
+                          <div className="space-y-1.5">
+                            <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 block">Administration & Special Instructions</span>
+                            <div className="bg-teal-50/40 dark:bg-teal-950/20 border border-teal-100 dark:border-teal-900/40 p-4 rounded-2xl text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
+                              {rx.instructions || 'Take medication as directed by attending physician after meal.'}
+                            </div>
+                          </div>
+
+                          <div className="flex flex-wrap gap-2 pt-1">
+                            <span className="px-3 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold text-[10px] flex items-center space-x-1">
+                              <span>✓ Approved eRx Signature</span>
+                            </span>
+                            <span className="px-3 py-1 rounded-xl bg-teal-50 dark:bg-teal-950/40 text-teal-600 dark:text-teal-400 font-bold text-[10px] flex items-center space-x-1">
+                              <span>Pharmacy Verified</span>
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-10 text-center space-y-4 shadow-sm">
+                <div className="h-16 w-16 bg-teal-50 dark:bg-teal-950 rounded-2xl flex items-center justify-center mx-auto text-teal-500">
+                  <Pill className="h-8 w-8" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="font-extrabold text-base text-slate-800 dark:text-white">No Prescriptions Found</h3>
+                  <p className="text-xs text-slate-400 max-w-sm mx-auto">
+                    No active or historical eRx electronic prescriptions match your current search or filters.
+                  </p>
+                </div>
+                {(medicineSearch || prescriptionDocFilter) && (
+                  <button
+                    onClick={() => {
+                      setMedicineSearch('');
+                      setPrescriptionDocFilter('');
+                    }}
+                    className="text-xs font-bold text-teal-600 dark:text-teal-400 hover:underline"
                   >
                     Reset Search & Filters
                   </button>
