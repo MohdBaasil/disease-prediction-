@@ -82,11 +82,21 @@ class PatientBase(BaseModel):
     age: int
     gender: str
     mobile_number: str
+    dob: Optional[str] = None
     email: Optional[str] = None
     blood_group: Optional[str] = None
-    allergies: Optional[str] = None
-    profile_photo: Optional[str] = None
+    address: Optional[str] = None
     emergency_contact: Optional[str] = None
+    emergency_contact_name: Optional[str] = None
+    emergency_contact_relationship: Optional[str] = None
+    emergency_contact_phone: Optional[str] = None
+    allergies: Optional[str] = None
+    existing_conditions: Optional[str] = None
+    national_id: Optional[str] = None
+    insurance_provider: Optional[str] = None
+    insurance_number: Optional[str] = None
+    profile_photo: Optional[str] = None
+    patient_code: Optional[str] = None
 
 class PatientCreate(PatientBase):
     username: Optional[str] = None
@@ -94,6 +104,7 @@ class PatientCreate(PatientBase):
 
 class PatientResponse(PatientBase):
     id: int
+    patient_code: Optional[str] = None
     user_id: Optional[int] = None
     created_at: datetime
 
@@ -102,14 +113,35 @@ class PatientResponse(PatientBase):
 
 class PatientProfileUpdate(BaseModel):
     name: Optional[str] = None
+    dob: Optional[str] = None
     age: Optional[int] = None
     gender: Optional[str] = None
     mobile_number: Optional[str] = None
     email: Optional[str] = None
     blood_group: Optional[str] = None
-    allergies: Optional[str] = None
-    profile_photo: Optional[str] = None
+    address: Optional[str] = None
     emergency_contact: Optional[str] = None
+    emergency_contact_name: Optional[str] = None
+    emergency_contact_relationship: Optional[str] = None
+    emergency_contact_phone: Optional[str] = None
+    allergies: Optional[str] = None
+    existing_conditions: Optional[str] = None
+    national_id: Optional[str] = None
+    insurance_provider: Optional[str] = None
+    insurance_number: Optional[str] = None
+    profile_photo: Optional[str] = None
+
+class DuplicateCheckRequest(BaseModel):
+    mobile_number: Optional[str] = None
+    email: Optional[str] = None
+    national_id: Optional[str] = None
+    exclude_patient_id: Optional[int] = None
+
+class DuplicateCheckResponse(BaseModel):
+    is_duplicate: bool
+    matches: List[str] = []
+    message: str
+    existing_patient: Optional[PatientResponse] = None
 
 # --- Appointment Schemas ---
 class AppointmentBase(BaseModel):

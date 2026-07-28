@@ -190,14 +190,35 @@ export const patientService = {
     const response = await api.get(`/api/patients/by-mobile/${mobile}`);
     return response.data;
   },
+
+  getById: async (patientId) => {
+    const response = await api.get(`/api/patients/${patientId}`);
+    return response.data;
+  },
+
+  checkDuplicate: async (duplicateData) => {
+    const response = await api.post('/api/patients/check-duplicate', duplicateData);
+    return response.data;
+  },
   
-  register: async (name, age, gender, mobileNumber, username = null, password = null) => {
-    const payload = { name, age: parseInt(age), gender, mobile_number: mobileNumber };
-    if (username && password) {
-      payload.username = username;
-      payload.password = password;
+  register: async (dataOrName, age = null, gender = null, mobileNumber = null, username = null, password = null) => {
+    let payload = {};
+    if (typeof dataOrName === 'object' && dataOrName !== null) {
+      payload = { ...dataOrName };
+      if (payload.age) payload.age = parseInt(payload.age);
+    } else {
+      payload = { name: dataOrName, age: parseInt(age), gender, mobile_number: mobileNumber };
+      if (username && password) {
+        payload.username = username;
+        payload.password = password;
+      }
     }
     const response = await api.post('/api/patients', payload);
+    return response.data;
+  },
+
+  update: async (patientId, patientData) => {
+    const response = await api.put(`/api/patients/${patientId}`, patientData);
     return response.data;
   },
   

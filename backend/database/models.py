@@ -53,16 +53,31 @@ class Patient(Base):
     __tablename__ = "patients"
 
     id = Column(Integer, primary_key=True, index=True)
+    patient_code = Column(String, unique=True, index=True, nullable=True)  # e.g., PAT-2026-000001
     user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), unique=True, nullable=True)
     name = Column(String, nullable=False)
+    dob = Column(String, nullable=True)  # YYYY-MM-DD
     email = Column(String, unique=True, index=True, nullable=True)
     age = Column(Integer, nullable=False)
     gender = Column(String, nullable=False)
     blood_group = Column(String, nullable=True)
-    allergies = Column(Text, nullable=True)
-    profile_photo = Column(String, nullable=True)
-    emergency_contact = Column(String, nullable=True)
     mobile_number = Column(String, nullable=False)
+    address = Column(Text, nullable=True)
+    
+    # Emergency Contact
+    emergency_contact = Column(String, nullable=True)
+    emergency_contact_name = Column(String, nullable=True)
+    emergency_contact_relationship = Column(String, nullable=True)
+    emergency_contact_phone = Column(String, nullable=True)
+
+    # Medical & Insurance
+    allergies = Column(Text, nullable=True)
+    existing_conditions = Column(Text, nullable=True)
+    national_id = Column(String, unique=True, index=True, nullable=True)
+    insurance_provider = Column(String, nullable=True)
+    insurance_number = Column(String, nullable=True)
+    profile_photo = Column(String, nullable=True)
+
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     # Relationships

@@ -5,7 +5,7 @@ import datetime
 from typing import Optional
 
 from backend.database.connection import get_db
-from backend.database.models import User, Queue, Doctor, Consultation, Patient
+from backend.database.models import User, Queue, Doctor, Consultation, Patient ,Appointment
 from backend.services.auth_service import RoleChecker
 
 router = APIRouter(prefix="/api/dashboard", tags=["Dashboards"])
@@ -17,44 +17,227 @@ def get_receptionist_dashboard(
 ):
     today = datetime.datetime.utcnow().date()
     start_of_today = datetime.datetime.combine(today, datetime.time.min)
+    end_of_today = datetime.datetime.combine(today, datetime.time.max)
+
+    # 1. STATISTICS CARDS
+    appts_today = db.query(Appointment).filter(
+        Appointment.appointment_time >= start_of_today,
+        Appointment.appointment_time <= end_of_today
+    ).all()
     
-    # 1. Total waiting patients today
-    waiting_count = db.query(func.count(Queue.id)).filter(
+    queues_today = db.query(Queue).filter(
+        Queue.checked_in_time >= start_of_today,
+        Queue.checked_in_time <= end_of_today
+    ).all()
+
+    # Total appointments today = scheduled appointments + walk-in queues
+    total_appointments_count = len(appts_today) + len([q for q in queues_today if not any(a.patient_id == q.patient_id for a in appts_today)])
+
+    # Walk-in patients today
+    walkin_count = db.query(func.count(Appointment.id)).filter(
+        Appointment.appointment_time >= start_of_today,
+        Appointment.appointment_time <= end_of_today,
+        Appointment.appointment_type == "Walk-in"
+    ).scalar() or 0
+    
+    walkin_queues = len([q for q in queues_today if not any(a.patient_id == q.patient_id for a in appts_today)])
+    total_walkins = walkin_count + walkin_queues
+
+    # Waiting Patients currently
+    waiting_patients_count = db.query(func.count(Queue.id)).filter(
         Queue.status == "Waiting"
     ).scalar() or 0
 
-    # 2. Emergency patients currently waiting
-    emergency_waiting = db.query(func.count(Queue.id)).filter(
+    # Checked-in Patients today
+    checked_in_count = db.query(func.count(Queue.id)).filter(
+        Queue.checked_in_time >= start_of_today,
+        Queue.status.in_(["Waiting", "Calling", "Completed", "Skipped"])
+    ).scalar() or 0
+
+    # Emergency waiting count
+    emergency_waiting_count = db.query(func.count(Queue.id)).filter(
         Queue.status == "Waiting",
         Queue.priority_level.in_([1, 2])
     ).scalar() or 0
 
-    # 3. Active/available doctors
-    available_docs = db.query(func.count(Doctor.id)).filter(
-        Doctor.is_available == True
-    ).scalar() or 0
+    # 2. TODAY'S APPOINTMENT LIST
+    today_appointments_list = []
+    patient_queue_map = {q.patient_id: q for q in queues_today}
 
-    # 4. Average wait time today (completed queues)
-    avg_wait = db.query(func.avg(Queue.call_time - Queue.checked_in_time)).filter(
-        Queue.status == "Completed",
-        Queue.checked_in_time >= start_of_today
-    ).scalar()
-
-    avg_wait_mins = 0.0
-    if avg_wait:
-        if isinstance(avg_wait, datetime.timedelta):
-            avg_wait_mins = avg_wait.total_seconds() / 60.0
+    for app in appts_today:
+        token = "TBD"
+        status = app.status
+        if app.patient_id in patient_queue_map:
+            q_item = patient_queue_map[app.patient_id]
+            token = q_item.token_number
+            if q_item.status == "Calling":
+                status = "In Consultation"
+            elif q_item.status == "Completed":
+                status = "Completed"
+            elif q_item.status == "Skipped":
+                status = "Skipped"
+            elif q_item.status == "Waiting":
+                status = "Checked-in"
         else:
-            try:
-                avg_wait_mins = float(avg_wait) * 24.0 * 60.0  # SQLite calculation
-            except:
-                avg_wait_mins = 15.0
+            if app.status == "Scheduled" and app.appointment_time < datetime.datetime.utcnow() - datetime.timedelta(minutes=15):
+                status = "Late"
+
+        today_appointments_list.append({
+            "id": app.id,
+            "patient_name": app.patient.name if app.patient else "Unknown Patient",
+            "patient_id": app.patient_id,
+            "token_number": token,
+            "appointment_time": app.appointment_time.strftime("%I:%M %p"),
+            "raw_time": app.appointment_time.isoformat(),
+            "doctor": f"Dr. {app.doctor.name}" if app.doctor else "Unassigned",
+            "doctor_id": app.doctor_id,
+            "department": app.doctor.department.name if (app.doctor and app.doctor.department) else "General",
+            "status": status,
+            "appointment_type": app.appointment_type or "Scheduled"
+        })
+
+    for q in queues_today:
+        if not any(item["patient_id"] == q.patient_id for item in today_appointments_list):
+            q_status = "Checked-in"
+            if q.status == "Calling":
+                q_status = "In Consultation"
+            elif q.status == "Completed":
+                q_status = "Completed"
+            elif q.status == "Skipped":
+                q_status = "Skipped"
+
+            today_appointments_list.append({
+                "id": f"q-{q.id}",
+                "patient_name": q.patient.name if q.patient else "Walk-in Patient",
+                "patient_id": q.patient_id,
+                "token_number": q.token_number,
+                "appointment_time": q.checked_in_time.strftime("%I:%M %p"),
+                "raw_time": q.checked_in_time.isoformat(),
+                "doctor": f"Dr. {q.doctor.name}" if q.doctor else "Any Physician",
+                "doctor_id": q.doctor_id,
+                "department": q.department.name if q.department else "General",
+                "status": q_status,
+                "appointment_type": "Walk-in"
+            })
+
+    today_appointments_list.sort(key=lambda x: x["raw_time"])
+
+    # 3. CURRENT QUEUE OVERVIEW (BY DOCTOR)
+    doctors = db.query(Doctor).all()
+    queue_overview = []
+    
+    for doc in doctors:
+        calling_q = db.query(Queue).filter(
+            Queue.doctor_id == doc.id,
+            Queue.status == "Calling"
+        ).first()
+        
+        waiting_q_count = db.query(func.count(Queue.id)).filter(
+            (Queue.doctor_id == doc.id) | ((Queue.doctor_id == None) & (Queue.department_id == doc.department_id)),
+            Queue.status == "Waiting"
+        ).scalar() or 0
+
+        queue_overview.append({
+            "doctor_id": doc.id,
+            "doctor_name": doc.name,
+            "specialization": doc.specialization,
+            "room_number": doc.room_number,
+            "department_name": doc.department.name if doc.department else "General",
+            "is_available": doc.is_available,
+            "current_token": calling_q.token_number if calling_q else "None",
+            "current_patient": calling_q.patient.name if (calling_q and calling_q.patient) else None,
+            "waiting_count": waiting_q_count
+        })
+
+    # 4. NOTIFICATIONS PANEL
+    late_arrivals = []
+    now_dt = datetime.datetime.utcnow()
+    for app in appts_today:
+        if app.status == "Scheduled" and app.patient_id not in patient_queue_map:
+            if app.appointment_time < now_dt - datetime.timedelta(minutes=15):
+                delay_mins = int((now_dt - app.appointment_time).total_seconds() / 60)
+                late_arrivals.append({
+                    "id": app.id,
+                    "patient_name": app.patient.name if app.patient else "Patient",
+                    "doctor_name": app.doctor.name if app.doctor else "Doctor",
+                    "scheduled_time": app.appointment_time.strftime("%I:%M %p"),
+                    "delay_minutes": delay_mins,
+                    "message": f"{app.patient.name if app.patient else 'Patient'} is {delay_mins} mins late for appointment at {app.appointment_time.strftime('%I:%M %p')}"
+                })
+
+    cancelled_appointments = []
+    cancelled_apps = db.query(Appointment).filter(
+        Appointment.appointment_time >= start_of_today,
+        Appointment.appointment_time <= end_of_today,
+        Appointment.status == "Cancelled"
+    ).all()
+    
+    for app in cancelled_apps:
+        cancelled_appointments.append({
+            "id": app.id,
+            "patient_name": app.patient.name if app.patient else "Patient",
+            "doctor_name": app.doctor.name if app.doctor else "Doctor",
+            "time": app.appointment_time.strftime("%I:%M %p"),
+            "message": f"Appointment for {app.patient.name if app.patient else 'Patient'} with Dr. {app.doctor.name if app.doctor else 'Doctor'} at {app.appointment_time.strftime('%I:%M %p')} was cancelled."
+        })
+
+    queue_alerts = []
+    if emergency_waiting_count > 0:
+        queue_alerts.append({
+            "id": "alert-emerg",
+            "type": "Emergency",
+            "severity": "high",
+            "title": "Emergency Patient Waiting",
+            "message": f"There are {emergency_waiting_count} emergency/urgent patient(s) waiting in queue."
+        })
+
+    high_wait_queues = db.query(Queue).filter(
+        Queue.status == "Waiting",
+        Queue.estimated_wait_time > 30
+    ).count()
+    if high_wait_queues > 0:
+        queue_alerts.append({
+            "id": "alert-wait",
+            "type": "WaitTime",
+            "severity": "medium",
+            "title": "Extended Waiting Time Alert",
+            "message": f"{high_wait_queues} patient(s) have estimated wait times exceeding 30 minutes."
+        })
+
+    skipped_count = db.query(Queue).filter(
+        Queue.status == "Skipped",
+        Queue.checked_in_time >= start_of_today
+    ).count()
+    if skipped_count > 0:
+        queue_alerts.append({
+            "id": "alert-skipped",
+            "type": "SkippedTokens",
+            "severity": "info",
+            "title": "Skipped Patients Pending",
+            "message": f"{skipped_count} patient token(s) were skipped and require re-queueing or receptionist action."
+        })
 
     return {
-        "waiting_patients": waiting_count,
-        "emergency_waiting": emergency_waiting,
-        "available_doctors": available_docs,
-        "average_wait_time_minutes": round(avg_wait_mins, 1)
+        "receptionist_info": {
+            "username": current_user.username,
+            "name": current_user.username.title(),
+            "role": current_user.role,
+            "current_date": today.strftime("%A, %B %d, %Y")
+        },
+        "statistics": {
+            "total_appointments_today": total_appointments_count,
+            "walkin_patients_today": total_walkins,
+            "waiting_patients": waiting_patients_count,
+            "checked_in_patients_today": checked_in_count,
+            "emergency_waiting": emergency_waiting_count
+        },
+        "today_appointments": today_appointments_list,
+        "queue_overview": queue_overview,
+        "notifications": {
+            "late_arrivals": late_arrivals,
+            "cancelled_appointments": cancelled_appointments,
+            "queue_alerts": queue_alerts
+        }
     }
 
 @router.get("/doctor/{doctor_id}")
