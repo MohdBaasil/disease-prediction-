@@ -46,3 +46,7 @@ ehthumbs.db
 Desktop.ini
 $RECYCLE.BIN/
 .DS_Store
+
+# Generated reports
+backend/generated_reports/*
+!backend/generated_reports/.gitkeep
