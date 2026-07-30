@@ -101,14 +101,19 @@ class Appointment(Base):
     id = Column(Integer, primary_key=True, index=True)
     patient_id = Column(Integer, ForeignKey("patients.id", ondelete="CASCADE"), nullable=False)
     doctor_id = Column(Integer, ForeignKey("doctors.id", ondelete="CASCADE"), nullable=False)
+    department_id = Column(Integer, ForeignKey("departments.id", ondelete="SET NULL"), nullable=True)
     appointment_type = Column(String, default="Scheduled")  # Walk-in, Scheduled
     appointment_time = Column(DateTime, nullable=False)
-    status = Column(String, default="Scheduled")  # Scheduled, Completed, Cancelled
+    priority = Column(Integer, default=3)  # 1: Critical, 2: Urgent, 3: Normal
+    reason = Column(Text, nullable=True)
+    notes = Column(Text, nullable=True)
+    status = Column(String, default="Scheduled")  # Scheduled, Checked-in, Completed, Cancelled, Late, No-show
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     # Relationships
     patient = relationship("Patient", back_populates="appointments")
     doctor = relationship("Doctor", back_populates="appointments")
+    department = relationship("Department")
 
 class Queue(Base):
     __tablename__ = "queue"

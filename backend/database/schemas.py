@@ -147,11 +147,48 @@ class DuplicateCheckResponse(BaseModel):
 class AppointmentBase(BaseModel):
     patient_id: int
     doctor_id: int
+    department_id: Optional[int] = None
     appointment_type: str = "Scheduled"  # Walk-in, Scheduled
     appointment_time: datetime
+    priority: Optional[int] = 3  # 1: Critical, 2: Urgent, 3: Normal
+    reason: Optional[str] = None
+    notes: Optional[str] = None
 
 class AppointmentCreate(AppointmentBase):
     pass
+
+class AppointmentUpdate(BaseModel):
+    patient_id: Optional[int] = None
+    doctor_id: Optional[int] = None
+    department_id: Optional[int] = None
+    appointment_type: Optional[str] = None
+    appointment_time: Optional[datetime] = None
+    priority: Optional[int] = None
+    reason: Optional[str] = None
+    notes: Optional[str] = None
+    status: Optional[str] = None
+
+class AppointmentReschedule(BaseModel):
+    appointment_time: datetime
+
+class AppointmentCheckIn(BaseModel):
+    priority_level: Optional[int] = 3
+
+class TimeSlot(BaseModel):
+    time: str
+    datetime_iso: str
+    available: bool
+    booking_id: Optional[int] = None
+    patient_name: Optional[str] = None
+
+class DoctorAvailabilityResponse(BaseModel):
+    doctor_id: int
+    doctor_name: str
+    date: str
+    is_available: bool
+    total_slots: int
+    available_slots_count: int
+    slots: List[TimeSlot]
 
 class AppointmentResponse(AppointmentBase):
     id: int
@@ -159,6 +196,7 @@ class AppointmentResponse(AppointmentBase):
     created_at: datetime
     patient: Optional[PatientResponse] = None
     doctor: Optional[DoctorResponse] = None
+    department: Optional[DepartmentResponse] = None
 
     class Config:
         from_attributes = True

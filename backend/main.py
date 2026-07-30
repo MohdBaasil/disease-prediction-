@@ -24,8 +24,25 @@ from backend.services.auth_service import get_password_hash
 from backend.routes import auth, doctor, patient, queue, notification, reports, dashboard, appointments, disease, patient_portal, analytics, clinical, ai
 from backend.utils.websocket import manager
 
-# Create database tables automatically
+# Create database tables automatically & run column migrations
 Base.metadata.create_all(bind=engine)
+
+def migrate_db():
+    from sqlalchemy import text
+    with engine.connect() as conn:
+        for col, col_type in [
+            ("department_id", "INTEGER"),
+            ("priority", "INTEGER DEFAULT 3"),
+            ("reason", "TEXT"),
+            ("notes", "TEXT")
+        ]:
+            try:
+                conn.execute(text(f"ALTER TABLE appointments ADD COLUMN {col} {col_type}"))
+                conn.commit()
+            except Exception:
+                pass
+
+migrate_db()
 
 app = FastAPI(
     title="Smart Hospital Queue Management System",

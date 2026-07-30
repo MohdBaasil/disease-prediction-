@@ -7,9 +7,10 @@ import {
   Sparkles, X, Activity, Phone, ArrowUpRight
 } from 'lucide-react';
 import {
-  patientService, queueService, dashboardService, doctorService, createQueueWebSocket
+  patientService, queueService, dashboardService, doctorService, appointmentsService, createQueueWebSocket
 } from '../services/api';
 import PatientRegistrationModal from '../components/PatientRegistrationModal';
+import AppointmentBookingModal from '../components/AppointmentBookingModal';
 
 function ReceptionistDashboard() {
   const [loading, setLoading] = useState(true);
@@ -52,6 +53,12 @@ function ReceptionistDashboard() {
   const [isActionModalOpen, setIsActionModalOpen] = useState(false);
   const [actionModalTitle, setActionModalTitle] = useState('');
   const [actionModalMessage, setActionModalMessage] = useState('');
+
+  // Appointment Booking Modal State
+  const [isApptBookingModalOpen, setIsApptBookingModalOpen] = useState(false);
+  const [apptModalPatient, setApptModalPatient] = useState(null);
+  const [apptModalInitialData, setApptModalInitialData] = useState(null);
+  const [apptModalMode, setApptModalMode] = useState('create');
 
   // Token Generation Drawer/Modal Form
   const [departments, setDepartments] = useState([]);
@@ -147,10 +154,43 @@ function ReceptionistDashboard() {
     setIsRegisterModalOpen(true);
   };
 
-  const handleOpenBookModal = () => {
-    setActionModalTitle('Book Appointment');
-    setActionModalMessage('Appointment Booking Module: Select attending physician and date on reception desk.');
-    setIsActionModalOpen(true);
+  const handleOpenBookModal = (patient = null, initialData = null, mode = 'create') => {
+    setApptModalPatient(patient);
+    setApptModalInitialData(initialData);
+    setApptModalMode(mode);
+    setIsApptBookingModalOpen(true);
+  };
+
+  const handleCheckInAppointment = async (appt) => {
+    if (typeof appt.id === 'string' && appt.id.startsWith('q-')) {
+      showMsg('success', `Patient ${appt.patient_name} is already checked in with token ${appt.token_number}.`);
+      return;
+    }
+    try {
+      const res = await appointmentsService.checkIn(appt.id, appt.priority || 3);
+      showMsg('success', `Checked in ${appt.patient_name} successfully! Token assigned.`);
+      loadDashboardData();
+    } catch (err) {
+      console.error(err);
+      showMsg('error', err.response?.data?.detail || 'Failed to check in appointment.');
+    }
+  };
+
+  const handleCancelAppointmentItem = async (appt) => {
+    if (typeof appt.id === 'string' && appt.id.startsWith('q-')) {
+      showMsg('error', 'Cannot cancel a live walk-in queue item directly from appointment list.');
+      return;
+    }
+    if (window.confirm(`Are you sure you want to cancel the appointment for ${appt.patient_name}?`)) {
+      try {
+        await appointmentsService.cancel(appt.id);
+        showMsg('success', `Appointment for ${appt.patient_name} cancelled.`);
+        loadDashboardData();
+      } catch (err) {
+        console.error(err);
+        showMsg('error', err.response?.data?.detail || 'Failed to cancel appointment.');
+      }
+    }
   };
 
   const handleOpenGenerateTokenModal = () => {
@@ -518,6 +558,7 @@ function ReceptionistDashboard() {
                       <th className="py-3 px-3">Doctor</th>
                       <th className="py-3 px-3">Department</th>
                       <th className="py-3 px-3 text-center">Status</th>
+                      <th className="py-3 px-3 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
@@ -567,6 +608,33 @@ function ReceptionistDashboard() {
                             <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] ${statusBadge}`}>
                               {item.status || 'Scheduled'}
                             </span>
+                          </td>
+                          <td className="py-3 px-3 text-right space-x-1.5">
+                            {(item.status === 'Scheduled' || item.status === 'Late') && (
+                              <button
+                                onClick={() => handleCheckInAppointment(item)}
+                                className="px-2.5 py-1 bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 rounded-lg hover:bg-emerald-100 font-bold text-[10px] transition-colors"
+                                title="Check-in patient and issue queue token"
+                              >
+                                Check In
+                              </button>
+                            )}
+                            {typeof item.id === 'number' && item.status !== 'Cancelled' && (
+                              <button
+                                onClick={() => handleOpenBookModal(null, item, 'edit')}
+                                className="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-200 text-[10px] font-bold transition-colors"
+                              >
+                                Edit
+                              </button>
+                            )}
+                            {typeof item.id === 'number' && item.status !== 'Cancelled' && item.status !== 'Completed' && (
+                              <button
+                                onClick={() => handleCancelAppointmentItem(item)}
+                                className="px-2.5 py-1 bg-rose-50 text-rose-700 dark:bg-rose-950 dark:text-rose-300 rounded-lg hover:bg-rose-100 text-[10px] font-bold transition-colors"
+                              >
+                                Cancel
+                              </button>
+                            )}
                           </td>
                         </tr>
                       );
@@ -1042,10 +1110,21 @@ function ReceptionistDashboard() {
           setIsTokenModalOpen(true);
         }}
         onBookAppointment={(patient) => {
-          setActionModalTitle('Book Appointment');
-          setActionModalMessage(`Book Appointment for ${patient?.name || 'patient'} (${patient?.patient_code || 'ID-' + (patient?.id || '')}). Select attending physician and date on reception desk.`);
-          setIsActionModalOpen(true);
+          handleOpenBookModal(patient, null, 'create');
         }}
+      />
+
+      {/* Appointment Booking / Edit Modal */}
+      <AppointmentBookingModal
+        isOpen={isApptBookingModalOpen}
+        onClose={() => setIsApptBookingModalOpen(false)}
+        onSuccess={() => {
+          showMsg('success', apptModalMode === 'edit' ? 'Appointment updated!' : 'Appointment booked successfully!');
+          loadDashboardData();
+        }}
+        patient={apptModalPatient}
+        initialData={apptModalInitialData}
+        mode={apptModalMode}
       />
 
     </div>

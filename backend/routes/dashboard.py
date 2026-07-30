@@ -91,7 +91,11 @@ def get_receptionist_dashboard(
             "raw_time": app.appointment_time.isoformat(),
             "doctor": f"Dr. {app.doctor.name}" if app.doctor else "Unassigned",
             "doctor_id": app.doctor_id,
-            "department": app.doctor.department.name if (app.doctor and app.doctor.department) else "General",
+            "department": (app.department.name if app.department else (app.doctor.department.name if (app.doctor and app.doctor.department) else "General")),
+            "department_id": app.department_id or (app.doctor.department_id if app.doctor else None),
+            "priority": getattr(app, "priority", 3) or 3,
+            "reason": getattr(app, "reason", "") or "",
+            "notes": getattr(app, "notes", "") or "",
             "status": status,
             "appointment_type": app.appointment_type or "Scheduled"
         })
@@ -116,6 +120,10 @@ def get_receptionist_dashboard(
                 "doctor": f"Dr. {q.doctor.name}" if q.doctor else "Any Physician",
                 "doctor_id": q.doctor_id,
                 "department": q.department.name if q.department else "General",
+                "department_id": q.department_id,
+                "priority": q.priority_level or 3,
+                "reason": "Walk-in Desk Check-in",
+                "notes": "",
                 "status": q_status,
                 "appointment_type": "Walk-in"
             })

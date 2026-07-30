@@ -295,18 +295,34 @@ export const patientService = {
 
 // Appointments Services
 export const appointmentsService = {
-  list: async () => {
-    const response = await api.get('/api/appointments');
+  list: async (params = {}) => {
+    const response = await api.get('/api/appointments', { params });
     return response.data;
   },
 
-  book: async (doctorId, appointmentTime, appointmentType = 'Scheduled') => {
-    const response = await api.post('/api/appointments', {
-      patient_id: 0, // Backend resolves from logged-in patient
-      doctor_id: doctorId,
-      appointment_time: appointmentTime,
-      appointment_type: appointmentType
-    });
+  getToday: async () => {
+    const response = await api.get('/api/appointments/today');
+    return response.data;
+  },
+
+  book: async (payloadOrDoctorId, appointmentTime, appointmentType = 'Scheduled') => {
+    let payload = {};
+    if (typeof payloadOrDoctorId === 'object' && payloadOrDoctorId !== null) {
+      payload = { ...payloadOrDoctorId };
+    } else {
+      payload = {
+        patient_id: 0, // Backend resolves from logged-in patient
+        doctor_id: payloadOrDoctorId,
+        appointment_time: appointmentTime,
+        appointment_type: appointmentType
+      };
+    }
+    const response = await api.post('/api/appointments', payload);
+    return response.data;
+  },
+
+  update: async (id, payload) => {
+    const response = await api.put(`/api/appointments/${id}`, payload);
     return response.data;
   },
 
@@ -319,6 +335,20 @@ export const appointmentsService = {
     const response = await api.put(`/api/appointments/${id}/reschedule`, {
       appointment_time: appointmentTime
     });
+    return response.data;
+  },
+
+  checkIn: async (id, priorityLevel = 3) => {
+    const response = await api.post(`/api/appointments/${id}/check-in`, {
+      priority_level: priorityLevel
+    });
+    return response.data;
+  },
+
+  getDoctorAvailability: async (doctorId, date = null) => {
+    const params = { doctor_id: doctorId };
+    if (date) params.date = date;
+    const response = await api.get('/api/appointments/doctor-availability', { params });
     return response.data;
   }
 };
