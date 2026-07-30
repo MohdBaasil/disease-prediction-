@@ -38,7 +38,14 @@ class Doctor(Base):
     name = Column(String, nullable=False)
     specialization = Column(String, nullable=False)
     room_number = Column(String, nullable=False)
+    email = Column(String, nullable=True)
     is_available = Column(Boolean, default=True)
+    is_active = Column(Boolean, default=True)
+    status_text = Column(String, default="Available")  # Available, Busy, On Leave, Inactive
+    working_days = Column(String, default="Mon,Tue,Wed,Thu,Fri")
+    working_hours_start = Column(String, default="09:00")
+    working_hours_end = Column(String, default="17:00")
+    avg_consultation_time = Column(Integer, default=15)  # minutes
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     # Relationships

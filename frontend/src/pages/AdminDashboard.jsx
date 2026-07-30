@@ -14,6 +14,7 @@ import {
   DoctorWorkloadChart, 
   RiskDistributionChart 
 } from './AnalyticsCharts';
+import DoctorManagement from '../components/DoctorManagement';
 
 function AdminDashboard() {
   // Navigation & General tab state
@@ -299,6 +300,19 @@ function AdminDashboard() {
             <TrendingUp className="h-3.5 w-3.5" />
             <span>Executive Analytics</span>
           </button>
+
+          <button
+            onClick={() => setActiveTab('doctors')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 ${
+              activeTab === 'doctors' 
+                ? 'bg-white dark:bg-slate-800 text-hospital-500 dark:text-white shadow-sm' 
+                : 'text-slate-550 hover:text-slate-800 dark:hover:text-slate-350'
+            }`}
+          >
+            <Stethoscope className="h-3.5 w-3.5" />
+            <span>Doctor Management</span>
+          </button>
+
           <button
             onClick={() => setActiveTab('management')}
             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 ${
@@ -854,6 +868,13 @@ function AdminDashboard() {
 
           </div>
 
+        </div>
+      )}
+
+      {/* DOCTOR MANAGEMENT TAB */}
+      {activeTab === 'doctors' && (
+        <div className="animate-fadeIn">
+          <DoctorManagement onDoctorUpdated={loadAnalytics} />
         </div>
       )}
 

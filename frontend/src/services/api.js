@@ -154,26 +154,68 @@ export const dashboardService = {
 
 // Doctors Services
 export const doctorService = {
-  list: async (departmentId = null) => {
-    const url = departmentId ? `/api/doctors?department_id=${departmentId}` : '/api/doctors';
+  list: async (params = null) => {
+    let url = '/api/doctors';
+    if (typeof params === 'number') {
+      url = `/api/doctors?department_id=${params}`;
+    } else if (params && typeof params === 'object') {
+      const searchParams = new URLSearchParams();
+      if (params.search) searchParams.append('search', params.search);
+      if (params.department_id) searchParams.append('department_id', params.department_id);
+      if (params.status && params.status !== 'All') searchParams.append('status', params.status);
+      if (params.is_active !== undefined && params.is_active !== null) searchParams.append('is_active', params.is_active);
+      if (params.is_available !== undefined && params.is_available !== null) searchParams.append('is_available', params.is_available);
+      const queryStr = searchParams.toString();
+      if (queryStr) url += `?${queryStr}`;
+    }
+    const response = await api.get(url);
+    return response.data;
+  },
+
+  getActive: async (departmentId = null) => {
+    const url = departmentId ? `/api/doctors/active?department_id=${departmentId}` : '/api/doctors/active';
     const response = await api.get(url);
     return response.data;
   },
   
-  create: async (name, specialization, roomNumber, username, password, departmentId) => {
-    const response = await api.post('/api/doctors', {
-      name,
-      specialization,
-      room_number: roomNumber,
-      username,
-      password,
-      department_id: departmentId
-    });
+  create: async (payloadOrName, specialization, roomNumber, username, password, departmentId) => {
+    let payload = {};
+    if (typeof payloadOrName === 'object') {
+      payload = payloadOrName;
+    } else {
+      payload = {
+        name: payloadOrName,
+        specialization,
+        room_number: roomNumber,
+        username,
+        password,
+        department_id: departmentId
+      };
+    }
+    const response = await api.post('/api/doctors', payload);
+    return response.data;
+  },
+
+  update: async (doctorId, updateData) => {
+    const response = await api.put(`/api/doctors/${doctorId}`, updateData);
+    return response.data;
+  },
+
+  updateSchedule: async (doctorId, scheduleData) => {
+    const response = await api.put(`/api/doctors/${doctorId}/schedule`, scheduleData);
     return response.data;
   },
   
-  updateAvailability: async (doctorId, isAvailable) => {
-    const response = await api.put(`/api/doctors/${doctorId}`, { is_available: isAvailable });
+  updateAvailability: async (doctorId, isAvailable, statusText = null) => {
+    const response = await api.put(`/api/doctors/${doctorId}/availability`, {
+      is_available: isAvailable,
+      status_text: statusText
+    });
+    return response.data;
+  },
+
+  setStatus: async (doctorId, isActive, force = false) => {
+    const response = await api.put(`/api/doctors/${doctorId}/status?is_active=${isActive}&force=${force}`);
     return response.data;
   },
   

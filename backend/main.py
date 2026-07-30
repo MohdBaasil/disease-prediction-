@@ -42,6 +42,21 @@ def migrate_db():
             except Exception:
                 pass
 
+        for col, col_type in [
+            ("email", "VARCHAR"),
+            ("is_active", "BOOLEAN DEFAULT 1"),
+            ("status_text", "VARCHAR DEFAULT 'Available'"),
+            ("working_days", "VARCHAR DEFAULT 'Mon,Tue,Wed,Thu,Fri'"),
+            ("working_hours_start", "VARCHAR DEFAULT '09:00'"),
+            ("working_hours_end", "VARCHAR DEFAULT '17:00'"),
+            ("avg_consultation_time", "INTEGER DEFAULT 15")
+        ]:
+            try:
+                conn.execute(text(f"ALTER TABLE doctors ADD COLUMN {col} {col_type}"))
+                conn.commit()
+            except Exception:
+                pass
+
 migrate_db()
 
 app = FastAPI(

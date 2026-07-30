@@ -108,7 +108,7 @@ function AppointmentBookingModal({
 
     const loadDoctors = async () => {
       try {
-        const docs = await doctorService.list(parseInt(selectedDepartment));
+        const docs = await doctorService.getActive(parseInt(selectedDepartment));
         const docsArr = Array.isArray(docs) ? docs : [];
         setDoctors(docsArr);
 

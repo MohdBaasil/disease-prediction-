@@ -52,7 +52,14 @@ class DoctorBase(BaseModel):
     name: str
     specialization: str
     room_number: str
+    email: Optional[str] = None
     is_available: bool = True
+    is_active: bool = True
+    status_text: Optional[str] = "Available"
+    working_days: Optional[str] = "Mon,Tue,Wed,Thu,Fri"
+    working_hours_start: Optional[str] = "09:00"
+    working_hours_end: Optional[str] = "17:00"
+    avg_consultation_time: Optional[int] = 15
 
 class DoctorCreate(DoctorBase):
     username: str
@@ -63,8 +70,28 @@ class DoctorUpdate(BaseModel):
     name: Optional[str] = None
     specialization: Optional[str] = None
     room_number: Optional[str] = None
+    email: Optional[str] = None
     is_available: Optional[bool] = None
+    is_active: Optional[bool] = None
+    status_text: Optional[str] = None
+    working_days: Optional[str] = None
+    working_hours_start: Optional[str] = None
+    working_hours_end: Optional[str] = None
+    avg_consultation_time: Optional[int] = None
     department_id: Optional[int] = None
+    username: Optional[str] = None
+    password: Optional[str] = None
+
+class DoctorScheduleUpdate(BaseModel):
+    working_days: str = "Mon,Tue,Wed,Thu,Fri"
+    working_hours_start: str = "09:00"
+    working_hours_end: str = "17:00"
+    avg_consultation_time: int = 15
+
+class DoctorStatusUpdate(BaseModel):
+    is_available: Optional[bool] = None
+    status_text: Optional[str] = None
+    is_active: Optional[bool] = None
 
 class DoctorResponse(DoctorBase):
     id: int
