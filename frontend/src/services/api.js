@@ -354,6 +354,19 @@ export const userService = {
   }
 };
 
+// System Settings Services
+export const settingsService = {
+  getSettings: async () => {
+    const response = await api.get('/api/settings');
+    return response.data;
+  },
+
+  updateSettings: async (settingsData) => {
+    const response = await api.put('/api/settings', settingsData);
+    return response.data;
+  }
+};
+
 // Patients Services
 export const patientService = {
   list: async (search = '') => {

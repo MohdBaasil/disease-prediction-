@@ -435,3 +435,82 @@ class AuditLogResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+# --- System Settings Schemas ---
+class SystemSettingsBase(BaseModel):
+    hospital_name: str = "AcuraQueue General Hospital"
+    hospital_code: str = "ACURA-HQ"
+    hospital_address: Optional[str] = "100 Health Science Blvd, Suite 400"
+    hospital_phone: Optional[str] = "555-0199"
+    hospital_email: Optional[str] = "info@acuraqueue.com"
+    hospital_website: Optional[str] = "https://acuraqueue.com"
+    hospital_logo: Optional[str] = "/logo.png"
+
+    appointment_duration_minutes: int = 15
+    booking_interval_minutes: int = 15
+    max_daily_appointments: int = 100
+    allow_walk_in: bool = True
+
+    queue_prefix: str = "Q"
+    auto_generate_tokens: bool = True
+    emergency_priority_enabled: bool = True
+    queue_reset_daily: bool = True
+
+    email_notifications: bool = True
+    sms_notifications: bool = False
+    appointment_reminders: bool = True
+    reminder_hours_before: int = 24
+
+    ai_recommendations_enabled: bool = True
+    ai_confidence_threshold: float = 75.0
+
+    timezone: str = "UTC"
+    date_format: str = "YYYY-MM-DD"
+    time_format: str = "12h"
+    language: str = "en"
+
+    system_theme: str = "system"
+    primary_color: str = "#0284c7"
+
+class SystemSettingsUpdate(BaseModel):
+    hospital_name: Optional[str] = None
+    hospital_code: Optional[str] = None
+    hospital_address: Optional[str] = None
+    hospital_phone: Optional[str] = None
+    hospital_email: Optional[str] = None
+    hospital_website: Optional[str] = None
+    hospital_logo: Optional[str] = None
+
+    appointment_duration_minutes: Optional[int] = None
+    booking_interval_minutes: Optional[int] = None
+    max_daily_appointments: Optional[int] = None
+    allow_walk_in: Optional[bool] = None
+
+    queue_prefix: Optional[str] = None
+    auto_generate_tokens: Optional[bool] = None
+    emergency_priority_enabled: Optional[bool] = None
+    queue_reset_daily: Optional[bool] = None
+
+    email_notifications: Optional[bool] = None
+    sms_notifications: Optional[bool] = None
+    appointment_reminders: Optional[bool] = None
+    reminder_hours_before: Optional[int] = None
+
+    ai_recommendations_enabled: Optional[bool] = None
+    ai_confidence_threshold: Optional[float] = None
+
+    timezone: Optional[str] = None
+    date_format: Optional[str] = None
+    time_format: Optional[str] = None
+    language: Optional[str] = None
+
+    system_theme: Optional[str] = None
+    primary_color: Optional[str] = None
+
+class SystemSettingsResponse(SystemSettingsBase):
+    id: int
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True

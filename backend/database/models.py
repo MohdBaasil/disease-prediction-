@@ -389,3 +389,53 @@ class CarePlan(Base):
     # Relationships
     patient = relationship("Patient", back_populates="care_plans")
     doctor = relationship("Doctor")
+
+class SystemSettings(Base):
+    __tablename__ = "system_settings"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    # General
+    hospital_name = Column(String, default="AcuraQueue General Hospital", nullable=False)
+    hospital_code = Column(String, default="ACURA-HQ", nullable=False)
+    hospital_address = Column(String, default="100 Health Science Blvd, Suite 400", nullable=True)
+    hospital_phone = Column(String, default="555-0199", nullable=True)
+    hospital_email = Column(String, default="info@acuraqueue.com", nullable=True)
+    hospital_website = Column(String, default="https://acuraqueue.com", nullable=True)
+    hospital_logo = Column(String, default="/logo.png", nullable=True)
+
+    # Appointments
+    appointment_duration_minutes = Column(Integer, default=15, nullable=False)
+    booking_interval_minutes = Column(Integer, default=15, nullable=False)
+    max_daily_appointments = Column(Integer, default=100, nullable=False)
+    allow_walk_in = Column(Boolean, default=True, nullable=False)
+
+    # Queue
+    queue_prefix = Column(String, default="Q", nullable=False)
+    auto_generate_tokens = Column(Boolean, default=True, nullable=False)
+    emergency_priority_enabled = Column(Boolean, default=True, nullable=False)
+    queue_reset_daily = Column(Boolean, default=True, nullable=False)
+
+    # Notifications
+    email_notifications = Column(Boolean, default=True, nullable=False)
+    sms_notifications = Column(Boolean, default=False, nullable=False)
+    appointment_reminders = Column(Boolean, default=True, nullable=False)
+    reminder_hours_before = Column(Integer, default=24, nullable=False)
+
+    # AI Configuration
+    ai_recommendations_enabled = Column(Boolean, default=True, nullable=False)
+    ai_confidence_threshold = Column(Float, default=75.0, nullable=False)
+
+    # Localization
+    timezone = Column(String, default="UTC", nullable=False)
+    date_format = Column(String, default="YYYY-MM-DD", nullable=False)
+    time_format = Column(String, default="12h", nullable=False)
+    language = Column(String, default="en", nullable=False)
+
+    # Appearance
+    system_theme = Column(String, default="system", nullable=False)
+    primary_color = Column(String, default="#0284c7", nullable=False)
+
+    # Audit
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)

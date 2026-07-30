@@ -18,6 +18,7 @@ import DoctorManagement from '../components/DoctorManagement';
 import ReceptionistManagement from '../components/ReceptionistManagement';
 import DepartmentManagement from '../components/DepartmentManagement';
 import UserManagement from '../components/UserManagement';
+import SystemSettings from '../components/SystemSettings';
 
 function AdminDashboard() {
   // Navigation & General tab state
@@ -350,6 +351,18 @@ function AdminDashboard() {
           >
             <Users className="h-3.5 w-3.5" />
             <span>User & Role Management</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('settings')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 ${
+              activeTab === 'settings' 
+                ? 'bg-white dark:bg-slate-800 text-hospital-500 dark:text-white shadow-sm' 
+                : 'text-slate-550 hover:text-slate-800 dark:hover:text-slate-350'
+            }`}
+          >
+            <Settings className="h-3.5 w-3.5" />
+            <span>System Settings</span>
           </button>
 
           <button
@@ -935,6 +948,49 @@ function AdminDashboard() {
       {activeTab === 'users' && (
         <div className="animate-fadeIn">
           <UserManagement onUserUpdated={loadAnalytics} />
+        </div>
+      )}
+
+      {/* SYSTEM SETTINGS TAB */}
+      {activeTab === 'settings' && (
+        <div className="space-y-6 animate-fadeIn">
+          
+          {/* System Information KPI Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl shadow-sm flex items-center justify-between">
+              <div>
+                <span className="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Application Version</span>
+                <span className="text-base font-black text-slate-800 dark:text-white mt-0.5 block font-mono">v2.0.0</span>
+              </div>
+              <div className="bg-hospital-50 text-hospital-500 dark:bg-hospital-950/40 p-2.5 rounded-xl"><Sparkles className="h-5 w-5" /></div>
+            </div>
+
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl shadow-sm flex items-center justify-between">
+              <div>
+                <span className="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Database Engine</span>
+                <span className="text-base font-black text-emerald-600 dark:text-emerald-400 mt-0.5 block font-mono">Connected (SQLite)</span>
+              </div>
+              <div className="bg-emerald-50 text-emerald-500 dark:bg-emerald-950/40 p-2.5 rounded-xl"><CheckCircle className="h-5 w-5" /></div>
+            </div>
+
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl shadow-sm flex items-center justify-between">
+              <div>
+                <span className="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Backend API Engine</span>
+                <span className="text-base font-black text-blue-600 dark:text-blue-400 mt-0.5 block font-mono">Healthy (FastAPI)</span>
+              </div>
+              <div className="bg-blue-50 text-blue-500 dark:bg-blue-950/40 p-2.5 rounded-xl"><Activity className="h-5 w-5" /></div>
+            </div>
+
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl shadow-sm flex items-center justify-between">
+              <div>
+                <span className="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Frontend Client</span>
+                <span className="text-base font-black text-purple-600 dark:text-purple-400 mt-0.5 block font-mono">Active (Vite + React)</span>
+              </div>
+              <div className="bg-purple-50 text-purple-500 dark:bg-purple-950/40 p-2.5 rounded-xl"><Layers className="h-5 w-5" /></div>
+            </div>
+          </div>
+
+          <SystemSettings onSettingsUpdated={loadAnalytics} />
         </div>
       )}
 
