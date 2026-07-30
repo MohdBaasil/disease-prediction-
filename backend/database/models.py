@@ -24,7 +24,10 @@ class Department(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, nullable=False)
     code = Column(String, unique=True, nullable=False)  # e.g., 'G' for General Medicine, 'C' for Cardiology
+    description = Column(Text, nullable=True)
+    is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
     # Relationships
     doctors = relationship("Doctor", back_populates="department", cascade="all, delete")

@@ -23,11 +23,15 @@ def get_admin_dashboard(
     total_patients = db.query(func.count(Patient.id)).scalar() or 0
     total_doctors = db.query(func.count(Doctor.id)).scalar() or 0
     total_receptionists = db.query(func.count(User.id)).filter(User.role == "Receptionist").scalar() or 0
-    from backend.database.models import Receptionist
+    from backend.database.models import Receptionist, Department
     active_receptionists = db.query(func.count(Receptionist.id)).filter(Receptionist.is_active == True).scalar()
     if active_receptionists is None or active_receptionists == 0:
         active_receptionists = total_receptionists
     disabled_receptionists = max(0, total_receptionists - active_receptionists)
+    
+    total_departments = db.query(func.count(Department.id)).scalar() or 0
+    active_departments = db.query(func.count(Department.id)).filter(Department.is_active == True).scalar() or 0
+    inactive_departments = max(0, total_departments - active_departments)
     total_appointments = db.query(func.count(Appointment.id)).scalar() or 0
     
     todays_appointments = db.query(func.count(Appointment.id)).filter(
@@ -122,6 +126,9 @@ def get_admin_dashboard(
             "total_receptionists": total_receptionists,
             "active_receptionists": active_receptionists,
             "disabled_receptionists": disabled_receptionists,
+            "total_departments": total_departments,
+            "active_departments": active_departments,
+            "inactive_departments": inactive_departments,
             "total_appointments": total_appointments,
             "todays_appointments": todays_appointments,
             "waiting_patients": waiting_patients,

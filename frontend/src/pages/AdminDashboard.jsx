@@ -16,6 +16,7 @@ import {
 } from './AnalyticsCharts';
 import DoctorManagement from '../components/DoctorManagement';
 import ReceptionistManagement from '../components/ReceptionistManagement';
+import DepartmentManagement from '../components/DepartmentManagement';
 
 function AdminDashboard() {
   // Navigation & General tab state
@@ -324,6 +325,18 @@ function AdminDashboard() {
           >
             <ShieldCheck className="h-3.5 w-3.5" />
             <span>Receptionist Management</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('departments')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 ${
+              activeTab === 'departments' 
+                ? 'bg-white dark:bg-slate-800 text-hospital-500 dark:text-white shadow-sm' 
+                : 'text-slate-550 hover:text-slate-800 dark:hover:text-slate-350'
+            }`}
+          >
+            <Layers className="h-3.5 w-3.5" />
+            <span>Department Management</span>
           </button>
 
           <button
@@ -895,6 +908,13 @@ function AdminDashboard() {
       {activeTab === 'receptionists' && (
         <div className="animate-fadeIn">
           <ReceptionistManagement onReceptionistUpdated={loadAnalytics} />
+        </div>
+      )}
+
+      {/* DEPARTMENT MANAGEMENT TAB */}
+      {activeTab === 'departments' && (
+        <div className="animate-fadeIn">
+          <DepartmentManagement onDepartmentUpdated={loadAnalytics} />
         </div>
       )}
 

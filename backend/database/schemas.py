@@ -36,13 +36,26 @@ class UserResponse(UserBase):
 class DepartmentBase(BaseModel):
     name: str
     code: str
+    description: Optional[str] = None
+    is_active: bool = True
 
 class DepartmentCreate(DepartmentBase):
     pass
 
+class DepartmentUpdate(BaseModel):
+    name: Optional[str] = None
+    code: Optional[str] = None
+    description: Optional[str] = None
+    is_active: Optional[bool] = None
+
+class DepartmentStatusUpdate(BaseModel):
+    is_active: bool
+
 class DepartmentResponse(DepartmentBase):
     id: int
+    doctor_count: Optional[int] = 0
     created_at: datetime
+    updated_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True

@@ -64,7 +64,7 @@ export const authService = {
 // Queue & Department Services
 export const queueService = {
   getDepartments: async () => {
-    const response = await api.get('/api/queue/departments');
+    const response = await api.get('/api/departments/active');
     return response.data;
   },
   
@@ -261,6 +261,49 @@ export const receptionistService = {
     const response = await api.put(`/api/receptionists/${receptionistId}/reset-password`, {
       password: newPassword
     });
+    return response.data;
+  }
+};
+
+// Department Management Services
+export const departmentService = {
+  getDepartments: async (params = null) => {
+    let url = '/api/departments';
+    if (params && typeof params === 'object') {
+      const searchParams = new URLSearchParams();
+      if (params.search) searchParams.append('search', params.search);
+      if (params.is_active !== undefined && params.is_active !== null && params.is_active !== 'all') {
+        searchParams.append('is_active', params.is_active);
+      }
+      const queryStr = searchParams.toString();
+      if (queryStr) url += `?${queryStr}`;
+    }
+    const response = await api.get(url);
+    return response.data;
+  },
+
+  getActiveDepartments: async () => {
+    const response = await api.get('/api/departments/active');
+    return response.data;
+  },
+
+  createDepartment: async (data) => {
+    const response = await api.post('/api/departments', data);
+    return response.data;
+  },
+
+  updateDepartment: async (departmentId, data) => {
+    const response = await api.put(`/api/departments/${departmentId}`, data);
+    return response.data;
+  },
+
+  updateDepartmentStatus: async (departmentId, isActive) => {
+    const response = await api.put(`/api/departments/${departmentId}/status?is_active=${isActive}`);
+    return response.data;
+  },
+
+  deleteDepartment: async (departmentId) => {
+    const response = await api.delete(`/api/departments/${departmentId}`);
     return response.data;
   }
 };
