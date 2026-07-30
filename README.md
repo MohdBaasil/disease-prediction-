@@ -275,7 +275,11 @@ The frontend application will run at `http://localhost:5173`.
 
 ## 👥 Contributors
 
-- **Mohd Baasil** - *Lead Architect & Full Stack Engineer* - [GitHub Profile](https://github.com/MohdBaasil)
+- **Mohd Baasil** – Full Stack Developer & Project Contributor  
+  GitHub: https://github.com/MohdBaasil
+
+- **Ahmed Jasim B** – Full Stack Developer & Project Contributor  
+  GitHub: https://github.com/Ahmed-Jasim-B
 - **AcuraQueue Development Team**
 
 ---
