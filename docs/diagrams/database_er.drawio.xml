@@ -1,0 +1,85 @@
+<mxfile host="Electron" modified="2026-07-30T14:45:00.000Z" agent="Mozilla/5.0" etag="acuraqueue-er" version="21.6.8" type="device">
+  <diagram id="AcuraQueue-ER" name="Database ER Diagram">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- User Entity -->
+        <mxCell id="User" value="User&#xa;-------------------&#xa;+ id: int (PK)&#xa;+ username: str (UQ)&#xa;+ hashed_password: str&#xa;+ role: str&#xa;+ email: str (UQ)&#xa;+ is_active: bool" style="shape=swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#e1f5fe;strokeColor=#0284c7;" vertex="1" parent="1">
+          <mxGeometry x="60" y="80" width="180" height="150" as="geometry" />
+        </mxCell>
+
+        <!-- Department Entity -->
+        <mxCell id="Department" value="Department&#xa;-------------------&#xa;+ id: int (PK)&#xa;+ name: str (UQ)&#xa;+ code: str (UQ)&#xa;+ description: str&#xa;+ is_active: bool" style="shape=swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#e8f5e9;strokeColor=#2e7d32;" vertex="1" parent="1">
+          <mxGeometry x="320" y="80" width="180" height="140" as="geometry" />
+        </mxCell>
+
+        <!-- Doctor Entity -->
+        <mxCell id="Doctor" value="Doctor&#xa;-------------------&#xa;+ id: int (PK)&#xa;+ user_id: int (FK)&#xa;+ department_id: int (FK)&#xa;+ name: str&#xa;+ specialization: str&#xa;+ room_number: str" style="shape=swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#fff3e0;strokeColor=#e65100;" vertex="1" parent="1">
+          <mxGeometry x="320" y="300" width="180" height="150" as="geometry" />
+        </mxCell>
+
+        <!-- Receptionist Entity -->
+        <mxCell id="Receptionist" value="Receptionist&#xa;-------------------&#xa;+ id: int (PK)&#xa;+ user_id: int (FK)&#xa;+ name: str&#xa;+ email: str&#xa;+ phone: str" style="shape=swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#f3e5f5;strokeColor=#7b1fa2;" vertex="1" parent="1">
+          <mxGeometry x="60" y="300" width="180" height="130" as="geometry" />
+        </mxCell>
+
+        <!-- Patient Entity -->
+        <mxCell id="Patient" value="Patient&#xa;-------------------&#xa;+ id: int (PK)&#xa;+ user_id: int (FK)&#xa;+ patient_code: str (UQ)&#xa;+ name: str&#xa;+ age: int&#xa;+ gender: str" style="shape=swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#e0f7fa;strokeColor=#00838f;" vertex="1" parent="1">
+          <mxGeometry x="580" y="80" width="180" height="150" as="geometry" />
+        </mxCell>
+
+        <!-- Queue Entity -->
+        <mxCell id="Queue" value="Queue&#xa;-------------------&#xa;+ id: int (PK)&#xa;+ patient_id: int (FK)&#xa;+ department_id: int (FK)&#xa;+ doctor_id: int (FK)&#xa;+ token_number: str&#xa;+ status: str" style="shape=swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#ffebee;strokeColor=#c62828;" vertex="1" parent="1">
+          <mxGeometry x="580" y="300" width="180" height="150" as="geometry" />
+        </mxCell>
+
+        <!-- Appointment Entity -->
+        <mxCell id="Appointment" value="Appointment&#xa;-------------------&#xa;+ id: int (PK)&#xa;+ patient_id: int (FK)&#xa;+ doctor_id: int (FK)&#xa;+ appointment_time: datetime&#xa;+ status: str&#xa;+ priority_level: int" style="shape=swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#fce4ec;strokeColor=#ad1457;" vertex="1" parent="1">
+          <mxGeometry x="840" y="80" width="190" height="150" as="geometry" />
+        </mxCell>
+
+        <!-- Consultation Entity -->
+        <mxCell id="Consultation" value="Consultation&#xa;-------------------&#xa;+ id: int (PK)&#xa;+ patient_id: int (FK)&#xa;+ doctor_id: int (FK)&#xa;+ queue_id: int (FK)&#xa;+ diagnosis: str&#xa;+ doctor_notes: str" style="shape=swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#ede7f6;strokeColor=#4527a0;" vertex="1" parent="1">
+          <mxGeometry x="840" y="300" width="190" height="150" as="geometry" />
+        </mxCell>
+
+        <!-- SystemSettings Entity -->
+        <mxCell id="SystemSettings" value="SystemSettings&#xa;-------------------&#xa;+ id: int (PK)&#xa;+ hospital_name: str&#xa;+ hospital_code: str&#xa;+ queue_prefix: str&#xa;+ ai_confidence_threshold: float" style="shape=swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#eceff1;strokeColor=#37474f;" vertex="1" parent="1">
+          <mxGeometry x="60" y="520" width="220" height="140" as="geometry" />
+        </mxCell>
+
+        <!-- Connectors -->
+        <mxCell id="e1" edge="1" parent="1" source="User" target="Doctor" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="User" target="Receptionist" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="User" target="Patient" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="Department" target="Doctor" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="Department" target="Queue" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="Patient" target="Queue" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" edge="1" parent="1" source="Doctor" target="Queue" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" edge="1" parent="1" source="Patient" target="Appointment" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e9" edge="1" parent="1" source="Queue" target="Consultation" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
