@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { 
   Users, BarChart2, PlusCircle, FileText, Download, 
   Settings, CheckCircle, AlertTriangle, ShieldCheck, HeartPulse,
-  Clock, Activity, Calendar, TrendingUp, Layers, RefreshCw, AlertOctagon, ListTodo
+  Clock, Activity, Calendar, TrendingUp, Layers, RefreshCw, AlertOctagon, ListTodo,
+  UserCheck, Stethoscope, ChevronRight, Filter, AlertCircle, Sparkles, X, UserPlus, CalendarPlus
 } from 'lucide-react';
-import { doctorService, queueService, reportsService, analyticsService } from '../services/api';
+import { doctorService, queueService, reportsService, analyticsService, dashboardService } from '../services/api';
 import { 
   MonthlyRegistrationChart, 
   AppointmentTrendChart, 
@@ -20,6 +21,13 @@ function AdminDashboard() {
   const [departments, setDepartments] = useState([]);
   const [doctorsList, setDoctorsList] = useState([]);
 
+  // Admin Dashboard API Data State
+  const [adminStats, setAdminStats] = useState(null);
+  const [recentPatients, setRecentPatients] = useState([]);
+  const [recentAppointments, setRecentAppointments] = useState([]);
+  const [recentConsultations, setRecentConsultations] = useState([]);
+  const [recentSubTab, setRecentSubTab] = useState('patients'); // 'patients', 'appointments', 'consultations'
+
   // Doctor Creation Form States
   const [docUsername, setDocUsername] = useState('');
   const [docPassword, setDocPassword] = useState('');
@@ -28,7 +36,7 @@ function AdminDashboard() {
   const [docRoom, setDocRoom] = useState('');
   const [docDept, setDocDept] = useState('');
 
-  // Report Export Form States (for original seeder)
+  // Report Export Form States
   const [reportStart, setReportStart] = useState('');
   const [reportEnd, setReportEnd] = useState('');
 
@@ -49,16 +57,16 @@ function AdminDashboard() {
   const [highRiskPatients, setHighRiskPatients] = useState([]);
   const [recentActivities, setRecentActivities] = useState([]);
 
-  // Load static configuration (departments & doctors list)
+  // Load static configuration
   const loadBaseConfig = async () => {
     try {
       const depts = await queueService.getDepartments();
-      setDepartments(depts);
-      if (depts.length > 0 && !docDept) {
+      setDepartments(Array.isArray(depts) ? depts : []);
+      if (depts && depts.length > 0 && !docDept) {
         setDocDept(depts[0].id.toString());
       }
       const docs = await doctorService.list();
-      setDoctorsList(docs);
+      setDoctorsList(Array.isArray(docs) ? docs : []);
     } catch (e) {
       console.error("Error loading base admin config:", e);
       setError("Failed to fetch hospital config.");
@@ -75,17 +83,25 @@ function AdminDashboard() {
         end: dateFilter === 'custom' ? customEnd : undefined
       };
 
-      const [kpiRes, chartsRes, highRiskRes, activitiesRes] = await Promise.all([
-        analyticsService.getAdminAnalytics(params),
-        analyticsService.getAdminCharts(params),
-        analyticsService.getHighRiskPatients(),
-        analyticsService.getRecentActivities()
+      const [adminDataRes, kpiRes, chartsRes, highRiskRes, activitiesRes] = await Promise.all([
+        dashboardService.getAdminStats().catch(err => { console.error(err); return null; }),
+        analyticsService.getAdminAnalytics(params).catch(err => { console.error(err); return null; }),
+        analyticsService.getAdminCharts(params).catch(err => { console.error(err); return null; }),
+        analyticsService.getHighRiskPatients().catch(err => { console.error(err); return []; }),
+        analyticsService.getRecentActivities().catch(err => { console.error(err); return []; })
       ]);
+
+      if (adminDataRes) {
+        setAdminStats(adminDataRes.statistics);
+        setRecentPatients(Array.isArray(adminDataRes.recent_patients) ? adminDataRes.recent_patients : []);
+        setRecentAppointments(Array.isArray(adminDataRes.recent_appointments) ? adminDataRes.recent_appointments : []);
+        setRecentConsultations(Array.isArray(adminDataRes.recent_consultations) ? adminDataRes.recent_consultations : []);
+      }
 
       setKpis(kpiRes);
       setChartsData(chartsRes);
-      setHighRiskPatients(highRiskRes);
-      setRecentActivities(activitiesRes);
+      setHighRiskPatients(Array.isArray(highRiskRes) ? highRiskRes : []);
+      setRecentActivities(Array.isArray(activitiesRes) ? activitiesRes : (adminDataRes?.recent_activities || []));
     } catch (err) {
       console.error("Error retrieving analytics:", err);
       setError("Failed to load hospital analytics datasets.");
@@ -103,7 +119,6 @@ function AdminDashboard() {
     };
     init();
 
-    // Default export report dates
     const today = new Date();
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(today.getDate() - 30);
@@ -111,7 +126,6 @@ function AdminDashboard() {
     setReportEnd(today.toISOString().split('T')[0]);
   }, []);
 
-  // Reload analytics when filter inputs change
   useEffect(() => {
     if (!loading) {
       if (dateFilter !== 'custom' || (customStart && customEnd)) {
@@ -163,7 +177,6 @@ function AdminDashboard() {
         startStr = customStart;
         endStr = customEnd;
       } else if (kpis) {
-        // Approximate range or standard mapping
         const range = getRangeDates(dateFilter);
         startStr = range.start;
         endStr = range.end;
@@ -190,22 +203,19 @@ function AdminDashboard() {
     window.open(url, '_blank');
   };
 
-  // Frontend custom CSV downloader for analytics summary data
   const handleExportCSV = () => {
-    if (!kpis) return;
+    if (!kpis && !adminStats) return;
     const csvData = [
-      { Metric: "Total Patients", Value: kpis.total_patients },
-      { Metric: "Total Doctors", Value: kpis.total_doctors },
-      { Metric: "Total Receptionists", Value: kpis.total_receptionists },
-      { Metric: "Total Appointments", Value: kpis.total_appointments },
-      { Metric: "Today's Appointments", Value: kpis.todays_appointments },
-      { Metric: "Total Consultations", Value: kpis.total_consultations },
-      { Metric: "Total Prescriptions", Value: kpis.total_prescriptions },
-      { Metric: "Total AI Predictions", Value: kpis.total_predictions },
-      { Metric: "Active Queue Count", Value: kpis.active_queue_count },
-      { Metric: "High Risk Patients", Value: kpis.high_risk_patients },
-      { Metric: "Average Daily Patients", Value: kpis.avg_daily_patients },
-      { Metric: "Average Waiting Time (min)", Value: kpis.avg_waiting_time_minutes }
+      { Metric: "Total Patients", Value: adminStats?.total_patients ?? kpis?.total_patients ?? 0 },
+      { Metric: "Total Doctors", Value: adminStats?.total_doctors ?? kpis?.total_doctors ?? 0 },
+      { Metric: "Total Receptionists", Value: adminStats?.total_receptionists ?? kpis?.total_receptionists ?? 0 },
+      { Metric: "Total Appointments", Value: adminStats?.total_appointments ?? kpis?.total_appointments ?? 0 },
+      { Metric: "Today's Appointments", Value: adminStats?.todays_appointments ?? kpis?.todays_appointments ?? 0 },
+      { Metric: "Waiting Patients", Value: adminStats?.waiting_patients ?? kpis?.active_queue_count ?? 0 },
+      { Metric: "Active Consultations", Value: adminStats?.active_consultations ?? 0 },
+      { Metric: "Completed Consultations", Value: adminStats?.completed_consultations ?? kpis?.total_consultations ?? 0 },
+      { Metric: "Emergency Queue Count", Value: adminStats?.emergency_queue_count ?? 0 },
+      { Metric: "High Risk Patients", Value: kpis?.high_risk_patients ?? 0 }
     ];
 
     const headers = Object.keys(csvData[0]).join(',');
@@ -216,7 +226,7 @@ function AdminDashboard() {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `Hospital_Analytics_${dateFilter}.csv`);
+    link.setAttribute("download", `Hospital_Admin_Summary_${dateFilter}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -228,7 +238,7 @@ function AdminDashboard() {
     if (filter === 'today') {
       start.setHours(0,0,0,0);
     } else if (filter === 'week') {
-      start.setDate(now.getDate() - now.getDay() + 1); // Monday
+      start.setDate(now.getDate() - now.getDay() + 1);
     } else if (filter === 'month') {
       start = new Date(now.getFullYear(), now.getMonth(), 1);
     } else if (filter === '6months') {
@@ -255,14 +265,25 @@ function AdminDashboard() {
     );
   }
 
+  // Calculate statistics display values
+  const statTotalPatients = adminStats?.total_patients ?? kpis?.total_patients ?? 0;
+  const statTotalDoctors = adminStats?.total_doctors ?? kpis?.total_doctors ?? 0;
+  const statTotalReceptionists = adminStats?.total_receptionists ?? kpis?.total_receptionists ?? 0;
+  const statTotalAppointments = adminStats?.total_appointments ?? kpis?.total_appointments ?? 0;
+  const statTodaysAppointments = adminStats?.todays_appointments ?? kpis?.todays_appointments ?? 0;
+  const statWaitingPatients = adminStats?.waiting_patients ?? kpis?.active_queue_count ?? 0;
+  const statActiveConsultations = adminStats?.active_consultations ?? 0;
+  const statCompletedConsultations = adminStats?.completed_consultations ?? kpis?.total_consultations ?? 0;
+  const statEmergencyCount = adminStats?.emergency_queue_count ?? 0;
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-12">
       
       {/* Header Panel */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-200 dark:border-slate-800 pb-4 gap-4">
         <div>
-          <h1 className="text-2xl font-black tracking-tight">Hospital Administration</h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400">View real-time operation metrics, configure medical staff, and generate PDF/Excel exports.</p>
+          <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">Hospital Administration</h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400">View real-time operation metrics, patient activity logs, staff configuration, and PDF/Excel exports.</p>
         </div>
 
         {/* Tab Selection Controls */}
@@ -306,9 +327,7 @@ function AdminDashboard() {
         </div>
       )}
 
-      {/* ========================================================
-          EXECUTIVE ANALYTICS TAB
-          ======================================================== */}
+      {/* EXECUTIVE ANALYTICS TAB */}
       {activeTab === 'analytics' && (
         <div className="space-y-6">
           
@@ -380,10 +399,10 @@ function AdminDashboard() {
             </div>
           </div>
 
-          {/* KPI Analytics Cards Grid */}
+          {/* 9 MANDATED ADMIN KPI CARDS GRID */}
           {analyticsLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {[...Array(12)].map((_, i) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {[...Array(9)].map((_, i) => (
                 <div key={i} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm animate-pulse h-24 flex items-center justify-between">
                   <div className="space-y-2.5">
                     <div className="h-3 w-24 bg-slate-200 dark:bg-slate-800 rounded"></div>
@@ -393,125 +412,265 @@ function AdminDashboard() {
                 </div>
               ))}
             </div>
-          ) : kpis ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               
-              {/* Total Patients */}
+              {/* 1. Total Patients */}
               <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm flex items-center justify-between hover:shadow transition-shadow">
                 <div>
                   <span className="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Total Patients</span>
-                  <span className="text-2xl font-black text-slate-800 dark:text-white mt-1 block">{kpis.total_patients}</span>
+                  <span className="text-2xl font-black text-slate-800 dark:text-white mt-1 block">{statTotalPatients}</span>
                 </div>
                 <div className="bg-blue-50 text-blue-500 dark:bg-blue-950/40 p-3 rounded-xl"><Users className="h-5 w-5" /></div>
               </div>
 
-              {/* Total Doctors */}
+              {/* 2. Total Doctors */}
               <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm flex items-center justify-between hover:shadow transition-shadow">
                 <div>
                   <span className="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Total Doctors</span>
-                  <span className="text-2xl font-black text-slate-800 dark:text-white mt-1 block">{kpis.total_doctors}</span>
+                  <span className="text-2xl font-black text-slate-800 dark:text-white mt-1 block">{statTotalDoctors}</span>
                 </div>
-                <div className="bg-purple-50 text-purple-500 dark:bg-purple-950/40 p-3 rounded-xl"><Layers className="h-5 w-5" /></div>
+                <div className="bg-purple-50 text-purple-500 dark:bg-purple-950/40 p-3 rounded-xl"><Stethoscope className="h-5 w-5" /></div>
               </div>
 
-              {/* Total Receptionists */}
+              {/* 3. Total Receptionists */}
               <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm flex items-center justify-between hover:shadow transition-shadow">
                 <div>
-                  <span className="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Reception Staff</span>
-                  <span className="text-2xl font-black text-slate-800 dark:text-white mt-1 block">{kpis.total_receptionists}</span>
+                  <span className="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Total Receptionists</span>
+                  <span className="text-2xl font-black text-slate-800 dark:text-white mt-1 block">{statTotalReceptionists}</span>
                 </div>
                 <div className="bg-indigo-50 text-indigo-500 dark:bg-indigo-950/40 p-3 rounded-xl"><ShieldCheck className="h-5 w-5" /></div>
               </div>
 
-              {/* Total Appointments */}
+              {/* 4. Total Appointments */}
               <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm flex items-center justify-between hover:shadow transition-shadow">
                 <div>
-                  <span className="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Appointments</span>
-                  <span className="text-2xl font-black text-slate-800 dark:text-white mt-1 block">{kpis.total_appointments}</span>
+                  <span className="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Total Appointments</span>
+                  <span className="text-2xl font-black text-slate-800 dark:text-white mt-1 block">{statTotalAppointments}</span>
                 </div>
                 <div className="bg-teal-50 text-teal-500 dark:bg-teal-950/40 p-3 rounded-xl"><Calendar className="h-5 w-5" /></div>
               </div>
 
-              {/* Today's Appointments */}
+              {/* 5. Today's Appointments */}
               <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm flex items-center justify-between hover:shadow transition-shadow">
                 <div>
-                  <span className="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Today's Appts</span>
-                  <span className="text-2xl font-black text-slate-800 dark:text-white mt-1 block">{kpis.todays_appointments}</span>
+                  <span className="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Today's Appointments</span>
+                  <span className="text-2xl font-black text-slate-800 dark:text-white mt-1 block">{statTodaysAppointments}</span>
                 </div>
-                <div className="bg-amber-50 text-amber-500 dark:bg-amber-950/40 p-3 rounded-xl"><Clock className="h-5 w-5" /></div>
+                <div className="bg-sky-50 text-sky-500 dark:bg-sky-950/40 p-3 rounded-xl"><Clock className="h-5 w-5" /></div>
               </div>
 
-              {/* Total Consultations */}
+              {/* 6. Waiting Patients */}
               <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm flex items-center justify-between hover:shadow transition-shadow">
                 <div>
-                  <span className="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Total Consults</span>
-                  <span className="text-2xl font-black text-slate-800 dark:text-white mt-1 block">{kpis.total_consultations}</span>
+                  <span className="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Waiting Patients</span>
+                  <span className="text-2xl font-black text-amber-600 dark:text-amber-400 mt-1 block">{statWaitingPatients}</span>
                 </div>
-                <div className="bg-emerald-50 text-emerald-500 dark:bg-emerald-950/40 p-3 rounded-xl"><HeartPulse className="h-5 w-5" /></div>
+                <div className="bg-amber-50 text-amber-500 dark:bg-amber-950/40 p-3 rounded-xl"><UserCheck className="h-5 w-5" /></div>
               </div>
 
-              {/* Total Prescriptions */}
+              {/* 7. Active Consultations */}
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm flex items-center justify-between hover:shadow transition-shadow relative">
+                <div>
+                  <span className="text-[10px] text-slate-400 font-bold block uppercase tracking-wider flex items-center space-x-1">
+                    <span>Active Consults</span>
+                    {statActiveConsultations > 0 && <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>}
+                  </span>
+                  <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1 block">{statActiveConsultations}</span>
+                </div>
+                <div className="bg-emerald-50 text-emerald-500 dark:bg-emerald-950/40 p-3 rounded-xl"><Activity className="h-5 w-5" /></div>
+              </div>
+
+              {/* 8. Completed Consultations */}
               <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm flex items-center justify-between hover:shadow transition-shadow">
                 <div>
-                  <span className="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Prescriptions Issued</span>
-                  <span className="text-2xl font-black text-slate-800 dark:text-white mt-1 block">{kpis.total_prescriptions}</span>
+                  <span className="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Completed Consults</span>
+                  <span className="text-2xl font-black text-slate-800 dark:text-white mt-1 block">{statCompletedConsultations}</span>
                 </div>
-                <div className="bg-rose-50 text-rose-500 dark:bg-rose-950/40 p-3 rounded-xl"><FileText className="h-5 w-5" /></div>
+                <div className="bg-cyan-50 text-cyan-500 dark:bg-cyan-950/40 p-3 rounded-xl"><HeartPulse className="h-5 w-5" /></div>
               </div>
 
-              {/* Total AI Predictions */}
+              {/* 9. Emergency Queue Count */}
               <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm flex items-center justify-between hover:shadow transition-shadow">
                 <div>
-                  <span className="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">AI Diagnoses</span>
-                  <span className="text-2xl font-black text-slate-800 dark:text-white mt-1 block">{kpis.total_predictions}</span>
+                  <span className="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Emergency Queue</span>
+                  <span className={`text-2xl font-black mt-1 block ${statEmergencyCount > 0 ? 'text-rose-600 dark:text-rose-400 animate-pulse' : 'text-slate-800 dark:text-white'}`}>
+                    {statEmergencyCount}
+                  </span>
                 </div>
-                <div className="bg-cyan-50 text-cyan-500 dark:bg-cyan-950/40 p-3 rounded-xl"><Activity className="h-5 w-5" /></div>
+                <div className="bg-rose-50 text-rose-500 dark:bg-rose-950/40 p-3 rounded-xl"><AlertTriangle className="h-5 w-5" /></div>
               </div>
 
-              {/* Active Queue Count */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm flex items-center justify-between hover:shadow transition-shadow">
-                <div>
-                  <span className="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Active Queue Length</span>
-                  <span className="text-2xl font-black text-slate-800 dark:text-white mt-1 block">{kpis.active_queue_count}</span>
-                </div>
-                <div className="bg-orange-50 text-orange-500 dark:bg-orange-950/40 p-3 rounded-xl"><RefreshCw className="h-5 w-5" /></div>
-              </div>
-
-              {/* High Risk Patients */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm flex items-center justify-between hover:shadow transition-shadow">
-                <div>
-                  <span className="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">High Risk Patients</span>
-                  <span className="text-2xl font-black text-rose-600 dark:text-rose-400 mt-1 block">{kpis.high_risk_patients}</span>
-                </div>
-                <div className="bg-rose-50 text-rose-500 dark:bg-rose-950/40 p-3 rounded-xl"><AlertOctagon className="h-5 w-5" /></div>
-              </div>
-
-              {/* Average Daily Patients */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm flex items-center justify-between hover:shadow transition-shadow">
-                <div>
-                  <span className="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Avg Daily Load</span>
-                  <span className="text-2xl font-black text-slate-800 dark:text-white mt-1 block">{kpis.avg_daily_patients}</span>
-                </div>
-                <div className="bg-sky-50 text-sky-500 dark:bg-sky-950/40 p-3 rounded-xl"><TrendingUp className="h-5 w-5" /></div>
-              </div>
-
-              {/* Average Waiting Time */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm flex items-center justify-between hover:shadow transition-shadow">
-                <div>
-                  <span className="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Avg Wait Pace</span>
-                  <span className="text-2xl font-black text-slate-800 dark:text-white mt-1 block">{kpis.avg_waiting_time_minutes} min</span>
-                </div>
-                <div className="bg-yellow-50 text-yellow-500 dark:bg-yellow-950/40 p-3 rounded-xl"><Clock className="h-5 w-5" /></div>
-              </div>
-
-            </div>
-          ) : (
-            <div className="text-center py-10 bg-slate-50 dark:bg-slate-900 rounded-3xl text-slate-450 border border-dashed border-slate-200 dark:border-slate-800">
-              No metrics available for the chosen filters.
             </div>
           )}
 
-          {/* Interactive Charts Panel */}
+          {/* RECENT OPERATIONAL DATA SECTIONS (Patients, Appointments, Consultations) */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4">
+            
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div>
+                <h2 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center space-x-2">
+                  <ListTodo className="h-5 w-5 text-hospital-500" />
+                  <span>Recent Hospital Operations</span>
+                </h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Live operational data feeds for recent registrations, bookings, and clinical interactions.</p>
+              </div>
+
+              {/* Sub-tab Selectors */}
+              <div className="flex items-center space-x-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300">
+                <button
+                  onClick={() => setRecentSubTab('patients')}
+                  className={`px-3 py-1.5 rounded-lg transition-colors ${
+                    recentSubTab === 'patients'
+                      ? 'bg-white dark:bg-slate-900 text-hospital-600 dark:text-hospital-400 shadow-sm font-bold'
+                      : 'hover:bg-slate-200/50 dark:hover:bg-slate-700/50'
+                  }`}
+                >
+                  Recent Patients ({recentPatients.length})
+                </button>
+                <button
+                  onClick={() => setRecentSubTab('appointments')}
+                  className={`px-3 py-1.5 rounded-lg transition-colors ${
+                    recentSubTab === 'appointments'
+                      ? 'bg-white dark:bg-slate-900 text-hospital-600 dark:text-hospital-400 shadow-sm font-bold'
+                      : 'hover:bg-slate-200/50 dark:hover:bg-slate-700/50'
+                  }`}
+                >
+                  Recent Appointments ({recentAppointments.length})
+                </button>
+                <button
+                  onClick={() => setRecentSubTab('consultations')}
+                  className={`px-3 py-1.5 rounded-lg transition-colors ${
+                    recentSubTab === 'consultations'
+                      ? 'bg-white dark:bg-slate-900 text-hospital-600 dark:text-hospital-400 shadow-sm font-bold'
+                      : 'hover:bg-slate-200/50 dark:hover:bg-slate-700/50'
+                  }`}
+                >
+                  Recent Consultations ({recentConsultations.length})
+                </button>
+              </div>
+            </div>
+
+            {/* TAB CONTENT 1: RECENT PATIENTS */}
+            {recentSubTab === 'patients' && (
+              <div className="overflow-x-auto">
+                {recentPatients.length > 0 ? (
+                  <table className="w-full text-xs text-left">
+                    <thead>
+                      <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-400 font-bold uppercase tracking-wider">
+                        <th className="py-3 px-3">Patient Code</th>
+                        <th className="py-3 px-3">Patient Name</th>
+                        <th className="py-3 px-3 text-center">Age / Gender</th>
+                        <th className="py-3 px-3">Mobile Number</th>
+                        <th className="py-3 px-3">Email Address</th>
+                        <th className="py-3 px-3 text-right">Registration Date</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
+                      {recentPatients.map((pat) => (
+                        <tr key={pat.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/20 transition-colors">
+                          <td className="py-3 px-3 font-mono font-bold text-hospital-600 dark:text-hospital-400">{pat.patient_code}</td>
+                          <td className="py-3 px-3 font-bold text-slate-900 dark:text-white">{pat.name}</td>
+                          <td className="py-3 px-3 text-center font-medium text-slate-600 dark:text-slate-300">{pat.age} yrs / {pat.gender}</td>
+                          <td className="py-3 px-3 text-slate-700 dark:text-slate-300 font-semibold">{pat.mobile_number || 'N/A'}</td>
+                          <td className="py-3 px-3 text-slate-500 dark:text-slate-400">{pat.email || 'N/A'}</td>
+                          <td className="py-3 px-3 text-right text-slate-400 font-medium">
+                            {pat.created_at ? new Date(pat.created_at).toLocaleDateString() : '--'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <div className="py-8 text-center text-slate-400 text-xs">No recent patient registrations found.</div>
+                )}
+              </div>
+            )}
+
+            {/* TAB CONTENT 2: RECENT APPOINTMENTS */}
+            {recentSubTab === 'appointments' && (
+              <div className="overflow-x-auto">
+                {recentAppointments.length > 0 ? (
+                  <table className="w-full text-xs text-left">
+                    <thead>
+                      <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-400 font-bold uppercase tracking-wider">
+                        <th className="py-3 px-3">Patient</th>
+                        <th className="py-3 px-3">Attending Physician</th>
+                        <th className="py-3 px-3">Department</th>
+                        <th className="py-3 px-3">Scheduled Time</th>
+                        <th className="py-3 px-3 text-center">Type</th>
+                        <th className="py-3 px-3 text-right">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
+                      {recentAppointments.map((app) => (
+                        <tr key={app.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/20 transition-colors">
+                          <td className="py-3 px-3 font-bold text-slate-900 dark:text-white">{app.patient_name}</td>
+                          <td className="py-3 px-3 font-semibold text-slate-800 dark:text-slate-200">{app.doctor_name}</td>
+                          <td className="py-3 px-3 text-slate-500 dark:text-slate-400 font-medium">{app.department_name}</td>
+                          <td className="py-3 px-3 font-semibold text-slate-700 dark:text-slate-300">{app.appointment_time}</td>
+                          <td className="py-3 px-3 text-center text-[10px] font-bold uppercase text-slate-500">{app.appointment_type}</td>
+                          <td className="py-3 px-3 text-right">
+                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                              app.status === 'Checked-in' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' :
+                              app.status === 'Scheduled' ? 'bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-300' :
+                              app.status === 'Cancelled' ? 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 line-through' :
+                              'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+                            }`}>
+                              {app.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <div className="py-8 text-center text-slate-400 text-xs">No recent appointments recorded.</div>
+                )}
+              </div>
+            )}
+
+            {/* TAB CONTENT 3: RECENT CONSULTATIONS */}
+            {recentSubTab === 'consultations' && (
+              <div className="overflow-x-auto">
+                {recentConsultations.length > 0 ? (
+                  <table className="w-full text-xs text-left">
+                    <thead>
+                      <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-400 font-bold uppercase tracking-wider">
+                        <th className="py-3 px-3">Patient</th>
+                        <th className="py-3 px-3">Doctor</th>
+                        <th className="py-3 px-3">Symptoms</th>
+                        <th className="py-3 px-3">Diagnosis</th>
+                        <th className="py-3 px-3 text-center">Outcome</th>
+                        <th className="py-3 px-3 text-right">Date</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
+                      {recentConsultations.map((c) => (
+                        <tr key={c.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/20 transition-colors">
+                          <td className="py-3 px-3 font-bold text-slate-900 dark:text-white">{c.patient_name}</td>
+                          <td className="py-3 px-3 font-semibold text-slate-800 dark:text-slate-200">{c.doctor_name}</td>
+                          <td className="py-3 px-3 text-slate-500 dark:text-slate-400 max-w-xs truncate">{c.symptoms}</td>
+                          <td className="py-3 px-3 font-semibold text-slate-800 dark:text-slate-200 max-w-xs truncate">{c.diagnosis}</td>
+                          <td className="py-3 px-3 text-center">
+                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
+                              {c.outcome}
+                            </span>
+                          </td>
+                          <td className="py-3 px-3 text-right text-slate-400">{c.created_at}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <div className="py-8 text-center text-slate-400 text-xs">No recent consultations recorded.</div>
+                )}
+              </div>
+            )}
+
+          </div>
+
+          {/* INTERACTIVE ANALYTICS CHARTS PANEL */}
           {analyticsLoading ? (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="h-72 bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200 dark:border-slate-800 animate-pulse"></div>
@@ -570,19 +729,19 @@ function AdminDashboard() {
                 <div className="grid grid-cols-2 gap-4 py-2 flex-grow">
                   <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl flex flex-col justify-center">
                     <span className="text-[10px] text-slate-400 font-bold block uppercase">Avg Waiting</span>
-                    <span className="text-xl font-black text-slate-800 dark:text-white mt-1">{chartsData.queue_analytics.average_waiting_time_minutes} min</span>
+                    <span className="text-xl font-black text-slate-800 dark:text-white mt-1">{chartsData.queue_analytics?.average_waiting_time_minutes ?? 0} min</span>
                   </div>
                   <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl flex flex-col justify-center">
                     <span className="text-[10px] text-slate-400 font-bold block uppercase">Avg Consult</span>
-                    <span className="text-xl font-black text-slate-800 dark:text-white mt-1">{chartsData.queue_analytics.average_consultation_time_minutes} min</span>
+                    <span className="text-xl font-black text-slate-800 dark:text-white mt-1">{chartsData.queue_analytics?.average_consultation_time_minutes ?? 0} min</span>
                   </div>
                   <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl flex flex-col justify-center">
                     <span className="text-[10px] text-slate-400 font-bold block uppercase">Active Length</span>
-                    <span className="text-xl font-black text-slate-800 dark:text-white mt-1">{chartsData.queue_analytics.current_queue_length} patients</span>
+                    <span className="text-xl font-black text-slate-800 dark:text-white mt-1">{chartsData.queue_analytics?.current_queue_length ?? 0} patients</span>
                   </div>
                   <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl flex flex-col justify-center">
                     <span className="text-[10px] text-slate-400 font-bold block uppercase">Tokens Done Today</span>
-                    <span className="text-xl font-black text-slate-800 dark:text-white mt-1">{chartsData.queue_analytics.completed_tokens_today}</span>
+                    <span className="text-xl font-black text-slate-800 dark:text-white mt-1">{chartsData.queue_analytics?.completed_tokens_today ?? 0}</span>
                   </div>
                 </div>
               </div>
@@ -598,7 +757,7 @@ function AdminDashboard() {
             </div>
           ) : null}
 
-          {/* High Risk Monitor & Recent Activities Layout */}
+          {/* HIGH RISK MONITOR & RECENT ACTIVITIES LAYOUT */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
             {/* High Risk Patients Monitor (Span 2) */}
@@ -678,7 +837,7 @@ function AdminDashboard() {
                             {act.type}
                           </span>
                           <span className="text-[9px] text-slate-400 font-medium">
-                            {new Date(act.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            {act.time ? new Date(act.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--'}
                           </span>
                         </div>
                         <p className="text-xs text-slate-600 dark:text-slate-350">{act.description}</p>
@@ -698,9 +857,7 @@ function AdminDashboard() {
         </div>
       )}
 
-      {/* ========================================================
-          STAFF SEEDING & CONFIG TAB (Original View)
-          ======================================================== */}
+      {/* STAFF SEEDING & CONFIG TAB */}
       {activeTab === 'management' && (
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 animate-fadeIn">
           

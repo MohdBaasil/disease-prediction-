@@ -10,6 +10,124 @@ from backend.services.auth_service import RoleChecker
 
 router = APIRouter(prefix="/api/dashboard", tags=["Dashboards"])
 
+@router.get("/admin")
+def get_admin_dashboard(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(RoleChecker(["Admin"]))
+):
+    today = datetime.datetime.utcnow().date()
+    start_of_today = datetime.datetime.combine(today, datetime.time.min)
+    end_of_today = datetime.datetime.combine(today, datetime.time.max)
+
+    # 1. KPI STATISTICS
+    total_patients = db.query(func.count(Patient.id)).scalar() or 0
+    total_doctors = db.query(func.count(Doctor.id)).scalar() or 0
+    total_receptionists = db.query(func.count(User.id)).filter(User.role == "Receptionist").scalar() or 0
+    total_appointments = db.query(func.count(Appointment.id)).scalar() or 0
+    
+    todays_appointments = db.query(func.count(Appointment.id)).filter(
+        Appointment.appointment_time >= start_of_today,
+        Appointment.appointment_time <= end_of_today
+    ).scalar() or 0
+
+    waiting_patients = db.query(func.count(Queue.id)).filter(
+        Queue.status == "Waiting"
+    ).scalar() or 0
+
+    active_consultations = db.query(func.count(Queue.id)).filter(
+        Queue.status == "Calling"
+    ).scalar() or 0
+
+    completed_consultations = db.query(func.count(Consultation.id)).scalar() or 0
+
+    emergency_queue_count = db.query(func.count(Queue.id)).filter(
+        Queue.status == "Waiting",
+        Queue.priority_level.in_([1, 2])
+    ).scalar() or 0
+
+    # 2. RECENT PATIENTS (Latest 10 registrations)
+    recent_patients_db = db.query(Patient).order_by(Patient.created_at.desc()).limit(10).all()
+    recent_patients = [{
+        "id": p.id,
+        "name": p.name,
+        "patient_code": p.patient_code or f"PAT-{p.id:06d}",
+        "age": p.age,
+        "gender": p.gender,
+        "mobile_number": p.mobile_number,
+        "email": p.email,
+        "created_at": p.created_at.isoformat() if p.created_at else None
+    } for p in recent_patients_db]
+
+    # 3. RECENT APPOINTMENTS (Latest 10 appointments)
+    recent_appts_db = db.query(Appointment).order_by(Appointment.created_at.desc()).limit(10).all()
+    recent_appointments = [{
+        "id": a.id,
+        "patient_name": a.patient.name if a.patient else "Unknown Patient",
+        "patient_id": a.patient_id,
+        "doctor_name": f"Dr. {a.doctor.name}" if a.doctor else "Unassigned",
+        "doctor_id": a.doctor_id,
+        "department_name": (a.department.name if a.department else (a.doctor.department.name if (a.doctor and a.doctor.department) else "General")),
+        "appointment_time": a.appointment_time.strftime("%b %d, %Y - %I:%M %p"),
+        "raw_time": a.appointment_time.isoformat(),
+        "appointment_type": a.appointment_type or "Scheduled",
+        "status": a.status
+    } for a in recent_appts_db]
+
+    # 4. RECENT CONSULTATIONS (Latest 10 completed/active consultations)
+    recent_consults_db = db.query(Consultation).order_by(Consultation.created_at.desc()).limit(10).all()
+    recent_consultations = [{
+        "id": c.id,
+        "patient_name": c.patient.name if c.patient else "Unknown Patient",
+        "doctor_name": f"Dr. {c.doctor.name}" if c.doctor else "Doctor",
+        "symptoms": c.symptoms,
+        "diagnosis": c.diagnosis,
+        "prescription": c.prescription,
+        "outcome": c.consultation_outcome or "Discharge",
+        "duration_minutes": c.duration_minutes or 15,
+        "created_at": c.created_at.strftime("%b %d, %Y - %I:%M %p")
+    } for c in recent_consults_db]
+
+    # 5. AGGREGATED RECENT ACTIVITIES
+    activities = []
+    for p in recent_patients_db[:5]:
+        activities.append({
+            "type": "Patient Registered",
+            "description": f"New patient '{p.name}' registered into hospital database.",
+            "time": p.created_at.isoformat() if p.created_at else None
+        })
+    for a in recent_appts_db[:5]:
+        activities.append({
+            "type": "Appointment Booked",
+            "description": f"Appointment scheduled for {a.patient.name if a.patient else 'Patient'} with Dr. {a.doctor.name if a.doctor else 'Doctor'}.",
+            "time": a.created_at.isoformat() if a.created_at else None
+        })
+    for c in recent_consults_db[:5]:
+        activities.append({
+            "type": "Consultation Completed",
+            "description": f"Dr. {c.doctor.name if c.doctor else 'Doctor'} completed consultation for {c.patient.name if c.patient else 'Patient'}.",
+            "time": c.created_at.isoformat() if c.created_at else None
+        })
+
+    activities.sort(key=lambda x: x["time"] or "", reverse=True)
+
+    return {
+        "statistics": {
+            "total_patients": total_patients,
+            "total_doctors": total_doctors,
+            "total_receptionists": total_receptionists,
+            "total_appointments": total_appointments,
+            "todays_appointments": todays_appointments,
+            "waiting_patients": waiting_patients,
+            "active_consultations": active_consultations,
+            "completed_consultations": completed_consultations,
+            "emergency_queue_count": emergency_queue_count
+        },
+        "recent_patients": recent_patients,
+        "recent_appointments": recent_appointments,
+        "recent_consultations": recent_consultations,
+        "recent_activities": activities
+    }
+
 @router.get("/receptionist")
 def get_receptionist_dashboard(
     db: Session = Depends(get_db),

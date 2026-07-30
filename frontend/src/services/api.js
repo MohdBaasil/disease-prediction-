@@ -131,6 +131,11 @@ export const queueService = {
 
 // Dashboard Services
 export const dashboardService = {
+  getAdminStats: async () => {
+    const response = await api.get('/api/dashboard/admin');
+    return response.data;
+  },
+
   getReceptionistStats: async () => {
     const response = await api.get('/api/dashboard/receptionist');
     return response.data;
