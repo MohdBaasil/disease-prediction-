@@ -17,6 +17,7 @@ import {
 import DoctorManagement from '../components/DoctorManagement';
 import ReceptionistManagement from '../components/ReceptionistManagement';
 import DepartmentManagement from '../components/DepartmentManagement';
+import UserManagement from '../components/UserManagement';
 
 function AdminDashboard() {
   // Navigation & General tab state
@@ -337,6 +338,18 @@ function AdminDashboard() {
           >
             <Layers className="h-3.5 w-3.5" />
             <span>Department Management</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('users')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 ${
+              activeTab === 'users' 
+                ? 'bg-white dark:bg-slate-800 text-hospital-500 dark:text-white shadow-sm' 
+                : 'text-slate-550 hover:text-slate-800 dark:hover:text-slate-350'
+            }`}
+          >
+            <Users className="h-3.5 w-3.5" />
+            <span>User & Role Management</span>
           </button>
 
           <button
@@ -915,6 +928,13 @@ function AdminDashboard() {
       {activeTab === 'departments' && (
         <div className="animate-fadeIn">
           <DepartmentManagement onDepartmentUpdated={loadAnalytics} />
+        </div>
+      )}
+
+      {/* USER & ROLE MANAGEMENT TAB */}
+      {activeTab === 'users' && (
+        <div className="animate-fadeIn">
+          <UserManagement onUserUpdated={loadAnalytics} />
         </div>
       )}
 

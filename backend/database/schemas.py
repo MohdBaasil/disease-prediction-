@@ -21,13 +21,33 @@ class UserLogin(BaseModel):
 class UserBase(BaseModel):
     username: str
     role: str
+    name: Optional[str] = None
+    email: Optional[str] = None
+    is_active: bool = True
 
 class UserCreate(UserBase):
     password: str
 
+class UserUpdate(BaseModel):
+    name: Optional[str] = None
+    username: Optional[str] = None
+    email: Optional[str] = None
+    role: Optional[str] = None
+    is_active: Optional[bool] = None
+
+class UserStatusUpdate(BaseModel):
+    is_active: bool
+
+class UserResetPassword(BaseModel):
+    password: str
+
 class UserResponse(UserBase):
     id: int
+    name: Optional[str] = None
     created_at: datetime
+    updated_at: Optional[datetime] = None
+    last_login: Optional[datetime] = None
+    profile_info: Optional[dict] = None
 
     class Config:
         from_attributes = True

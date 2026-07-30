@@ -308,6 +308,52 @@ export const departmentService = {
   }
 };
 
+// User & Role Management Services
+export const userService = {
+  getUsers: async (params = null) => {
+    let url = '/api/users';
+    if (params && typeof params === 'object') {
+      const searchParams = new URLSearchParams();
+      if (params.search) searchParams.append('search', params.search);
+      if (params.role && params.role !== 'all') searchParams.append('role', params.role);
+      if (params.is_active !== undefined && params.is_active !== null && params.is_active !== 'all') {
+        searchParams.append('is_active', params.is_active);
+      }
+      const queryStr = searchParams.toString();
+      if (queryStr) url += `?${queryStr}`;
+    }
+    const response = await api.get(url);
+    return response.data;
+  },
+
+  getUser: async (userId) => {
+    const response = await api.get(`/api/users/${userId}`);
+    return response.data;
+  },
+
+  createUser: async (data) => {
+    const response = await api.post('/api/users', data);
+    return response.data;
+  },
+
+  updateUser: async (userId, data) => {
+    const response = await api.put(`/api/users/${userId}`, data);
+    return response.data;
+  },
+
+  updateUserStatus: async (userId, isActive) => {
+    const response = await api.put(`/api/users/${userId}/status?is_active=${isActive}`);
+    return response.data;
+  },
+
+  resetUserPassword: async (userId, newPassword) => {
+    const response = await api.put(`/api/users/${userId}/reset-password`, {
+      password: newPassword
+    });
+    return response.data;
+  }
+};
+
 // Patients Services
 export const patientService = {
   list: async (search = '') => {

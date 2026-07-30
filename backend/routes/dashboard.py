@@ -32,6 +32,19 @@ def get_admin_dashboard(
     total_departments = db.query(func.count(Department.id)).scalar() or 0
     active_departments = db.query(func.count(Department.id)).filter(Department.is_active == True).scalar() or 0
     inactive_departments = max(0, total_departments - active_departments)
+
+    total_users = db.query(func.count(User.id)).scalar() or 0
+    active_users = db.query(func.count(User.id)).filter(User.is_active == True).scalar()
+    if active_users is None:
+        active_users = total_users
+    disabled_users = max(0, total_users - active_users)
+
+    users_by_role = {
+        "Admin": db.query(func.count(User.id)).filter(User.role == "Admin").scalar() or 0,
+        "Doctor": db.query(func.count(User.id)).filter(User.role == "Doctor").scalar() or 0,
+        "Receptionist": db.query(func.count(User.id)).filter(User.role == "Receptionist").scalar() or 0,
+        "Patient": db.query(func.count(User.id)).filter(User.role == "Patient").scalar() or 0
+    }
     total_appointments = db.query(func.count(Appointment.id)).scalar() or 0
     
     todays_appointments = db.query(func.count(Appointment.id)).filter(
@@ -121,6 +134,10 @@ def get_admin_dashboard(
 
     return {
         "statistics": {
+            "total_users": total_users,
+            "active_users": active_users,
+            "disabled_users": disabled_users,
+            "users_by_role": users_by_role,
             "total_patients": total_patients,
             "total_doctors": total_doctors,
             "total_receptionists": total_receptionists,

@@ -21,7 +21,7 @@ from backend.database.models import (
 from backend.services.auth_service import get_password_hash
 
 # Route imports
-from backend.routes import auth, doctor, patient, queue, notification, reports, dashboard, appointments, disease, patient_portal, analytics, clinical, ai, receptionist, department
+from backend.routes import auth, doctor, patient, queue, notification, reports, dashboard, appointments, disease, patient_portal, analytics, clinical, ai, receptionist, department, user_management
 from backend.utils.websocket import manager
 
 # Create database tables automatically & run column migrations
@@ -64,6 +64,18 @@ def migrate_db():
         ]:
             try:
                 conn.execute(text(f"ALTER TABLE departments ADD COLUMN {col} {col_type}"))
+                conn.commit()
+            except Exception:
+                pass
+
+        for col, col_type in [
+            ("email", "VARCHAR"),
+            ("is_active", "BOOLEAN DEFAULT 1"),
+            ("updated_at", "DATETIME"),
+            ("last_login", "DATETIME")
+        ]:
+            try:
+                conn.execute(text(f"ALTER TABLE users ADD COLUMN {col} {col_type}"))
                 conn.commit()
             except Exception:
                 pass
@@ -123,6 +135,7 @@ app.include_router(clinical.router)
 app.include_router(ai.router)
 app.include_router(receptionist.router)
 app.include_router(department.router)
+app.include_router(user_management.router)
 
 # Direct endpoint alias for /api/consultations/{consultation_id}/report
 from fastapi.responses import FileResponse

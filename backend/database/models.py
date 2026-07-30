@@ -10,7 +10,11 @@ class User(Base):
     username = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
     role = Column(String, nullable=False)  # Admin, Receptionist, Doctor, Patient
+    email = Column(String, unique=True, index=True, nullable=True)
+    is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    last_login = Column(DateTime, nullable=True)
 
     # Relationships
     doctor = relationship("Doctor", back_populates="user", uselist=False, cascade="all, delete-orphan")
