@@ -21,7 +21,7 @@ from backend.database.models import (
 from backend.services.auth_service import get_password_hash
 
 # Route imports
-from backend.routes import auth, doctor, patient, queue, notification, reports, dashboard, appointments, disease, patient_portal, analytics, clinical, ai
+from backend.routes import auth, doctor, patient, queue, notification, reports, dashboard, appointments, disease, patient_portal, analytics, clinical, ai, receptionist
 from backend.utils.websocket import manager
 
 # Create database tables automatically & run column migrations
@@ -57,6 +57,28 @@ def migrate_db():
             except Exception:
                 pass
 
+        # 3. Backfill Receptionist table entries for existing Receptionist users
+        try:
+            from backend.database.models import User, Receptionist
+            from backend.database.connection import SessionLocal
+            db_session = SessionLocal()
+            rec_users = db_session.query(User).filter(User.role == "Receptionist").all()
+            for r_user in rec_users:
+                existing_rec = db_session.query(Receptionist).filter(Receptionist.user_id == r_user.id).first()
+                if not existing_rec:
+                    new_rec = Receptionist(
+                        user_id=r_user.id,
+                        name=r_user.username.capitalize(),
+                        email=f"{r_user.username}@acura.com",
+                        phone="555-0100",
+                        is_active=True
+                    )
+                    db_session.add(new_rec)
+            db_session.commit()
+            db_session.close()
+        except Exception as ex:
+            pass
+
 migrate_db()
 
 app = FastAPI(
@@ -88,6 +110,7 @@ app.include_router(patient_portal.router)
 app.include_router(analytics.router)
 app.include_router(clinical.router)
 app.include_router(ai.router)
+app.include_router(receptionist.router)
 
 # Direct endpoint alias for /api/consultations/{consultation_id}/report
 from fastapi.responses import FileResponse

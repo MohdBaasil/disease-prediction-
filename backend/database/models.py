@@ -15,6 +15,7 @@ class User(Base):
     # Relationships
     doctor = relationship("Doctor", back_populates="user", uselist=False, cascade="all, delete-orphan")
     patient = relationship("Patient", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    receptionist = relationship("Receptionist", back_populates="user", uselist=False, cascade="all, delete-orphan")
     audit_logs = relationship("AuditLog", back_populates="user", cascade="all, delete")
 
 class Department(Base):
@@ -55,6 +56,22 @@ class Doctor(Base):
     queues = relationship("Queue", back_populates="doctor", cascade="all, delete")
     consultations = relationship("Consultation", back_populates="doctor", cascade="all, delete")
     visits = relationship("Visit", back_populates="doctor", cascade="all, delete")
+
+class Receptionist(Base):
+    __tablename__ = "receptionists"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), unique=True, nullable=False)
+    name = Column(String, nullable=False)
+    email = Column(String, nullable=True)
+    phone = Column(String, nullable=True)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    last_login = Column(DateTime, nullable=True)
+
+    # Relationships
+    user = relationship("User", back_populates="receptionist")
 
 class Patient(Base):
     __tablename__ = "patients"

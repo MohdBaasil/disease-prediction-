@@ -225,6 +225,46 @@ export const doctorService = {
   }
 };
 
+// Receptionist Management Services
+export const receptionistService = {
+  getReceptionists: async (params = null) => {
+    let url = '/api/receptionists';
+    if (params && typeof params === 'object') {
+      const searchParams = new URLSearchParams();
+      if (params.search) searchParams.append('search', params.search);
+      if (params.is_active !== undefined && params.is_active !== null && params.is_active !== 'all') {
+        searchParams.append('is_active', params.is_active);
+      }
+      const queryStr = searchParams.toString();
+      if (queryStr) url += `?${queryStr}`;
+    }
+    const response = await api.get(url);
+    return response.data;
+  },
+
+  createReceptionist: async (data) => {
+    const response = await api.post('/api/receptionists', data);
+    return response.data;
+  },
+
+  updateReceptionist: async (receptionistId, data) => {
+    const response = await api.put(`/api/receptionists/${receptionistId}`, data);
+    return response.data;
+  },
+
+  updateReceptionistStatus: async (receptionistId, isActive) => {
+    const response = await api.put(`/api/receptionists/${receptionistId}/status?is_active=${isActive}`);
+    return response.data;
+  },
+
+  resetReceptionistPassword: async (receptionistId, newPassword) => {
+    const response = await api.put(`/api/receptionists/${receptionistId}/reset-password`, {
+      password: newPassword
+    });
+    return response.data;
+  }
+};
+
 // Patients Services
 export const patientService = {
   list: async (search = '') => {

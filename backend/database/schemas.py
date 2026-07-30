@@ -103,6 +103,41 @@ class DoctorResponse(DoctorBase):
     class Config:
         from_attributes = True
 
+# --- Receptionist Schemas ---
+class ReceptionistBase(BaseModel):
+    name: str
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    is_active: bool = True
+
+class ReceptionistCreate(ReceptionistBase):
+    username: str
+    password: str
+
+class ReceptionistUpdate(BaseModel):
+    name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    username: Optional[str] = None
+    is_active: Optional[bool] = None
+
+class ReceptionistStatusUpdate(BaseModel):
+    is_active: bool
+
+class ReceptionistResetPassword(BaseModel):
+    password: str
+
+class ReceptionistResponse(ReceptionistBase):
+    id: int
+    user_id: int
+    username: str
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    last_login: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
 # --- Patient Schemas ---
 class PatientBase(BaseModel):
     name: str
