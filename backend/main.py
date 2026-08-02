@@ -99,6 +99,9 @@ def migrate_db():
                     db_session.add(new_rec)
             db_session.commit()
             db_session.close()
+        except Exception:
+            pass
+
         # 4. Initialize SystemSettings default row if empty
         try:
             from backend.database.models import SystemSettings
@@ -183,8 +186,9 @@ async def websocket_queue_endpoint(websocket: WebSocket):
 
 from fastapi.staticfiles import StaticFiles
 # Mount static files directory to serve the frontend client
-os.makedirs("backend/static", exist_ok=True)
-app.mount("/", StaticFiles(directory="backend/static", html=True), name="static")
+static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
+os.makedirs(static_dir, exist_ok=True)
+app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
 
 # Startup Seeding Logic
 from backend.database.seed_from_csv import seed_db_from_csv
@@ -194,7 +198,7 @@ def seed_data():
     db = next(get_db())
     try:
         print("Checking default seed data...", flush=True)
-        csv_path = os.path.join(os.getcwd(), "healthcare_dataset.csv")
+        csv_path = os.path.join(project_root, "healthcare_dataset.csv")
         print("Invoking seed_db_from_csv...", flush=True)
         seed_db_from_csv(db, csv_path)
         print("seed_db_from_csv finished successfully.", flush=True)
