@@ -1,7 +1,9 @@
 import axios from 'axios';
 
 // Automatically detect host URL
-const API_BASE_URL = window.location.origin;
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL ||
+  "https://disease-prediction-w46h.onrender.com";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -28,11 +30,11 @@ export const authService = {
     const params = new URLSearchParams();
     params.append('username', username);
     params.append('password', password);
-    
+
     const response = await api.post('/api/auth/login', params, {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
     });
-    
+
     if (response.data.access_token) {
       localStorage.setItem('token', response.data.access_token);
       localStorage.setItem('role', response.data.role);
@@ -40,18 +42,18 @@ export const authService = {
     }
     return response.data;
   },
-  
+
   register: async (username, password, role = 'Patient') => {
     const response = await api.post('/api/auth/register', { username, password, role });
     return response.data;
   },
-  
+
   logout: () => {
     localStorage.removeItem('token');
     localStorage.removeItem('role');
     localStorage.removeItem('username');
   },
-  
+
   getCurrentUser: () => {
     return {
       token: localStorage.getItem('token'),
@@ -67,7 +69,7 @@ export const queueService = {
     const response = await api.get('/api/departments/active');
     return response.data;
   },
-  
+
   checkIn: async (patientId, departmentId, priorityLevel, doctorId = null) => {
     const response = await api.post('/api/queue/check-in', {
       patient_id: patientId,
@@ -77,12 +79,12 @@ export const queueService = {
     });
     return response.data;
   },
-  
+
   callNext: async (doctorId) => {
     const response = await api.post(`/api/queue/call-next?doctor_id=${doctorId}`);
     return response.data;
   },
-  
+
   complete: async (queueId, symptoms, diagnosis, prescription, durationMinutes = 15, labRequests = [], disposition = {}) => {
     const payload = {
       patient_id: 0, // placeholder
@@ -112,17 +114,17 @@ export const queueService = {
     const response = await api.post(`/api/queue/complete/${queueId}`, payload);
     return response.data;
   },
-  
+
   skip: async (queueId) => {
     const response = await api.post(`/api/queue/skip/${queueId}`);
     return response.data;
   },
-  
+
   reschedule: async (queueId) => {
     const response = await api.post(`/api/queue/reschedule/${queueId}`);
     return response.data;
   },
-  
+
   getDepartmentQueue: async (departmentId) => {
     const response = await api.get(`/api/queue/department/${departmentId}`);
     return response.data;
@@ -140,12 +142,12 @@ export const dashboardService = {
     const response = await api.get('/api/dashboard/receptionist');
     return response.data;
   },
-  
+
   getDoctorStats: async (doctorId) => {
     const response = await api.get(`/api/dashboard/doctor/${doctorId}`);
     return response.data;
   },
-  
+
   getPatientStats: async (patientId) => {
     const response = await api.get(`/api/dashboard/patient/${patientId}`);
     return response.data;
@@ -177,7 +179,7 @@ export const doctorService = {
     const response = await api.get(url);
     return response.data;
   },
-  
+
   create: async (payloadOrName, specialization, roomNumber, username, password, departmentId) => {
     let payload = {};
     if (typeof payloadOrName === 'object') {
@@ -205,7 +207,7 @@ export const doctorService = {
     const response = await api.put(`/api/doctors/${doctorId}/schedule`, scheduleData);
     return response.data;
   },
-  
+
   updateAvailability: async (doctorId, isAvailable, statusText = null) => {
     const response = await api.put(`/api/doctors/${doctorId}/availability`, {
       is_available: isAvailable,
@@ -218,7 +220,7 @@ export const doctorService = {
     const response = await api.put(`/api/doctors/${doctorId}/status?is_active=${isActive}&force=${force}`);
     return response.data;
   },
-  
+
   getMe: async () => {
     const response = await api.get('/api/doctors/me');
     return response.data;
@@ -374,7 +376,7 @@ export const patientService = {
     const response = await api.get(url);
     return response.data;
   },
-  
+
   getByMobile: async (mobile) => {
     const response = await api.get(`/api/patients/by-mobile/${mobile}`);
     return response.data;
@@ -389,7 +391,7 @@ export const patientService = {
     const response = await api.post('/api/patients/check-duplicate', duplicateData);
     return response.data;
   },
-  
+
   register: async (dataOrName, age = null, gender = null, mobileNumber = null, username = null, password = null) => {
     let payload = {};
     if (typeof dataOrName === 'object' && dataOrName !== null) {
@@ -410,12 +412,12 @@ export const patientService = {
     const response = await api.put(`/api/patients/${patientId}`, patientData);
     return response.data;
   },
-  
+
   getMe: async () => {
     const response = await api.get('/api/patients/me');
     return response.data;
   },
-  
+
   getConsultations: async (patientId) => {
     const response = await api.get(`/api/patients/${patientId}/consultations`);
     return response.data;
@@ -548,12 +550,12 @@ export const reportsService = {
     const response = await api.get('/api/reports/analytics');
     return response.data;
   },
-  
+
   getExcelUrl: (start = '', end = '') => {
     const token = localStorage.getItem('token');
     return `${API_BASE_URL}/api/reports/excel?token=${token}&start=${start}&end=${end}`;
   },
-  
+
   getPdfUrl: (start = '', end = '') => {
     const token = localStorage.getItem('token');
     return `${API_BASE_URL}/api/reports/pdf?token=${token}&start=${start}&end=${end}`;
@@ -697,9 +699,9 @@ export const aiService = {
 export const createQueueWebSocket = (onMessageCallback) => {
   const wsProto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
   const wsUrl = `${wsProto}//${window.location.hostname}:8000/ws/queue`;
-  
+
   const ws = new WebSocket(wsUrl);
-  
+
   ws.onmessage = (event) => {
     try {
       const data = JSON.parse(event.data);
@@ -708,16 +710,16 @@ export const createQueueWebSocket = (onMessageCallback) => {
       console.error('Error parsing WS message:', e);
     }
   };
-  
+
   ws.onclose = () => {
     console.log('WS connection closed. Reconnecting in 3s...');
     setTimeout(() => createQueueWebSocket(onMessageCallback), 3000);
   };
-  
+
   ws.onerror = (err) => {
     console.error('WS Error:', err);
     ws.close();
   };
-  
+
   return ws;
 };
