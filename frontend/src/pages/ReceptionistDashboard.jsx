@@ -82,26 +82,49 @@ function ReceptionistDashboard() {
   };
 
   const loadDashboardData = async (isManualRefresh = false) => {
+    console.log('[DEBUG Trace L84] ENTER loadDashboardData(). isManualRefresh:', isManualRefresh);
     if (isManualRefresh) setRefreshing(true);
     try {
+      console.log('[DEBUG Trace L88] BEFORE await dashboardService.getReceptionistStats()');
       const data = await dashboardService.getReceptionistStats();
+      console.log('[DEBUG Trace L90] AFTER await dashboardService.getReceptionistStats(). Data:', data);
       if (data) {
-        if (data.receptionist_info) setReceptionistInfo(data.receptionist_info);
-        if (data.statistics) setStats(data.statistics);
+        if (data.receptionist_info) {
+          console.log('[DEBUG Trace L93] BEFORE setReceptionistInfo');
+          setReceptionistInfo(data.receptionist_info);
+          console.log('[DEBUG Trace L95] AFTER setReceptionistInfo');
+        }
+        if (data.statistics) {
+          console.log('[DEBUG Trace L97] BEFORE setStats');
+          setStats(data.statistics);
+          console.log('[DEBUG Trace L99] AFTER setStats');
+        }
+        console.log('[DEBUG Trace L101] BEFORE setTodayAppointments');
         setTodayAppointments(Array.isArray(data.today_appointments) ? data.today_appointments : []);
+        console.log('[DEBUG Trace L103] AFTER setTodayAppointments');
+
+        console.log('[DEBUG Trace L105] BEFORE setQueueOverview');
         setQueueOverview(Array.isArray(data.queue_overview) ? data.queue_overview : []);
+        console.log('[DEBUG Trace L107] AFTER setQueueOverview');
+
+        console.log('[DEBUG Trace L109] BEFORE setNotifications');
         setNotifications({
           late_arrivals: Array.isArray(data.notifications?.late_arrivals) ? data.notifications.late_arrivals : [],
           cancelled_appointments: Array.isArray(data.notifications?.cancelled_appointments) ? data.notifications.cancelled_appointments : [],
           queue_alerts: Array.isArray(data.notifications?.queue_alerts) ? data.notifications.queue_alerts : []
         });
+        console.log('[DEBUG Trace L113] AFTER setNotifications');
       }
     } catch (err) {
-      console.error('Error fetching receptionist dashboard data:', err);
+      console.error('[DEBUG Trace CATCH] ERROR in loadDashboardData:', err);
       showMsg('error', 'Failed to update dashboard data.');
     } finally {
+      console.log('[DEBUG Trace FINALLY] ENTER finally block');
+      console.log('[DEBUG Trace FINALLY] BEFORE setLoading(false)');
       setLoading(false);
+      console.log('[DEBUG Trace FINALLY] AFTER setLoading(false)');
       setRefreshing(false);
+      console.log('[DEBUG Trace FINALLY] EXIT finally block');
     }
   };
 
@@ -291,7 +314,9 @@ function ReceptionistDashboard() {
     return true;
   });
 
+  console.log('[DEBUG Trace RENDER] Evaluating render. loading state is:', loading);
   if (loading) {
+    console.log('[DEBUG Trace RENDER] loading is TRUE -> Rendering Loading Spinner screen');
     return (
       <div className="flex justify-center items-center h-96">
         <div className="flex flex-col items-center space-y-3">
@@ -301,6 +326,7 @@ function ReceptionistDashboard() {
       </div>
     );
   }
+  console.log('[DEBUG Trace RENDER] loading is FALSE -> Rendering Main Dashboard Content UI');
 
   const totalAlertsCount =
     (notifications?.queue_alerts?.length || 0) +
