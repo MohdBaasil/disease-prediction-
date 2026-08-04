@@ -113,8 +113,6 @@ function ReceptionistDashboard() {
       if (deptsArray.length > 0 && deptsArray[0]?.id) {
         setTokenDept(deptsArray[0].id.toString());
       }
-      const docs = await doctorService.list();
-      setDoctors(Array.isArray(docs) ? docs : []);
     } catch (err) {
       console.error('Error loading metadata:', err);
     }
