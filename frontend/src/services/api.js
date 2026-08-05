@@ -697,29 +697,53 @@ export const aiService = {
 
 // WebSocket Service Creator
 export const createQueueWebSocket = (onMessageCallback) => {
-  const wsProto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  const wsUrl = `${wsProto}//${window.location.hostname}:8000/ws/queue`;
+  let isClosedIntentionally = false;
+  let reconnectTimer = null;
+  let ws = null;
 
-  const ws = new WebSocket(wsUrl);
+  const connect = () => {
+    let url = API_BASE_URL.replace(/^http/, 'ws');
+    const wsUrl = `${url.replace(/\/+$/, '')}/ws/queue`;
 
-  ws.onmessage = (event) => {
-    try {
-      const data = JSON.parse(event.data);
-      onMessageCallback(data);
-    } catch (e) {
-      console.error('Error parsing WS message:', e);
+    ws = new WebSocket(wsUrl);
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        onMessageCallback(data);
+      } catch (e) {
+        console.error('Error parsing WS message:', e);
+      }
+    };
+
+    ws.onclose = () => {
+      if (!isClosedIntentionally) {
+        console.log('WS connection closed. Reconnecting in 3s...');
+        reconnectTimer = setTimeout(connect, 3000);
+      }
+    };
+
+    ws.onerror = (err) => {
+      console.error('WS Error:', err);
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.close();
+      }
+    };
+  };
+
+  connect();
+
+  return {
+    close: () => {
+      isClosedIntentionally = true;
+      if (reconnectTimer) {
+        clearTimeout(reconnectTimer);
+        reconnectTimer = null;
+      }
+      if (ws) {
+        ws.onclose = null;
+        ws.close();
+      }
     }
   };
-
-  ws.onclose = () => {
-    console.log('WS connection closed. Reconnecting in 3s...');
-    setTimeout(() => createQueueWebSocket(onMessageCallback), 3000);
-  };
-
-  ws.onerror = (err) => {
-    console.error('WS Error:', err);
-    ws.close();
-  };
-
-  return ws;
 };
