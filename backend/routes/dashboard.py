@@ -188,7 +188,9 @@ def get_receptionist_dashboard(
     print(f"[RECEPTIONIST DASHBOARD] T+{time.time()-_t_start:.3f}s — queues_today loaded ({len(queues_today)} rows)", flush=True)
 
     # Total appointments today = scheduled appointments + walk-in queues
+    print(f"[RECEPTIONIST DASHBOARD] T+{time.time()-_t_start:.3f}s — BEFORE total_appointments_count", flush=True)
     total_appointments_count = len(appts_today) + len([q for q in queues_today if not any(a.patient_id == q.patient_id for a in appts_today)])
+    print(f"[RECEPTIONIST DASHBOARD] T+{time.time()-_t_start:.3f}s — AFTER total_appointments_count", flush=True)
 
     # Walk-in patients today
     walkin_count = db.query(func.count(Appointment.id)).filter(
@@ -197,7 +199,9 @@ def get_receptionist_dashboard(
         Appointment.appointment_type == "Walk-in"
     ).scalar() or 0
     
+    print(f"[RECEPTIONIST DASHBOARD] T+{time.time()-_t_start:.3f}s — BEFORE walkin_queues", flush=True)
     walkin_queues = len([q for q in queues_today if not any(a.patient_id == q.patient_id for a in appts_today)])
+    print(f"[RECEPTIONIST DASHBOARD] T+{time.time()-_t_start:.3f}s — AFTER walkin_queues", flush=True)
     total_walkins = walkin_count + walkin_queues
 
     # Waiting Patients currently
