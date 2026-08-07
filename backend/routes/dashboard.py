@@ -292,21 +292,61 @@ def get_receptionist_dashboard(
     today_appointments_list.sort(key=lambda x: x["raw_time"])
 
     # 3. CURRENT QUEUE OVERVIEW (BY DOCTOR)
+    # --- OPTIMIZED: replaces 2×N SQL queries with 3 bulk queries ---
     print(f"[RECEPTIONIST DASHBOARD] T+{time.time()-_t_start:.3f}s — starting queue_overview doctor loop", flush=True)
-    doctors = db.query(Doctor).all()
+    doctors = db.query(Doctor).filter(Doctor.is_active == True).all()
     print(f"[RECEPTIONIST DASHBOARD] T+{time.time()-_t_start:.3f}s — doctors loaded ({len(doctors)} rows)", flush=True)
+
+    # Bulk query 1: fetch all "Calling" queue rows for every doctor in one round-trip
+    # joinedload(Queue.patient) eliminates lazy-load queries when reading calling_q.patient.name
+    from sqlalchemy.orm import joinedload
+    calling_rows = db.query(Queue).options(joinedload(Queue.patient)).filter(
+        Queue.status == "Calling",
+        Queue.doctor_id.in_([d.id for d in doctors])
+    ).all()
+    # Index by doctor_id — only the first "Calling" row per doctor is used (mirrors .first())
+    calling_by_doctor = {}
+    for row in calling_rows:
+        if row.doctor_id not in calling_by_doctor:
+            calling_by_doctor[row.doctor_id] = row
+
+    # Bulk query 2: fetch all "Waiting" counts grouped by doctor_id in one round-trip
+    # Mirrors the original filter: doctor-assigned rows OR department-unassigned rows
+    from sqlalchemy import case
+    doctor_ids = [d.id for d in doctors]
+    dept_ids = list({d.department_id for d in doctors})
+
+    waiting_rows = db.query(
+        Queue.doctor_id,
+        Queue.department_id,
+        func.count(Queue.id).label("cnt")
+    ).filter(
+        Queue.status == "Waiting",
+        (Queue.doctor_id.in_(doctor_ids)) |
+        ((Queue.doctor_id == None) & (Queue.department_id.in_(dept_ids)))
+    ).group_by(Queue.doctor_id, Queue.department_id).all()
+
+    # Build per-doctor waiting count from bulk result
+    # doctor-assigned rows add directly; unassigned dept rows add to every doctor in that dept
+    dept_to_doctors: dict = {}
+    for d in doctors:
+        dept_to_doctors.setdefault(d.department_id, []).append(d.id)
+
+    waiting_by_doctor: dict = {d.id: 0 for d in doctors}
+    for row in waiting_rows:
+        if row.doctor_id is not None:
+            if row.doctor_id in waiting_by_doctor:
+                waiting_by_doctor[row.doctor_id] += row.cnt
+        else:
+            # Unassigned queue for a department — credit all doctors in that dept
+            for doc_id in dept_to_doctors.get(row.department_id, []):
+                waiting_by_doctor[doc_id] += row.cnt
+
+    # Build queue_overview with zero additional SQL queries
     queue_overview = []
-    
     for doc in doctors:
-        calling_q = db.query(Queue).filter(
-            Queue.doctor_id == doc.id,
-            Queue.status == "Calling"
-        ).first()
-        
-        waiting_q_count = db.query(func.count(Queue.id)).filter(
-            (Queue.doctor_id == doc.id) | ((Queue.doctor_id == None) & (Queue.department_id == doc.department_id)),
-            Queue.status == "Waiting"
-        ).scalar() or 0
+        calling_q = calling_by_doctor.get(doc.id)
+        waiting_q_count = waiting_by_doctor.get(doc.id, 0)
 
         queue_overview.append({
             "doctor_id": doc.id,
