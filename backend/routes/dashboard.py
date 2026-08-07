@@ -2,7 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 import datetime
+import time
 from typing import Optional
+
 
 from backend.database.connection import get_db
 from backend.database.models import User, Queue, Doctor, Consultation, Patient ,Appointment
@@ -164,6 +166,10 @@ def get_receptionist_dashboard(
     db: Session = Depends(get_db),
     current_user: User = Depends(RoleChecker(["Admin", "Receptionist"]))
 ):
+    _t_start = time.time()
+    print("=" * 70, flush=True)
+    print(f"[RECEPTIONIST DASHBOARD] REQUEST ENTERED: {_t_start}", flush=True)
+
     today = datetime.datetime.utcnow().date()
     start_of_today = datetime.datetime.combine(today, datetime.time.min)
     end_of_today = datetime.datetime.combine(today, datetime.time.max)
@@ -173,11 +179,13 @@ def get_receptionist_dashboard(
         Appointment.appointment_time >= start_of_today,
         Appointment.appointment_time <= end_of_today
     ).all()
+    print(f"[RECEPTIONIST DASHBOARD] T+{time.time()-_t_start:.3f}s — appts_today loaded ({len(appts_today)} rows)", flush=True)
     
     queues_today = db.query(Queue).filter(
         Queue.checked_in_time >= start_of_today,
         Queue.checked_in_time <= end_of_today
     ).all()
+    print(f"[RECEPTIONIST DASHBOARD] T+{time.time()-_t_start:.3f}s — queues_today loaded ({len(queues_today)} rows)", flush=True)
 
     # Total appointments today = scheduled appointments + walk-in queues
     total_appointments_count = len(appts_today) + len([q for q in queues_today if not any(a.patient_id == q.patient_id for a in appts_today)])
@@ -280,7 +288,9 @@ def get_receptionist_dashboard(
     today_appointments_list.sort(key=lambda x: x["raw_time"])
 
     # 3. CURRENT QUEUE OVERVIEW (BY DOCTOR)
+    print(f"[RECEPTIONIST DASHBOARD] T+{time.time()-_t_start:.3f}s — starting queue_overview doctor loop", flush=True)
     doctors = db.query(Doctor).all()
+    print(f"[RECEPTIONIST DASHBOARD] T+{time.time()-_t_start:.3f}s — doctors loaded ({len(doctors)} rows)", flush=True)
     queue_overview = []
     
     for doc in doctors:
@@ -305,6 +315,7 @@ def get_receptionist_dashboard(
             "current_patient": calling_q.patient.name if (calling_q and calling_q.patient) else None,
             "waiting_count": waiting_q_count
         })
+    print(f"[RECEPTIONIST DASHBOARD] T+{time.time()-_t_start:.3f}s — queue_overview doctor loop DONE ({len(queue_overview)} entries)", flush=True)
 
     # 4. NOTIFICATIONS PANEL
     late_arrivals = []
@@ -374,6 +385,8 @@ def get_receptionist_dashboard(
             "message": f"{skipped_count} patient token(s) were skipped and require re-queueing or receptionist action."
         })
 
+    print(f"[RECEPTIONIST DASHBOARD] T+{time.time()-_t_start:.3f}s — RETURNING response", flush=True)
+    print("=" * 70, flush=True)
     return {
         "receptionist_info": {
             "username": current_user.username,
