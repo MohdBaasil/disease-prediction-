@@ -48,8 +48,7 @@ from backend.database.connection import DATABASE_URL, engine
 
 def get_current_user(request: Request, token: Optional[str] = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
     auth_header = request.headers.get("authorization", "MISSING")
-    
-    # If not found in Authorization header, search query parameters
+
     if not token:
         token = request.query_params.get("token")
 
@@ -58,25 +57,19 @@ def get_current_user(request: Request, token: Optional[str] = Depends(oauth2_sch
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    
+
     secret_hash = hashlib.sha256(SECRET_KEY.encode()).hexdigest()[:8]
-    abs_db_path = str(engine.url)
-    
-    print("\n----------------------------------------------------", flush=True)
-    print("REQUEST START", flush=True)
+
+    print("\n=================== get_current_user() ===================", flush=True)
     print(f"Authorization header: {auth_header}", flush=True)
-    print(f"Token exists?: {bool(token)}", flush=True)
-    print(f"Token length: {len(token) if token else 0}", flush=True)
-    print(f"SECRET_KEY SHA256 hash (ONLY first 8 chars): {secret_hash}", flush=True)
-    print(f"DATABASE_URL: {DATABASE_URL}", flush=True)
-    print(f"Absolute database file path: {abs_db_path}", flush=True)
-    print(f"Current working directory: {os.getcwd()}", flush=True)
-    print("----------------------------------------------------", flush=True)
+    print(f"Token: {token}", flush=True)
+    print(f"SECRET_KEY hash: {secret_hash}", flush=True)
 
     if not token:
-        print("401 caused by missing token", flush=True)
+        print("401 ERROR: Missing token", flush=True)
+        print("==========================================================\n", flush=True)
         raise credentials_exception
-        
+
     payload = None
     username = None
     role = None
@@ -90,44 +83,28 @@ def get_current_user(request: Request, token: Optional[str] = Depends(oauth2_sch
         print(f"Username: {username}", flush=True)
         print(f"Role: {role}", flush=True)
         print(f"Expiration: {exp}", flush=True)
-        print(f"Current UTC time: {datetime.utcnow().isoformat()}", flush=True)
         if username is None:
-            print("401 caused by missing sub in payload", flush=True)
+            print("401 ERROR: Missing 'sub' in JWT payload", flush=True)
+            print("==========================================================\n", flush=True)
             raise credentials_exception
-    except JWTError as e:
-        print(f"Exception class: {type(e).__name__}", flush=True)
-        print(f"Exception message: {str(e)}", flush=True)
-        print("401 caused by jwt.decode()", flush=True)
-        raise credentials_exception
     except Exception as e:
-        print(f"Exception class: {type(e).__name__}", flush=True)
-        print(f"Exception message: {str(e)}", flush=True)
-        print("401 caused by jwt.decode()", flush=True)
+        print(f"JWT Decode Exception: {type(e).__name__} - {str(e)}", flush=True)
+        print("401 ERROR: jwt.decode() failed", flush=True)
+        print("==========================================================\n", flush=True)
         raise credentials_exception
 
-    print("\nRunning database lookup...", flush=True)
-    print(f"Username being searched: {username}", flush=True)
-    print(f"Database path: {abs_db_path}", flush=True)
-    try:
-        user_count = db.query(User).count()
-        print(f"Total users in database: {user_count}", flush=True)
-        users_list = db.query(User.username, User.role).all()
-        print(f"SELECT username, role FROM users: {users_list}", flush=True)
-    except Exception as db_err:
-        print(f"Error reading users table: {db_err}", flush=True)
-
+    print(f"Searching database for username: {username}", flush=True)
     user = db.query(User).filter(User.username == username).first()
-    print(f"Returned user object: {user}", flush=True)
-    
+    print(f"Database user found: {user.username if user else 'NONE (User Not Found)'}", flush=True)
+
     if user is None:
-        print("401 caused because user does not exist.", flush=True)
+        print(f"401 ERROR: User '{username}' searched in database but NOT FOUND", flush=True)
+        print("==========================================================\n", flush=True)
         raise credentials_exception
 
-    print(f"User ID: {user.id}", flush=True)
-    print(f"Username: {user.username}", flush=True)
-    print(f"Role: {user.role}", flush=True)
-    print(f"Active: {getattr(user, 'is_active', None)}", flush=True)
-    print("SUCCESS: User authenticated successfully", flush=True)
+    print(f"SUCCESS: User '{user.username}' (ID: {user.id}, Role: {user.role}) validated", flush=True)
+    print("==========================================================\n", flush=True)
+    return user
     return user
 
 def get_current_user_optional(

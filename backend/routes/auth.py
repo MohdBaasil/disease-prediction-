@@ -24,7 +24,7 @@ def register_user(user_in: UserCreate, db: Session = Depends(get_db)):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Username already registered"
         )
-    
+
     # Restrict general registration to Patient and Receptionist. Doctors are created by Admin or Doctor endpoints.
     if user_in.role not in ["Patient", "Receptionist", "Admin"]:
         raise HTTPException(
@@ -70,19 +70,19 @@ def register_user(user_in: UserCreate, db: Session = Depends(get_db)):
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = None
     patient = None
-    
+
     # 1. Check if username is an email address
     if "@" in form_data.username:
         patient = db.query(Patient).filter(Patient.email == form_data.username).first()
-        
+
     # 2. Check if username is a numeric Patient ID
     elif form_data.username.isdigit():
         patient = db.query(Patient).filter(Patient.id == int(form_data.username)).first()
-        
+
     # If patient profile was found, load the linked User
     if patient and patient.user_id:
         user = db.query(User).filter(User.id == patient.user_id).first()
-        
+
     # 3. Fallback: Lookup by User.username directly (e.g. Doctor, Receptionist, Admin, or Patient Username)
     if not user:
         user = db.query(User).filter(User.username == form_data.username).first()
@@ -93,9 +93,23 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     access_token = create_access_token(data={"sub": user.username, "role": user.role})
-    
+
+    import hashlib
+    from jose import jwt as jose_jwt
+    from backend.services.auth_service import SECRET_KEY, ALGORITHM
+    secret_hash = hashlib.sha256(SECRET_KEY.encode()).hexdigest()[:8]
+    decoded_tmp = jose_jwt.decode(access_token, SECRET_KEY, algorithms=[ALGORITHM])
+
+    print("\n=================== POST /api/auth/login ===================", flush=True)
+    print(f"Generated JWT: {access_token}", flush=True)
+    print(f"Username: {user.username}", flush=True)
+    print(f"Role: {user.role}", flush=True)
+    print(f"Expiration: {decoded_tmp.get('exp')}", flush=True)
+    print(f"SECRET_KEY hash: {secret_hash}", flush=True)
+    print("============================================================\n", flush=True)
+
     # Audit log
     log = AuditLog(
         user_id=user.id,
