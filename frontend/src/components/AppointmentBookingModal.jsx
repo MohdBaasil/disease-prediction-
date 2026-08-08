@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Calendar, Clock, User, Search, Stethoscope, Building2,
   AlertTriangle, CheckCircle2, Sparkles, X, FileText, ShieldAlert,
@@ -155,23 +155,64 @@ function AppointmentBookingModal({
     fetchSlots();
   }, [isOpen, selectedDoctor, appointmentDate]);
 
-  // Search Patient
-  const handleSearchPatient = async (query) => {
-    setSearchQuery(query);
-    if (!query || !query.trim()) {
+  // Ref for debouncing & stale request cancellation
+  const searchTimeoutRef = useRef(null);
+  const searchRequestIdRef = useRef(0);
+
+  // Debounced Patient Search Effect
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const trimmedQuery = searchQuery.trim();
+    if (!trimmedQuery) {
       setSearchResults([]);
+      setIsSearchingPatient(false);
       return;
     }
+
     setIsSearchingPatient(true);
-    try {
-      const results = await patientService.list(query.trim());
-      setSearchResults(Array.isArray(results) ? results : []);
-    } catch (err) {
-      console.error(err);
-      setSearchResults([]);
-    } finally {
-      setIsSearchingPatient(false);
+    const requestId = ++searchRequestIdRef.current;
+
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
     }
+
+    searchTimeoutRef.current = setTimeout(async () => {
+      try {
+        const results = await patientService.list(trimmedQuery);
+        // Ignore stale responses if a newer request was made or patient was selected
+        if (requestId === searchRequestIdRef.current) {
+          setSearchResults(Array.isArray(results) ? results : []);
+        }
+      } catch (err) {
+        console.error('Error searching patients:', err);
+        if (requestId === searchRequestIdRef.current) {
+          setSearchResults([]);
+        }
+      } finally {
+        if (requestId === searchRequestIdRef.current) {
+          setIsSearchingPatient(false);
+        }
+      }
+    }, 350);
+
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [searchQuery, isOpen]);
+
+  // Instant Patient Selection Handler
+  const handleSelectPatient = (patient) => {
+    searchRequestIdRef.current++; // Invalidate any pending search responses
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    setSelectedPatient(patient);
+    setSearchQuery('');
+    setSearchResults([]);
+    setIsSearchingPatient(false);
   };
 
   // Helper to convert date + "09:30 AM" into valid ISO String
@@ -343,7 +384,7 @@ function AppointmentBookingModal({
                   <input
                     type="text"
                     value={searchQuery}
-                    onChange={(e) => handleSearchPatient(e.target.value)}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Type patient name or mobile number to search..."
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs focus:ring-2 focus:ring-hospital-500 focus:outline-none"
                   />
@@ -362,11 +403,7 @@ function AppointmentBookingModal({
                         <button
                           key={p.id}
                           type="button"
-                          onClick={() => {
-                            setSelectedPatient(p);
-                            setSearchQuery('');
-                            setSearchResults([]);
-                          }}
+                          onClick={() => handleSelectPatient(p)}
                           className="w-full p-2.5 text-left rounded-xl hover:bg-hospital-50 dark:hover:bg-hospital-950/40 flex justify-between items-center transition-colors text-xs"
                         >
                           <div>
