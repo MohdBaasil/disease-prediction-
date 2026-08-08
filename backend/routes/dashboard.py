@@ -166,10 +166,6 @@ def get_receptionist_dashboard(
     db: Session = Depends(get_db),
     current_user: User = Depends(RoleChecker(["Admin", "Receptionist"]))
 ):
-    _t_start = time.time()
-    print("=" * 70, flush=True)
-    print(f"[RECEPTIONIST DASHBOARD] REQUEST ENTERED: {_t_start}", flush=True)
-
     today = datetime.datetime.utcnow().date()
     start_of_today = datetime.datetime.combine(today, datetime.time.min)
     end_of_today = datetime.datetime.combine(today, datetime.time.max)
@@ -183,7 +179,6 @@ def get_receptionist_dashboard(
         Appointment.appointment_time >= start_of_today,
         Appointment.appointment_time <= end_of_today
     ).all()
-    print(f"[RECEPTIONIST DASHBOARD] T+{time.time()-_t_start:.3f}s — appts_today loaded ({len(appts_today)} rows)", flush=True)
     
     queues_today = db.query(Queue).options(
         joinedload(Queue.patient),
@@ -193,15 +188,12 @@ def get_receptionist_dashboard(
         Queue.checked_in_time >= start_of_today,
         Queue.checked_in_time <= end_of_today
     ).all()
-    print(f"[RECEPTIONIST DASHBOARD] T+{time.time()-_t_start:.3f}s — queues_today loaded ({len(queues_today)} rows)", flush=True)
 
     # Fast set lookup for patient IDs with appointments today
     appt_patient_ids = {a.patient_id for a in appts_today if a.patient_id}
 
     # Total appointments today = scheduled appointments + walk-in queues
-    print(f"[RECEPTIONIST DASHBOARD] T+{time.time()-_t_start:.3f}s — BEFORE total_appointments_count", flush=True)
     total_appointments_count = len(appts_today) + len([q for q in queues_today if q.patient_id not in appt_patient_ids])
-    print(f"[RECEPTIONIST DASHBOARD] T+{time.time()-_t_start:.3f}s — AFTER total_appointments_count", flush=True)
 
     # Walk-in patients today
     walkin_count = db.query(func.count(Appointment.id)).filter(
@@ -210,9 +202,7 @@ def get_receptionist_dashboard(
         Appointment.appointment_type == "Walk-in"
     ).scalar() or 0
     
-    print(f"[RECEPTIONIST DASHBOARD] T+{time.time()-_t_start:.3f}s — BEFORE walkin_queues", flush=True)
     walkin_queues = len([q for q in queues_today if q.patient_id not in appt_patient_ids])
-    print(f"[RECEPTIONIST DASHBOARD] T+{time.time()-_t_start:.3f}s — AFTER walkin_queues", flush=True)
     total_walkins = walkin_count + walkin_queues
 
     # Waiting Patients currently
@@ -304,9 +294,7 @@ def get_receptionist_dashboard(
 
     # 3. CURRENT QUEUE OVERVIEW (BY DOCTOR)
     # --- OPTIMIZED: replaces 2×N SQL queries with 3 bulk queries ---
-    print(f"[RECEPTIONIST DASHBOARD] T+{time.time()-_t_start:.3f}s — starting queue_overview doctor loop", flush=True)
     doctors = db.query(Doctor).options(joinedload(Doctor.department)).filter(Doctor.is_active == True).all()
-    print(f"[RECEPTIONIST DASHBOARD] T+{time.time()-_t_start:.3f}s — doctors loaded ({len(doctors)} rows)", flush=True)
 
     # Bulk query 1: fetch all "Calling" queue rows for every doctor in one round-trip
     calling_rows = db.query(Queue).options(joinedload(Queue.patient)).filter(
@@ -365,7 +353,6 @@ def get_receptionist_dashboard(
             "current_patient": calling_q.patient.name if (calling_q and calling_q.patient) else None,
             "waiting_count": waiting_q_count
         })
-    print(f"[RECEPTIONIST DASHBOARD] T+{time.time()-_t_start:.3f}s — queue_overview doctor loop DONE ({len(queue_overview)} entries)", flush=True)
 
     # 4. NOTIFICATIONS PANEL
     late_arrivals = []
@@ -438,8 +425,6 @@ def get_receptionist_dashboard(
             "message": f"{skipped_count} patient token(s) were skipped and require re-queueing or receptionist action."
         })
 
-    print(f"[RECEPTIONIST DASHBOARD] T+{time.time()-_t_start:.3f}s — RETURNING response", flush=True)
-    print("=" * 70, flush=True)
     return {
         "receptionist_info": {
             "username": current_user.username,

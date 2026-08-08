@@ -18,7 +18,10 @@ import PatientLayout from './layouts/PatientLayout';
 import { authService } from './services/api';
 
 function App() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    const curUser = authService.getCurrentUser();
+    return curUser.token ? curUser : null;
+  });
   const [darkMode, setDarkMode] = useState(false);
 
   useEffect(() => {
@@ -30,12 +33,6 @@ function App() {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
-    }
-
-    // Check logged in user
-    const curUser = authService.getCurrentUser();
-    if (curUser.token) {
-      setUser(curUser);
     }
   }, []);
 
@@ -64,7 +61,6 @@ function App() {
       return <Navigate to="/login" replace />;
     }
     if (allowedRoles && !allowedRoles.includes(curUser.role)) {
-      // Redirect to correct dashboard if unauthorized
       return <Navigate to={`/${curUser.role.toLowerCase()}`} replace />;
     }
     return children;

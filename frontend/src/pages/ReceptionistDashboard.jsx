@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Users, Ticket, ClipboardList, CheckCircle2, AlertTriangle,
   UserCheck, Heart, Search, HelpCircle, PlusCircle, Calendar,
@@ -11,6 +11,55 @@ import {
 } from '../services/api';
 import PatientRegistrationModal from '../components/PatientRegistrationModal';
 import AppointmentBookingModal from '../components/AppointmentBookingModal';
+
+// Module-level in-flight request trackers and cache to deduplicate React 18 StrictMode double-mounts
+let dashboardInFlightPromise = null;
+let lastDashboardData = null;
+let lastDashboardFetchTime = 0;
+
+const fetchDashboardStatsDeduplicated = (isForceRefresh = false) => {
+  const now = Date.now();
+
+  // 1. Share active in-flight Promise if request is currently pending
+  if (dashboardInFlightPromise && !isForceRefresh) {
+    return dashboardInFlightPromise;
+  }
+
+  // 2. Reuse recent data if fetched < 1.5 seconds ago (e.g. StrictMode remount)
+  if (!isForceRefresh && lastDashboardData && (now - lastDashboardFetchTime < 1500)) {
+    return Promise.resolve(lastDashboardData);
+  }
+
+  // 3. Initiate fresh network request
+  dashboardInFlightPromise = dashboardService.getReceptionistStats()
+    .then((data) => {
+      lastDashboardData = data;
+      lastDashboardFetchTime = Date.now();
+      return data;
+    })
+    .finally(() => {
+      dashboardInFlightPromise = null;
+    });
+
+  return dashboardInFlightPromise;
+};
+
+let deptsInFlightPromise = null;
+let lastDeptsData = null;
+
+const fetchDepartmentsDeduplicated = () => {
+  if (deptsInFlightPromise) return deptsInFlightPromise;
+  if (lastDeptsData) return Promise.resolve(lastDeptsData);
+  deptsInFlightPromise = queueService.getDepartments()
+    .then((data) => {
+      lastDeptsData = data;
+      return data;
+    })
+    .finally(() => {
+      deptsInFlightPromise = null;
+    });
+  return deptsInFlightPromise;
+};
 
 function ReceptionistDashboard() {
   const [loading, setLoading] = useState(true);
@@ -82,55 +131,32 @@ function ReceptionistDashboard() {
   };
 
   const loadDashboardData = async (isManualRefresh = false) => {
-    console.log('[DEBUG Trace L84] ENTER loadDashboardData(). isManualRefresh:', isManualRefresh);
     if (isManualRefresh) setRefreshing(true);
     try {
-      console.log('[DEBUG Trace L88] BEFORE await dashboardService.getReceptionistStats()');
-      const data = await dashboardService.getReceptionistStats();
-      console.log('[DEBUG Trace L90] AFTER await dashboardService.getReceptionistStats(). Data:', data);
+      const data = await fetchDashboardStatsDeduplicated(isManualRefresh);
       if (data) {
-        if (data.receptionist_info) {
-          console.log('[DEBUG Trace L93] BEFORE setReceptionistInfo');
-          setReceptionistInfo(data.receptionist_info);
-          console.log('[DEBUG Trace L95] AFTER setReceptionistInfo');
-        }
-        if (data.statistics) {
-          console.log('[DEBUG Trace L97] BEFORE setStats');
-          setStats(data.statistics);
-          console.log('[DEBUG Trace L99] AFTER setStats');
-        }
-        console.log('[DEBUG Trace L101] BEFORE setTodayAppointments');
+        if (data.receptionist_info) setReceptionistInfo(data.receptionist_info);
+        if (data.statistics) setStats(data.statistics);
         setTodayAppointments(Array.isArray(data.today_appointments) ? data.today_appointments : []);
-        console.log('[DEBUG Trace L103] AFTER setTodayAppointments');
-
-        console.log('[DEBUG Trace L105] BEFORE setQueueOverview');
         setQueueOverview(Array.isArray(data.queue_overview) ? data.queue_overview : []);
-        console.log('[DEBUG Trace L107] AFTER setQueueOverview');
-
-        console.log('[DEBUG Trace L109] BEFORE setNotifications');
         setNotifications({
           late_arrivals: Array.isArray(data.notifications?.late_arrivals) ? data.notifications.late_arrivals : [],
           cancelled_appointments: Array.isArray(data.notifications?.cancelled_appointments) ? data.notifications.cancelled_appointments : [],
           queue_alerts: Array.isArray(data.notifications?.queue_alerts) ? data.notifications.queue_alerts : []
         });
-        console.log('[DEBUG Trace L113] AFTER setNotifications');
       }
     } catch (err) {
-      console.error('[DEBUG Trace CATCH] ERROR in loadDashboardData:', err);
+      console.error("[loadDashboardData] Error fetching dashboard data:", err);
       showMsg('error', 'Failed to update dashboard data.');
     } finally {
-      console.log('[DEBUG Trace FINALLY] ENTER finally block');
-      console.log('[DEBUG Trace FINALLY] BEFORE setLoading(false)');
       setLoading(false);
-      console.log('[DEBUG Trace FINALLY] AFTER setLoading(false)');
       setRefreshing(false);
-      console.log('[DEBUG Trace FINALLY] EXIT finally block');
     }
   };
 
   const loadDepartmentsAndDoctors = async () => {
     try {
-      const depts = await queueService.getDepartments();
+      const depts = await fetchDepartmentsDeduplicated();
       const deptsArray = Array.isArray(depts) ? depts : [];
       setDepartments(deptsArray);
       if (deptsArray.length > 0 && deptsArray[0]?.id) {
@@ -148,7 +174,6 @@ function ReceptionistDashboard() {
     // WebSocket real-time updates
     const ws = createQueueWebSocket((msg) => {
       if (msg && msg.event === 'queue_update') {
-        console.log('Real-time queue update received on Reception Dashboard');
         loadDashboardData();
       }
     });
@@ -176,7 +201,9 @@ function ReceptionistDashboard() {
   };
 
   const handleOpenBookModal = (patient = null, initialData = null, mode = 'create') => {
-    setApptModalPatient(patient);
+    // Defensive check: ensure patient is a valid patient record and not a React SyntheticEvent
+    const isValidPatient = patient && typeof patient === 'object' && !('_reactName' in patient) && ('id' in patient || 'name' in patient);
+    setApptModalPatient(isValidPatient ? patient : null);
     setApptModalInitialData(initialData);
     setApptModalMode(mode);
     setIsApptBookingModalOpen(true);
@@ -314,9 +341,7 @@ function ReceptionistDashboard() {
     return true;
   });
 
-  console.log('[DEBUG Trace RENDER] Evaluating render. loading state is:', loading);
   if (loading) {
-    console.log('[DEBUG Trace RENDER] loading is TRUE -> Rendering Loading Spinner screen');
     return (
       <div className="flex justify-center items-center h-96">
         <div className="flex flex-col items-center space-y-3">
@@ -326,7 +351,6 @@ function ReceptionistDashboard() {
       </div>
     );
   }
-  console.log('[DEBUG Trace RENDER] loading is FALSE -> Rendering Main Dashboard Content UI');
 
   const totalAlertsCount =
     (notifications?.queue_alerts?.length || 0) +
@@ -496,7 +520,7 @@ function ReceptionistDashboard() {
           </button>
 
           <button
-            onClick={handleOpenBookModal}
+            onClick={() => handleOpenBookModal()}
             className="flex items-center justify-center space-x-2 bg-white/15 hover:bg-white/25 border border-white/20 backdrop-blur-md p-3.5 rounded-2xl text-xs font-bold transition-all transform active:scale-95 text-white"
           >
             <CalendarPlus className="h-4 w-4 text-sky-300" />
