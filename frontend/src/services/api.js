@@ -3,7 +3,7 @@ import axios from 'axios';
 // Automatically detect host URL
 const API_BASE_URL =
   import.meta.env.VITE_API_URL ||
-  "https://disease-prediction-w46h.onrender.com";
+  'http://localhost:8000';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -17,6 +17,9 @@ api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+    console.log(`[INSTRUMENT INTERCEPTOR] Attached Authorization header for URL ${config.url}:`, config.headers.Authorization);
+  } else {
+    console.log(`[INSTRUMENT INTERCEPTOR] NO token in localStorage for URL ${config.url}, Authorization header NOT attached.`);
   }
   return config;
 }, (error) => {
@@ -36,6 +39,9 @@ export const authService = {
     });
 
     if (response.data.access_token) {
+      console.log('[INSTRUMENT authService.login] Setting localStorage.token =', response.data.access_token);
+      console.log('[INSTRUMENT authService.login] Setting localStorage.role =', response.data.role);
+      console.log('[INSTRUMENT authService.login] Setting localStorage.username =', response.data.username);
       localStorage.setItem('token', response.data.access_token);
       localStorage.setItem('role', response.data.role);
       localStorage.setItem('username', response.data.username);
