@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
 import datetime
 import time
@@ -175,21 +175,32 @@ def get_receptionist_dashboard(
     end_of_today = datetime.datetime.combine(today, datetime.time.max)
 
     # 1. STATISTICS CARDS
-    appts_today = db.query(Appointment).filter(
+    appts_today = db.query(Appointment).options(
+        joinedload(Appointment.patient),
+        joinedload(Appointment.doctor).joinedload(Doctor.department),
+        joinedload(Appointment.department)
+    ).filter(
         Appointment.appointment_time >= start_of_today,
         Appointment.appointment_time <= end_of_today
     ).all()
     print(f"[RECEPTIONIST DASHBOARD] T+{time.time()-_t_start:.3f}s — appts_today loaded ({len(appts_today)} rows)", flush=True)
     
-    queues_today = db.query(Queue).filter(
+    queues_today = db.query(Queue).options(
+        joinedload(Queue.patient),
+        joinedload(Queue.doctor),
+        joinedload(Queue.department)
+    ).filter(
         Queue.checked_in_time >= start_of_today,
         Queue.checked_in_time <= end_of_today
     ).all()
     print(f"[RECEPTIONIST DASHBOARD] T+{time.time()-_t_start:.3f}s — queues_today loaded ({len(queues_today)} rows)", flush=True)
 
+    # Fast set lookup for patient IDs with appointments today
+    appt_patient_ids = {a.patient_id for a in appts_today if a.patient_id}
+
     # Total appointments today = scheduled appointments + walk-in queues
     print(f"[RECEPTIONIST DASHBOARD] T+{time.time()-_t_start:.3f}s — BEFORE total_appointments_count", flush=True)
-    total_appointments_count = len(appts_today) + len([q for q in queues_today if not any(a.patient_id == q.patient_id for a in appts_today)])
+    total_appointments_count = len(appts_today) + len([q for q in queues_today if q.patient_id not in appt_patient_ids])
     print(f"[RECEPTIONIST DASHBOARD] T+{time.time()-_t_start:.3f}s — AFTER total_appointments_count", flush=True)
 
     # Walk-in patients today
@@ -200,7 +211,7 @@ def get_receptionist_dashboard(
     ).scalar() or 0
     
     print(f"[RECEPTIONIST DASHBOARD] T+{time.time()-_t_start:.3f}s — BEFORE walkin_queues", flush=True)
-    walkin_queues = len([q for q in queues_today if not any(a.patient_id == q.patient_id for a in appts_today)])
+    walkin_queues = len([q for q in queues_today if q.patient_id not in appt_patient_ids])
     print(f"[RECEPTIONIST DASHBOARD] T+{time.time()-_t_start:.3f}s — AFTER walkin_queues", flush=True)
     total_walkins = walkin_count + walkin_queues
 
@@ -262,7 +273,7 @@ def get_receptionist_dashboard(
         })
 
     for q in queues_today:
-        if not any(item["patient_id"] == q.patient_id for item in today_appointments_list):
+        if q.patient_id not in appt_patient_ids:
             q_status = "Checked-in"
             if q.status == "Calling":
                 q_status = "In Consultation"
@@ -294,12 +305,10 @@ def get_receptionist_dashboard(
     # 3. CURRENT QUEUE OVERVIEW (BY DOCTOR)
     # --- OPTIMIZED: replaces 2×N SQL queries with 3 bulk queries ---
     print(f"[RECEPTIONIST DASHBOARD] T+{time.time()-_t_start:.3f}s — starting queue_overview doctor loop", flush=True)
-    doctors = db.query(Doctor).filter(Doctor.is_active == True).all()
+    doctors = db.query(Doctor).options(joinedload(Doctor.department)).filter(Doctor.is_active == True).all()
     print(f"[RECEPTIONIST DASHBOARD] T+{time.time()-_t_start:.3f}s — doctors loaded ({len(doctors)} rows)", flush=True)
 
     # Bulk query 1: fetch all "Calling" queue rows for every doctor in one round-trip
-    # joinedload(Queue.patient) eliminates lazy-load queries when reading calling_q.patient.name
-    from sqlalchemy.orm import joinedload
     calling_rows = db.query(Queue).options(joinedload(Queue.patient)).filter(
         Queue.status == "Calling",
         Queue.doctor_id.in_([d.id for d in doctors])
@@ -312,7 +321,6 @@ def get_receptionist_dashboard(
 
     # Bulk query 2: fetch all "Waiting" counts grouped by doctor_id in one round-trip
     # Mirrors the original filter: doctor-assigned rows OR department-unassigned rows
-    from sqlalchemy import case
     doctor_ids = [d.id for d in doctors]
     dept_ids = list({d.department_id for d in doctors})
 
@@ -327,7 +335,6 @@ def get_receptionist_dashboard(
     ).group_by(Queue.doctor_id, Queue.department_id).all()
 
     # Build per-doctor waiting count from bulk result
-    # doctor-assigned rows add directly; unassigned dept rows add to every doctor in that dept
     dept_to_doctors: dict = {}
     for d in doctors:
         dept_to_doctors.setdefault(d.department_id, []).append(d.id)
@@ -338,7 +345,6 @@ def get_receptionist_dashboard(
             if row.doctor_id in waiting_by_doctor:
                 waiting_by_doctor[row.doctor_id] += row.cnt
         else:
-            # Unassigned queue for a department — credit all doctors in that dept
             for doc_id in dept_to_doctors.get(row.department_id, []):
                 waiting_by_doctor[doc_id] += row.cnt
 
@@ -378,7 +384,10 @@ def get_receptionist_dashboard(
                 })
 
     cancelled_appointments = []
-    cancelled_apps = db.query(Appointment).filter(
+    cancelled_apps = db.query(Appointment).options(
+        joinedload(Appointment.patient),
+        joinedload(Appointment.doctor)
+    ).filter(
         Appointment.appointment_time >= start_of_today,
         Appointment.appointment_time <= end_of_today,
         Appointment.status == "Cancelled"
